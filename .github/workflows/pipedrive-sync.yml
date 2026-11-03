@@ -1,0 +1,53 @@
+name: Pipedrive incremental sync
+
+# One-way Pipedrive -> CRM delta sync. Runs every 15 minutes on GitHub's
+# infrastructure. Uncomment the schedule block to run it automatically once this file
+# is on the default branch. Requires two repo secrets (Settings -> Secrets and
+# variables -> Actions): PIPEDRIVE_API_TOKEN and DATABASE_URL.
+on:
+  # Scheduled runs are off by default so a fresh fork does not fail every
+  # 15 minutes without secrets. Uncomment the schedule block to enable.
+  # schedule:
+  #   - cron: "*/15 * * * *" # every 15 min (UTC); change to "*/30 * * * *" to halve usage
+  workflow_dispatch: # manual runs from the Actions tab / gh CLI
+    inputs:
+      since:
+        description: >-
+          Re-sync window start (second-precision ISO, e.g.
+          2026-06-21T00:00:00Z). Leave empty to use the saved watermark.
+          Re-running any window is idempotent — use this to recover a record
+          the incremental poll missed.
+        required: false
+        default: ""
+
+# Never let two syncs overlap (the watermark + dedupe make it safe regardless).
+concurrency:
+  group: pipedrive-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install pg (only dependency the sync needs)
+        working-directory: migrations/pipedrive-api-sync
+        run: |
+          npm init -y -q >/dev/null
+          npm install pg@8.20.0 --silent
+      - name: Run incremental sync
+        working-directory: migrations/pipedrive-api-sync
+        env:
+          PIPEDRIVE_API_TOKEN: ${{ secrets.PIPEDRIVE_API_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SINCE_INPUT: ${{ inputs.since }}
+        run: |
+          if [ -n "$SINCE_INPUT" ]; then
+            node sync.js --phase=incremental --since="$SINCE_INPUT"
+          else
+            node sync.js --phase=incremental
+          fi

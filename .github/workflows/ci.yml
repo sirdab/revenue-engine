@@ -1,0 +1,61 @@
+name: CI
+
+# Typecheck + build + tests on every PR and on pushes to main. Strict TypeScript
+# and a successful build are the primary correctness gate; the node:test suites
+# cover the intricate pure logic.
+on:
+  pull_request: {}
+  push:
+    branches: ["main"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # A throwaway Postgres so the migrations are proven to apply from empty.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          # The lockfile's overrides-config hash only validates under pnpm >= 10.
+          version: 10.34.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck & build
+        # vite build throws at config eval without BASE_PATH and PORT.
+        env:
+          BASE_PATH: /
+          PORT: "8080"
+        run: pnpm run build
+      - name: Migrate a fresh database
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/ci
+        run: pnpm --filter @workspace/db run migrate
+      - name: Typecheck & run tests
+        # The main typecheck excludes *.test.ts (they import with .ts extensions
+        # for Node's test runner); typecheck them via tsconfig.test.json, then run.
+        run: |
+          pnpm --filter @workspace/api-server run typecheck:test
+          pnpm run test

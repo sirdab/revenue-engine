@@ -1,0 +1,10 @@
+*.log
+.lost-history.lock/
+resume-lost-history.sh
+secrets.env
+launchd.*
+
+# CI/local install artifacts
+node_modules/
+package.json
+package-lock.json

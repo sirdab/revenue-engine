@@ -1,0 +1,95 @@
+# Run the whole stack locally: `docker compose up --build`, then open
+# http://localhost:8080 and sign in with BOOTSTRAP_ADMIN_EMAIL /
+# BOOTSTRAP_ADMIN_PASSWORD from your .env (see .env.example).
+#
+# Services:
+#   postgres  the database
+#   minio     S3-compatible storage for file attachments (console on :9001)
+#   mailpit   catches outgoing email (web UI on :8025)
+#   migrate   applies the Drizzle migrations, then exits
+#   app       the API server, serving the built frontend on the same origin
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: revenue_engine
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  # Creates the attachments bucket once MinIO is up.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      sh -c "until mc alias set local http://minio:9000 minioadmin minioadmin; do sleep 1; done;
+             mc mb --ignore-existing local/crm-files"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+
+  migrate:
+    build:
+      context: .
+      target: deps
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/revenue_engine
+    command: ["pnpm", "--filter", "@workspace/db", "run", "migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/revenue_engine
+      PORT: "8080"
+      APP_BASE_URL: http://localhost:8080
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_SECRET_ACCESS_KEY: minioadmin
+      S3_BUCKET_NAME: crm-files
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_REQUIRE_TLS: "false"
+    # bootstrap is idempotent: it ensures the admin from BOOTSTRAP_ADMIN_* exists.
+    command: ["sh", "-c", "node dist/bootstrap.mjs && node --enable-source-maps dist/index.mjs"]
+    ports:
+      - "8080:8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_started
+
+volumes:
+  postgres-data:
+  minio-data:

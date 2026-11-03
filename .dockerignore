@@ -1,0 +1,22 @@
+# Keep the build context small and avoid leaking local/editor state.
+node_modules
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+
+.git
+.github
+.idea
+.vscode
+.cache
+.local
+.env
+.env.*
+
+# Docs and deploy config aren't needed inside the image.
+*.md
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+.DS_Store

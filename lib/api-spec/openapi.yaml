@@ -1,0 +1,6079 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Sirdab Revenue Engine API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: pipelines
+    description: Pipelines and board
+  - name: stages
+    description: Pipeline stages
+  - name: deals
+    description: Deals
+  - name: views
+    description: Saved deal views
+  - name: user-preferences
+    description: Per-user default/working-state preferences
+  - name: persons
+    description: People (contacts)
+  - name: organizations
+    description: Organizations
+  - name: activities
+    description: Activities
+  - name: notes
+    description: Notes
+  - name: users
+    description: Users (admin)
+  - name: search
+    description: Global search
+  - name: labels
+    description: Label registry and managed lost reasons
+  - name: assignment-rules
+    description: Auto-assignment rules engine (admin)
+  - name: insights
+    description: Self-serve analytics dashboards and widget queries
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Sign in with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Sign out the current user
+      responses:
+        "204":
+          description: Signed out
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get the currently authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/forgot-password:
+    post:
+      operationId: forgotPassword
+      tags: [auth]
+      summary: Request a password reset email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordInput"
+      responses:
+        "200":
+          description: Generic acknowledgement (never reveals whether the email exists)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/reset-password:
+    post:
+      operationId: resetPassword
+      tags: [auth]
+      summary: Set a new password using a reset token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordInput"
+      responses:
+        "200":
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid or expired token, or weak password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/reset-password/validate:
+    get:
+      operationId: validateResetToken
+      tags: [auth]
+      summary: Check whether a password reset token is still valid
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Validity of the token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResetTokenValidity"
+
+  /pipelines:
+    get:
+      operationId: listPipelines
+      tags: [pipelines]
+      summary: List pipelines
+      responses:
+        "200":
+          description: Pipelines
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pipeline"
+
+  /board:
+    get:
+      operationId: getBoard
+      tags: [pipelines]
+      summary: Get a pipeline's kanban board with stages and deals
+      parameters:
+        - name: pipelineId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: ownerId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: filters
+          in: query
+          required: false
+          description: base64url-encoded JSON filter group (AND/OR DSL), the same one the deals list takes
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Board
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"
+        "404":
+          description: Pipeline not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /stages:
+    get:
+      operationId: listStages
+      tags: [stages]
+      summary: List stages, optionally filtered by pipeline
+      parameters:
+        - name: pipelineId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Stages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Stage"
+
+  /deals:
+    get:
+      operationId: listDeals
+      tags: [deals]
+      summary: List deals with optional filters
+      parameters:
+        - name: view
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pipeline, list, forecast]
+        - name: pipelineId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: stageId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          description: >
+            Status lens. Omitted defaults to open-only in the working views. `all` drops the status filter entirely (archived deals are still excluded unless the `archived` lens is on).
+          schema:
+            type: string
+            enum: [open, won, lost, deleted, all]
+        - name: ownerId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: personId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: organizationId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: q
+          in: query
+          required: false
+          description: Free-text search across deal title, contact name/email/phone, and organization name.
+          schema:
+            type: string
+        - name: archived
+          in: query
+          required: false
+          description: true = only archived deals; omitted/false = archived excluded.
+          schema:
+            type: boolean
+        - name: rotting
+          in: query
+          required: false
+          description: true = only rotting deals (open, idle past the stage's rotting threshold). Omitted/false = no rotting filter.
+          schema:
+            type: boolean
+        - name: filters
+          in: query
+          required: false
+          description: base64url-encoded JSON filter group (AND/OR DSL)
+          schema:
+            type: string
+        - name: sort
+          in: query
+          required: false
+          description: "Sort spec as field:direction, e.g. value:desc. Allowed fields: title, value, addTime, wonTime, stageChangeTime, stage, organization, owner, status, utmKeyword."
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+        - name: columns
+          in: query
+          required: false
+          description: Comma-separated list of visible column keys (hint only).
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DealList"
+    post:
+      operationId: createDeal
+      tags: [deals]
+      summary: Create a deal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DealInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deal"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /deals/{id}:
+    get:
+      operationId: getDeal
+      tags: [deals]
+      summary: Get a deal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deal"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      operationId: updateDeal
+      tags: [deals]
+      summary: Update a deal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DealUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deal"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteDeal
+      tags: [deals]
+      summary: Delete a deal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /deals/count:
+    get:
+      operationId: countDeals
+      tags: [deals]
+      summary: Count deals matching filters
+      parameters:
+        - name: view
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pipeline, list, forecast]
+        - name: pipelineId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: stageId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          description: >
+            Status lens. Omitted defaults to open-only in the working views. `all` drops the status filter entirely (archived deals are still excluded unless the `archived` lens is on).
+          schema:
+            type: string
+            enum: [open, won, lost, deleted, all]
+        - name: ownerId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: personId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: organizationId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: q
+          in: query
+          required: false
+          description: Free-text search across deal title, contact name/email/phone, and organization name.
+          schema:
+            type: string
+        - name: archived
+          in: query
+          required: false
+          description: true = only archived deals; omitted/false = archived excluded.
+          schema:
+            type: boolean
+        - name: rotting
+          in: query
+          required: false
+          description: true = only rotting deals (open, idle past the stage's rotting threshold). Omitted/false = no rotting filter.
+          schema:
+            type: boolean
+        - name: filters
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deal count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DealCount"
+
+  /deals/forecast:
+    get:
+      operationId: forecastDeals
+      tags: [deals]
+      summary: Forecast deals grouped by expected close month (Asia/Riyadh)
+      parameters:
+        - name: pipelineId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: ownerId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [open, won, lost, deleted]
+        - name: filters
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Forecast buckets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DealForecast"
+
+  /deals/stage-summary:
+    get:
+      operationId: getDealStageSummary
+      tags: [deals]
+      summary: Per-stage open-deal count and value for one pipeline
+      parameters:
+        - name: pipelineId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: ownerId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [open, won, lost, deleted]
+      responses:
+        "200":
+          description: Stage summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DealStageSummary"
+
+  /deals/labels:
+    get:
+      operationId: listDealLabels
+      tags: [deals]
+      summary: Distinct labels in use across all deals
+      responses:
+        "200":
+          description: Sorted list of distinct label names
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /deals/owners:
+    get:
+      operationId: listDealOwners
+      tags: [deals]
+      summary: Distinct owners that have at least one (non-deleted) deal
+      responses:
+        "200":
+          description: Owners that currently have deals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DealOwner"
+
+  /deals/{id}/merge:
+    post:
+      operationId: mergeDeal
+      tags: [deals]
+      summary: Merge this (duplicate) deal into another deal
+      description: >
+        Moves the duplicate's activities, notes, files and audit history to the primary, fills the primary's empty fields from the duplicate, unions labels, then archives the duplicate with a pointer to the survivor. Pass preview=true to see what would happen without changing anything.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DealMergeInput"
+      responses:
+        "200":
+          description: Merge result (or preview)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DealMergeResult"
+        "404":
+          description: Deal not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: One of the deals cannot be merged (archived, deleted, or already merged)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /deals/bulk:
+    post:
+      operationId: bulkUpdateDeals
+      tags: [deals]
+      summary: Bulk update or delete deals
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DealBulkInput"
+      responses:
+        "200":
+          description: Bulk result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DealBulkResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /deals/{id}/history:
+    get:
+      operationId: getDealHistory
+      tags: [deals]
+      summary: Change history and time-in-stage for a deal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deal history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DealHistory"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /changes/feed:
+    get:
+      operationId: getChangesFeed
+      tags: [changes]
+      summary: Recent changes made by others on records the current user owns
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+      responses:
+        "200":
+          description: Changes feed, newest first
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChangesFeed"
+
+  /funnel:
+    get:
+      operationId: getPipelineFunnel
+      tags: [pipelines]
+      summary: Stage conversion funnel and average time-in-stage for a pipeline
+      parameters:
+        - name: pipelineId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: from
+          in: query
+          required: false
+          description: Inclusive start date (YYYY-MM-DD, Asia/Riyadh) scoping deal entry
+          schema:
+            type: string
+        - name: to
+          in: query
+          required: false
+          description: Inclusive end date (YYYY-MM-DD, Asia/Riyadh) scoping deal entry
+          schema:
+            type: string
+        - name: ownerId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Pipeline funnel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PipelineFunnel"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /deal-views:
+    get:
+      operationId: listDealViews
+      tags: [views]
+      summary: List saved views for the current user
+      responses:
+        "200":
+          description: Views
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DealView"
+    post:
+      operationId: createDealView
+      tags: [views]
+      summary: Create a saved view
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DealViewInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DealView"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /deal-views/{id}:
+    patch:
+      operationId: updateDealView
+      tags: [views]
+      summary: Update a saved view
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DealViewUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DealView"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteDealView
+      tags: [views]
+      summary: Delete a saved view
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /user-preferences:
+    get:
+      operationId: getUserPreferences
+      tags: [user-preferences]
+      summary: Get the current user's preferences document
+      responses:
+        "200":
+          description: Preferences (an empty object if the user has none saved yet)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPreferences"
+    patch:
+      operationId: updateUserPreferences
+      tags: [user-preferences]
+      summary: Deep-merge a partial patch into the current user's preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserPreferencesPatch"
+      responses:
+        "200":
+          description: The updated preferences document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPreferences"
+    delete:
+      operationId: resetUserPreferences
+      tags: [user-preferences]
+      summary: Reset the current user's preferences document back to empty
+      responses:
+        "204":
+          description: Reset
+
+  /persons:
+    get:
+      operationId: listPersons
+      tags: [persons]
+      summary: List people
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: People
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Person"
+    post:
+      operationId: createPerson
+      tags: [persons]
+      summary: Create a person
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PersonInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /persons/{id}:
+    get:
+      operationId: getPerson
+      tags: [persons]
+      summary: Get a person
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Person
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      operationId: updatePerson
+      tags: [persons]
+      summary: Update a person
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PersonUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Person"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deletePerson
+      tags: [persons]
+      summary: Delete a person
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /persons/{id}/history:
+    get:
+      operationId: getPersonHistory
+      tags: [persons]
+      summary: Change history for a person
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Person history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityHistoryResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /organizations:
+    get:
+      operationId: listOrganizations
+      tags: [organizations]
+      summary: List organizations
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Organizations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Organization"
+    post:
+      operationId: createOrganization
+      tags: [organizations]
+      summary: Create an organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrganizationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organization"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /organizations/{id}:
+    get:
+      operationId: getOrganization
+      tags: [organizations]
+      summary: Get an organization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Organization
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organization"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      operationId: updateOrganization
+      tags: [organizations]
+      summary: Update an organization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrganizationUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organization"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteOrganization
+      tags: [organizations]
+      summary: Delete an organization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /organizations/{id}/history:
+    get:
+      operationId: getOrganizationHistory
+      tags: [organizations]
+      summary: Change history for an organization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Organization history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityHistoryResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /activities:
+    get:
+      operationId: listActivities
+      tags: [activities]
+      summary: List activities with optional filters
+      parameters:
+        - name: done
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [call, meeting, email, task, deadline, whatsapp]
+        - name: ownerId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: dealId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: personId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: orgId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: includeDrafts
+          in: query
+          required: false
+          description: Also return the caller's own drafts. Other users' drafts are never returned.
+          schema:
+            type: boolean
+        - name: draftsOnly
+          in: query
+          required: false
+          description: >-
+            Return only the caller's own drafts (excludes all posted activities). Use for a dedicated drafts list; unlike includeDrafts, drafts are not buried under the posted-activity window.
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          required: false
+          description: Max rows to return. Defaults to a safe cap so the endpoint is never unbounded.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 500
+      responses:
+        "200":
+          description: Activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Activity"
+    post:
+      operationId: createActivity
+      tags: [activities]
+      summary: Create an activity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /activities/bulk:
+    post:
+      operationId: bulkUpdateActivities
+      tags: [activities]
+      summary: Bulk mark done/open or delete activities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityBulkInput"
+      responses:
+        "200":
+          description: Bulk result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityBulkResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /activities/{id}:
+    get:
+      operationId: getActivity
+      tags: [activities]
+      summary: Get an activity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Activity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      operationId: updateActivity
+      tags: [activities]
+      summary: Update an activity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteActivity
+      tags: [activities]
+      summary: Delete an activity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /activities/{id}/no-reply:
+    post:
+      operationId: markActivityNoReply
+      tags: [activities]
+      summary: Close an open activity as no reply and open a copy of it
+      description: >-
+        Refused (409) on a completed activity, a draft, or an activity on an archived deal.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The closed activity and its open copy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityNoReplyResult"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Not an open activity that can be marked no reply
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /activities/{id}/post:
+    post:
+      operationId: postActivity
+      tags: [activities]
+      summary: Publish a draft activity (idempotent for already-posted entries)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Posted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /activities/{id}/history:
+    get:
+      operationId: getActivityHistory
+      tags: [activities]
+      summary: Change history for an activity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Activity history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityHistoryResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /notes:
+    get:
+      operationId: listNotes
+      tags: [notes]
+      summary: List notes with optional filters
+      parameters:
+        - name: dealId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: personId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: orgId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: includeDrafts
+          in: query
+          required: false
+          description: Also return the caller's own drafts. Other users' drafts are never returned.
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          required: false
+          description: Max rows to return. Defaults to a safe cap so the endpoint is never unbounded.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 200
+      responses:
+        "200":
+          description: Notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+    post:
+      operationId: createNote
+      tags: [notes]
+      summary: Create a note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /notes/{id}:
+    patch:
+      operationId: updateNote
+      tags: [notes]
+      summary: Update a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteNote
+      tags: [notes]
+      summary: Delete a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /notes/{id}/post:
+    post:
+      operationId: postNote
+      tags: [notes]
+      summary: Publish a draft note (idempotent for already-posted entries)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Posted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /notes/{id}/history:
+    get:
+      operationId: getNoteHistory
+      tags: [notes]
+      summary: Change history for a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Note history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityHistoryResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /notes/{id}/reactions/{emoji}:
+    put:
+      operationId: addNoteReaction
+      tags: [notes]
+      summary: Add the current user's emoji reaction to a posted comment (idempotent)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: emoji
+          in: path
+          required: true
+          description: A single emoji from the server-curated reaction set.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Reaction added (or already present)
+        "400":
+          description: Emoji is not in the curated set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Note not found or not visible
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: removeNoteReaction
+      tags: [notes]
+      summary: Remove the current user's emoji reaction (idempotent)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: emoji
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Reaction removed (or already absent)
+        "400":
+          description: Emoji is not in the curated set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Note not found or not visible
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: The current user's notifications, newest first
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        "200":
+          description: Notifications with the unread count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationsResponse"
+
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark every notification of the current user as read
+      responses:
+        "204":
+          description: Marked read
+
+  /notifications/{id}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark one notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Marked read
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /notifications/{id}/dismiss:
+    post:
+      operationId: dismissNotification
+      tags: [notifications]
+      summary: Clear one notification from the bell and the home card
+      description: >
+        Explicit dismissal, distinct from marking read. A dismissed notification leaves both the bell and the home card.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Dismissed
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /notification-rules:
+    get:
+      operationId: listNotificationRules
+      tags: [notifications]
+      summary: Notification rules an admin has authored, with my subscription state
+      description: >
+        Every active automation whose action posts an in-app notification, each merged with the CURRENT user's subscription so the settings page renders from one call. Readable by any authenticated user — authoring stays on the admin automations endpoints.
+      responses:
+        "200":
+          description: Rules with my subscription state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationRulesResponse"
+
+  /notification-rules/automations:
+    put:
+      operationId: setAutomationNotifications
+      tags: [notifications]
+      summary: One on/off for every automation that posts an in-app notification
+      description: >
+        Subscribes or unsubscribes the CURRENT user to every active notification-posting automation at once.
+
+        This replaces the per-rule subscription list. That list was the single worst piece of this feature's design: creating a rule in Settings looked like finishing, and a second identical-looking toggle on a different page was what actually made it deliver — with nothing on the first page saying so. One switch, and the lead time belongs to the automation rather than to each subscriber.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutomationNotificationsInput"
+      responses:
+        "200":
+          description: New state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutomationNotificationsState"
+
+  /notification-rules/{id}/subscription:
+    put:
+      operationId: setNotificationSubscription
+      tags: [notifications]
+      summary: Subscribe, unsubscribe, or retune one rule for the current user
+      description: >
+        Idempotent upsert keyed on (current user, rule) — calling it twice is the same as calling it once. The recipient is always the session user; there is no way to set a subscription for someone else. Setting active=false keeps the row so the user's tuning survives being switched off.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationSubscriptionInput"
+      responses:
+        "200":
+          description: The saved subscription state for this rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationRule"
+        "400":
+          description: Params rejected — an unknown key, or one the rule does not declare tunable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No such notification rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /users/options:
+    get:
+      operationId: listUserOptions
+      tags: [users]
+      summary: Slim user directory for assignment pickers (any authenticated user)
+      responses:
+        "200":
+          description: Active users (id, name, team) for pickers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserOption"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List users (admin)
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create a user (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get a user (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update a user (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: >
+            Deactivation blocked — a self-lockout guard, the last-active-admin guard, or (when needsReassign is true) the target user still owns open deals and reassignOwnerId is required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDeactivateConflict"
+
+  /users/{id}/resend-credentials:
+    post:
+      operationId: resendUserCredentials
+      tags: [users]
+      summary: Reset a user's password and email them fresh login details (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Login details emailed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Email delivery is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /search:
+    get:
+      operationId: search
+      tags: [search]
+      summary: Global search across deals, contacts, activities and notes
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: types
+          in: query
+          required: false
+          description: Optional comma-separated record types to scope the search to.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results, grouped by module / record type
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResults"
+
+  /labels:
+    get:
+      operationId: listLabels
+      tags: [labels]
+      summary: Known labels for an entity (registered and in-use), for pickers
+      parameters:
+        - name: entity
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [deal, person, organization]
+      responses:
+        "200":
+          description: Labels sorted by display order, then name
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LabelOption"
+
+  /lost-reasons:
+    get:
+      operationId: listLostReasons
+      tags: [labels]
+      summary: Active managed lost reasons for the mark-as-lost picker
+      responses:
+        "200":
+          description: Active reasons in display order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LostReason"
+
+  /admin/labels:
+    get:
+      operationId: adminListLabels
+      tags: [labels]
+      summary: Label registry for an entity, with usage counts (admin)
+      parameters:
+        - name: entity
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [deal, person, organization]
+      responses:
+        "200":
+          description: Registered labels plus unregistered labels found in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLabelList"
+    post:
+      operationId: createLabel
+      tags: [labels]
+      summary: Register a label (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LabelInput"
+      responses:
+        "200":
+          description: The registered label
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Label"
+        "409":
+          description: A label with this name already exists for the entity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/labels/{id}:
+    patch:
+      operationId: updateLabel
+      tags: [labels]
+      summary: Rename or recolor a label (admin)
+      description: >
+        Renaming rewrites the stored label on every record that carries it. Renaming onto an existing label's name merges the two: records are rewritten to the surviving label and this label is removed.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LabelUpdate"
+      responses:
+        "200":
+          description: The surviving label (the merge target when merged)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Label"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteLabel
+      tags: [labels]
+      summary: Delete a label and strip it from every record (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LabelDeletionResult"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/lost-reasons:
+    get:
+      operationId: adminListLostReasons
+      tags: [labels]
+      summary: Managed lost reasons with usage, plus unmanaged reasons on deals (admin)
+      responses:
+        "200":
+          description: Managed reasons and unmanaged reasons found on deals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLostReasonList"
+    post:
+      operationId: createLostReason
+      tags: [labels]
+      summary: Add a managed lost reason (admin)
+      description: Re-adding an archived reason's name reactivates it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LostReasonInput"
+      responses:
+        "200":
+          description: The managed reason
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostReason"
+        "409":
+          description: An active reason with this name already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/lost-reasons/{id}:
+    patch:
+      operationId: updateLostReason
+      tags: [labels]
+      summary: Rename, reorder, or archive a lost reason (admin)
+      description: Renaming rewrites the reason on every deal that carries it.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LostReasonUpdate"
+      responses:
+        "200":
+          description: The updated reason
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostReason"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Another reason already uses this name
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteLostReason
+      tags: [labels]
+      summary: Delete a lost reason; deal history is untouched (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /teams:
+    get:
+      operationId: listTeams
+      tags: [teams]
+      summary: Active teams for pickers and future assignment rules
+      responses:
+        "200":
+          description: Active teams in display order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeamOption"
+
+  /admin/teams:
+    get:
+      operationId: adminListTeams
+      tags: [teams]
+      summary: All teams with their members (admin)
+      responses:
+        "200":
+          description: Every team (active and archived) with its members
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminTeamList"
+    post:
+      operationId: createTeam
+      tags: [teams]
+      summary: Create a team (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeamInput"
+      responses:
+        "200":
+          description: The created team
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Team"
+
+  /admin/teams/{id}:
+    patch:
+      operationId: updateTeam
+      tags: [teams]
+      summary: Rename, reorder, or archive a team (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeamUpdate"
+      responses:
+        "200":
+          description: The updated team
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Team"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteTeam
+      tags: [teams]
+      summary: Delete a team; members are left unassigned (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/assignment-rules:
+    get:
+      operationId: adminListAssignmentRules
+      tags: [assignment-rules]
+      summary: All auto-assignment rules with resolved target names (admin)
+      responses:
+        "200":
+          description: Every rule (both trigger events), ordered by priority
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAssignmentRuleList"
+    post:
+      operationId: createAssignmentRule
+      tags: [assignment-rules]
+      summary: Create an auto-assignment rule (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentRuleInput"
+      responses:
+        "200":
+          description: The created rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignmentRule"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/assignment-rules/{id}:
+    patch:
+      operationId: updateAssignmentRule
+      tags: [assignment-rules]
+      summary: Edit a rule — name, conditions, target, active (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentRuleUpdate"
+      responses:
+        "200":
+          description: The updated rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssignmentRule"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteAssignmentRule
+      tags: [assignment-rules]
+      summary: Delete a rule (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/assignment-rules/reorder:
+    post:
+      operationId: reorderAssignmentRules
+      tags: [assignment-rules]
+      summary: Set rule priority order within one trigger event (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentRuleReorder"
+      responses:
+        "204":
+          description: Reordered
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/automations:
+    get:
+      operationId: adminListAutomations
+      tags: [automations]
+      summary: All deal automations (admin)
+      responses:
+        "200":
+          description: Every automation (both trigger events), ordered by priority
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAutomationList"
+    post:
+      operationId: createAutomation
+      tags: [automations]
+      summary: Create a deal automation (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutomationInput"
+      responses:
+        "200":
+          description: The created automation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automation"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/automations/{id}:
+    patch:
+      operationId: updateAutomation
+      tags: [automations]
+      summary: Edit an automation — name, conditions, action, active (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutomationUpdate"
+      responses:
+        "200":
+          description: The updated automation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Automation"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteAutomation
+      tags: [automations]
+      summary: Delete an automation (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/automations/reorder:
+    post:
+      operationId: reorderAutomations
+      tags: [automations]
+      summary: Set automation priority order within one trigger event (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutomationReorder"
+      responses:
+        "204":
+          description: Reordered
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/automations/templates:
+    get:
+      operationId: listAutomationTemplates
+      tags: [automations]
+      summary: List saved automation templates (admin, org-wide)
+      responses:
+        "200":
+          description: Saved templates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutomationTemplateList"
+    post:
+      operationId: createAutomationTemplate
+      tags: [automations]
+      summary: Save an automation's setup as a reusable template (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutomationTemplateInput"
+      responses:
+        "200":
+          description: Created template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutomationTemplate"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/automations/templates/{id}:
+    patch:
+      operationId: updateAutomationTemplate
+      tags: [automations]
+      summary: Update a saved automation template (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutomationTemplateInput"
+      responses:
+        "200":
+          description: Updated template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutomationTemplate"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteAutomationTemplate
+      tags: [automations]
+      summary: Delete a saved automation template (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/automations/slack-channels:
+    get:
+      operationId: listSlackChannels
+      tags: [automations]
+      summary: List the workspace's Slack channels for the channel picker (admin)
+      description: >
+        Returns available=false with an empty list when the Slack bot token is missing the channels:read/groups:read scope or Slack can't be reached, so the wizard falls back to a free-text channel field.
+      responses:
+        "200":
+          description: Channel list (or a graceful unavailable result)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SlackChannelList"
+
+  /admin/automations/chips:
+    get:
+      operationId: getAutomationChips
+      tags: [automations]
+      summary: Get the message field-chip config for the automation wizard (admin)
+      responses:
+        "200":
+          description: Chip config (defaults when never customized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageChipConfig"
+    put:
+      operationId: updateAutomationChips
+      tags: [automations]
+      summary: Replace the message field-chip config (admin, org-wide)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageChipConfig"
+      responses:
+        "200":
+          description: Saved config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageChipConfig"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/automations/test:
+    post:
+      operationId: testAutomationMessage
+      tags: [automations]
+      summary: Send a private test of a Slack-message automation to yourself (admin)
+      description: >
+        Renders the message against sample data and delivers it privately to the requesting user (never to the real channel), so setup can be verified without notifying anyone else.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestAutomationInput"
+      responses:
+        "200":
+          description: Test delivery result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestAutomationResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /import/organizations:
+    post:
+      operationId: importOrganizations
+      tags: [import]
+      summary: Bulk-create organizations from a parsed import batch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrganizationImportInput"
+      responses:
+        "200":
+          description: Import result (per-row outcome)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /import/persons:
+    post:
+      operationId: importPersons
+      tags: [import]
+      summary: Bulk-create persons from a parsed import batch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PersonImportInput"
+      responses:
+        "200":
+          description: Import result (per-row outcome)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /import/deals:
+    post:
+      operationId: importDeals
+      tags: [import]
+      summary: Bulk-create deals from a parsed import batch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DealImportInput"
+      responses:
+        "200":
+          description: Import result (per-row outcome)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # ---- Insights (self-serve analytics) ------------------------------------
+  /insights/dashboards:
+    get:
+      operationId: listInsightsDashboards
+      tags: [insights]
+      summary: List dashboards visible to the current user (own + shared)
+      responses:
+        "200":
+          description: Dashboards with their widgets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InsightsDashboard"
+    post:
+      operationId: createInsightsDashboard
+      tags: [insights]
+      summary: Create a dashboard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsightsDashboardInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightsDashboard"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /insights/dashboards/{id}:
+    patch:
+      operationId: updateInsightsDashboard
+      tags: [insights]
+      summary: Update a dashboard (name, section, layout, board filters, share)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsightsDashboardUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightsDashboard"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: >
+            Stale write rejected: `expectedUpdatedAt` was sent and no longer matches (the dashboard changed elsewhere). Reload and retry.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteInsightsDashboard
+      tags: [insights]
+      summary: Delete a dashboard (widgets cascade; library widgets survive)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /insights/dashboards/{id}/duplicate:
+    post:
+      operationId: duplicateInsightsDashboard
+      tags: [insights]
+      summary: Duplicate a dashboard (widgets and layout copied, owned by caller)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsightsDuplicateDashboardInput"
+      responses:
+        "201":
+          description: The new dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightsDashboard"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /insights/dashboards/starter:
+    post:
+      operationId: createInsightsStarterDashboard
+      tags: [insights]
+      summary: Seed the starter dashboard (one transaction, server-owned content)
+      description: >
+        Creates the example "Overview" board — dashboard, widgets and packed layout land atomically, so a failure never strands a half-built board.
+      responses:
+        "201":
+          description: The seeded dashboard with its widgets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightsDashboard"
+
+  /insights/widgets:
+    get:
+      operationId: listInsightsWidgets
+      tags: [insights]
+      summary: List the caller's widgets (library = widgets with null dashboardId)
+      parameters:
+        - name: library
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: When true, return only library widgets (no dashboard placement).
+      responses:
+        "200":
+          description: Widgets owned by the caller
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InsightsWidget"
+    post:
+      operationId: createInsightsWidget
+      tags: [insights]
+      summary: Create a widget (dashboardId omitted = save to library)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsightsWidgetInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightsWidget"
+        "400":
+          description: Invalid input (spec fails validation or allow-list)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /insights/widgets/{id}:
+    patch:
+      operationId: updateInsightsWidget
+      tags: [insights]
+      summary: Update a widget (name, spec, viz, dashboard placement)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsightsWidgetUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightsWidget"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteInsightsWidget
+      tags: [insights]
+      summary: Delete a widget
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /insights/widgets/{id}/duplicate:
+    post:
+      operationId: duplicateInsightsWidget
+      tags: [insights]
+      summary: Duplicate a widget ("save as"), optionally onto a dashboard
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsightsDuplicateWidgetInput"
+      responses:
+        "201":
+          description: The new widget
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightsWidget"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /insights/query:
+    post:
+      operationId: runInsightsQuery
+      tags: [insights]
+      summary: Run a widget query spec (board filters intersected server-side)
+      description: >
+        Widgets are pure config: this one generic endpoint executes any widget spec, so user-built widgets need no API changes. The spec's field names are validated against the per-scope allow-list; board filters compose with the spec's own filters by intersection (narrow, never widen).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsightsQueryRequest"
+      responses:
+        "200":
+          description: Query result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightsQueryResult"
+        "400":
+          description: Invalid spec (unknown field, bad filters, bad options)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Analytics is saturated — retry shortly
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /insights/query-batch:
+    post:
+      operationId: runInsightsQueryBatch
+      tags: [insights]
+      summary: Run several widget queries in one round trip
+      description: >
+        One request per board load instead of one per widget. Items succeed or fail independently; `results` aligns to `items` by index, each entry carrying either `result` or `error`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsightsQueryBatchRequest"
+      responses:
+        "200":
+          description: Per-item results, aligned by index
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightsQueryBatchResult"
+        "400":
+          description: Invalid batch envelope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /insights/fields:
+    get:
+      operationId: listInsightsFields
+      tags: [insights]
+      summary: Allow-listed fields for a scope (drives builder + filter UIs)
+      parameters:
+        - name: scope
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [deals, activities, organizations]
+      responses:
+        "200":
+          description: Field catalog for the scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InsightsFieldList"
+        "400":
+          description: Unknown scope
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    # ---- Bulk import -------------------------------------------------------
+    # Row shapes for the importer. These are intentionally separate from the
+    # create-form *Input schemas so the importer can carry extra fields (e.g.
+    # ownerId on persons/organizations) and evolve independently.
+    OrganizationImportRow:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        address:
+          type: string
+        ownerId:
+          type: integer
+
+    PersonImportRow:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+        phone:
+          type: string
+        jobTitle:
+          type: string
+        organizationId:
+          type: integer
+        ownerId:
+          type: integer
+
+    DealImportRow:
+      type: object
+      required: [title, pipelineId, stageId]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        value:
+          type: number
+        currency:
+          type: string
+        pipelineId:
+          type: integer
+        stageId:
+          type: integer
+        ownerId:
+          type: integer
+        personId:
+          type: integer
+        organizationId:
+          type: integer
+        # Inline contact creation. When personId is absent but personPhone is
+        # set, the deal importer links an existing contact with that phone (the
+        # most recently created one if several match) or creates a new contact
+        # from personPhone/personName/personEmail and links it. personName is
+        # optional — a blank name falls back to a placeholder, since the phone
+        # is what identifies the contact.
+        personName:
+          type: string
+        personPhone:
+          type: string
+        personEmail:
+          type: string
+        expectedCloseDate:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+
+    OrganizationImportInput:
+      type: object
+      required: [rows]
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationImportRow"
+
+    PersonImportInput:
+      type: object
+      required: [rows]
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/PersonImportRow"
+
+    DealImportInput:
+      type: object
+      required: [rows]
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/DealImportRow"
+
+    ImportError:
+      type: object
+      required: [row, message]
+      properties:
+        # 1-based index of the offending row within the submitted batch.
+        row:
+          type: integer
+        message:
+          type: string
+        field:
+          type: ["string", "null"]
+
+    ImportResult:
+      type: object
+      required: [created, failed, errors]
+      properties:
+        created:
+          type: integer
+        failed:
+          type: integer
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportError"
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+
+    ForgotPasswordInput:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          minLength: 1
+
+    ResetPasswordInput:
+      type: object
+      required: [token, password]
+      properties:
+        token:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 8
+
+    MessageResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+
+    ResetTokenValidity:
+      type: object
+      required: [valid]
+      properties:
+        valid:
+          type: boolean
+
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - isAdmin
+        - activeFlag
+        - defaultCurrency
+        - timezoneName
+        - created
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        roleId:
+          type: ["integer", "null"]
+        isAdmin:
+          type: boolean
+        activeFlag:
+          type: boolean
+        defaultCurrency:
+          type: string
+        timezoneName:
+          type: string
+        created:
+          type: string
+          format: date-time
+        lastLogin:
+          type: ["string", "null"]
+          format: date-time
+        teamId:
+          type: ["integer", "null"]
+        teamName:
+          type: ["string", "null"]
+
+    UserOption:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        teamName:
+          type: ["string", "null"]
+
+    UserInput:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 8
+        phone:
+          type: string
+        roleId:
+          type: integer
+        isAdmin:
+          type: boolean
+        activeFlag:
+          type: boolean
+        defaultCurrency:
+          type: string
+        timezoneName:
+          type: string
+        sendInvite:
+          type: boolean
+          description: Email the new user their login details (defaults to true).
+
+    UserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 8
+        phone:
+          type: ["string", "null"]
+        roleId:
+          type: ["integer", "null"]
+        isAdmin:
+          type: boolean
+        activeFlag:
+          type: boolean
+        defaultCurrency:
+          type: string
+        timezoneName:
+          type: string
+        teamId:
+          type: ["integer", "null"]
+        reassignOwnerId:
+          type: integer
+          description: >
+            When deactivating a user who still owns open deals, the id of the active user to reassign those deals to. Required only after the server responds 409 needsReassign on a first attempt.
+
+    UserDeactivateConflict:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        needsReassign:
+          type: boolean
+        openDealsCount:
+          type: integer
+
+    Pipeline:
+      type: object
+      required: [id, name, adminOnlyReassign]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        adminOnlyReassign:
+          type: boolean
+          description: >-
+            Only an admin may change the owner of a deal in this pipeline (moving a deal into or out of it with an owner change included). Moving deals between pipelines stays open to everyone.
+
+    Stage:
+      type: object
+      required: [id, name, pipelineId, orderIndex, probability]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        pipelineId:
+          type: integer
+        orderIndex:
+          type: integer
+        probability:
+          type: integer
+        rottingDays:
+          type: ["integer", "null"]
+
+    Organization:
+      type: object
+      required: [id, name, addTime, updateTime]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        address:
+          type: ["string", "null"]
+        ownerId:
+          type: ["integer", "null"]
+        ownerName:
+          type: ["string", "null"]
+        labels:
+          type: ["array", "null"]
+          items:
+            type: string
+        dealCount:
+          type: ["integer", "null"]
+        personCount:
+          type: ["integer", "null"]
+        addTime:
+          type: string
+          format: date-time
+        updateTime:
+          type: string
+          format: date-time
+
+    OrganizationInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        address:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+
+    OrganizationUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        address:
+          type: ["string", "null"]
+        labels:
+          type: ["array", "null"]
+          items:
+            type: string
+
+    Person:
+      type: object
+      required: [id, name, addTime, updateTime]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        jobTitle:
+          type: ["string", "null"]
+        organizationId:
+          type: ["integer", "null"]
+        organizationName:
+          type: ["string", "null"]
+        ownerId:
+          type: ["integer", "null"]
+        ownerName:
+          type: ["string", "null"]
+        labels:
+          type: ["array", "null"]
+          items:
+            type: string
+        dealCount:
+          type: ["integer", "null"]
+        addTime:
+          type: string
+          format: date-time
+        updateTime:
+          type: string
+          format: date-time
+
+    PersonInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        phone:
+          type: string
+        email:
+          type: string
+        jobTitle:
+          type: string
+        organizationId:
+          type: integer
+        labels:
+          type: array
+          items:
+            type: string
+
+    PersonUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        phone:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        jobTitle:
+          type: ["string", "null"]
+        organizationId:
+          type: ["integer", "null"]
+        labels:
+          type: ["array", "null"]
+          items:
+            type: string
+
+    DealOwner:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        teamName:
+          type: ["string", "null"]
+
+    Deal:
+      type: object
+      required:
+        - id
+        - title
+        - value
+        - currency
+        - status
+        - pipelineId
+        - stageId
+        - addTime
+        - updateTime
+        - isRotting
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        value:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [open, won, lost, deleted]
+        ownerId:
+          type: ["integer", "null"]
+        ownerName:
+          type: ["string", "null"]
+        creatorUserId:
+          type: ["integer", "null"]
+        personId:
+          type: ["integer", "null"]
+        personName:
+          type: ["string", "null"]
+        organizationId:
+          type: ["integer", "null"]
+        organizationName:
+          type: ["string", "null"]
+        pipelineId:
+          type: integer
+        stageId:
+          type: integer
+        stageName:
+          type: ["string", "null"]
+        visibleTo:
+          type: ["string", "null"]
+        lostReason:
+          type: ["string", "null"]
+        lostReasonNote:
+          type: ["string", "null"]
+        archived:
+          type: boolean
+          description: Archived deals are read-only and hidden from working views.
+        archiveTime:
+          type: ["string", "null"]
+          format: date-time
+        mergedIntoDealId:
+          type: ["integer", "null"]
+          description: >-
+            Set when this deal was merged into another one, pointing at the surviving deal. Its activities, notes and files now live there. A deal carrying this can never be merged again, so the UI must surface it rather than let a merge attempt discover it.
+        comments:
+          type: ["string", "null"]
+        expectedCloseDate:
+          type: ["string", "null"]
+        utmSource:
+          type: ["string", "null"]
+        utmMedium:
+          type: ["string", "null"]
+        utmCampaign:
+          type: ["string", "null"]
+        utmKeyword:
+          type: ["string", "null"]
+        adName:
+          type: ["string", "null"]
+        gclid:
+          type: ["string", "null"]
+        fbclid:
+          type: ["string", "null"]
+        labels:
+          type: ["array", "null"]
+          items:
+            type: string
+        addTime:
+          type: string
+          format: date-time
+        updateTime:
+          type: string
+          format: date-time
+        stageChangeTime:
+          type: ["string", "null"]
+          format: date-time
+        wonTime:
+          type: ["string", "null"]
+          format: date-time
+        lostTime:
+          type: ["string", "null"]
+          format: date-time
+        closeTime:
+          type: ["string", "null"]
+          format: date-time
+        isRotting:
+          type: boolean
+        lastActivityTime:
+          type: ["string", "null"]
+          format: date-time
+        nextActivityDueDate:
+          description: >-
+            Earliest due date (YYYY-MM-DD) among the deal's open, non-draft activities — its next action item. Null when nothing is scheduled. A plain calendar date (no time); the client derives the overdue/today/scheduled/none priority colour from it.
+          type: ["string", "null"]
+        customFields:
+          description: >-
+            Resolved values for the custom-field columns requested via the `columns` query param, keyed by field key. Absent unless requested.
+          type: ["object", "null"]
+          additionalProperties: true
+
+    DealInput:
+      type: object
+      required: [title, pipelineId, stageId]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        value:
+          type: number
+          minimum: 0
+        currency:
+          type: string
+        pipelineId:
+          type: integer
+        stageId:
+          type: integer
+        ownerId:
+          type: integer
+        personId:
+          type: integer
+        organizationId:
+          type: integer
+        expectedCloseDate:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        source:
+          type: string
+          enum: [ui, import, api, automation]
+
+    DealUpdate:
+      type: object
+      properties:
+        archived:
+          type: boolean
+          description: >-
+            true archives the deal (read-only, hidden from working views); false restores it to its previous state. The only field accepted on an already-archived deal is archived=false.
+        title:
+          type: string
+          minLength: 1
+        value:
+          type: number
+          minimum: 0
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [open, won, lost, deleted]
+        ownerId:
+          type: ["integer", "null"]
+        personId:
+          type: ["integer", "null"]
+        organizationId:
+          type: ["integer", "null"]
+        pipelineId:
+          type: integer
+        stageId:
+          type: integer
+        lostReason:
+          type: ["string", "null"]
+        lostReasonNote:
+          type: ["string", "null"]
+        comments:
+          type: ["string", "null"]
+        expectedCloseDate:
+          type: ["string", "null"]
+        labels:
+          type: ["array", "null"]
+          items:
+            type: string
+
+    DealList:
+      type: object
+      required: [items, page, limit, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Deal"
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+
+    DealCount:
+      type: object
+      required: [count]
+      properties:
+        count:
+          type: integer
+
+    DealForecastBucket:
+      type: object
+      required: [month, label, count, totalValue, weightedValue]
+      properties:
+        month:
+          type: string
+        label:
+          type: string
+        count:
+          type: integer
+        totalValue:
+          type: number
+        weightedValue:
+          type: number
+
+    DealForecast:
+      type: object
+      required: [buckets, totalCount, totalValue, totalWeightedValue]
+      properties:
+        buckets:
+          type: array
+          items:
+            $ref: "#/components/schemas/DealForecastBucket"
+        totalCount:
+          type: integer
+        totalValue:
+          type: number
+        totalWeightedValue:
+          type: number
+
+    DealStageSummaryBucket:
+      type: object
+      required: [stageId, name, orderIndex, count, totalValue, weightedValue]
+      properties:
+        stageId:
+          type: integer
+        name:
+          type: string
+        orderIndex:
+          type: integer
+        count:
+          type: integer
+        totalValue:
+          type: number
+        weightedValue:
+          type: number
+
+    DealStageSummary:
+      type: object
+      required: [stages, totalCount, totalValue, totalWeightedValue]
+      properties:
+        stages:
+          type: array
+          items:
+            $ref: "#/components/schemas/DealStageSummaryBucket"
+        totalCount:
+          type: integer
+        totalValue:
+          type: number
+        totalWeightedValue:
+          type: number
+
+    ChangesFeedItem:
+      type: object
+      required: [id, entityType, fieldKey, targetType, targetId, source, changedAt]
+      properties:
+        id:
+          type: integer
+        entityType:
+          type: string
+          enum: [deal, person, organization, note]
+        fieldKey:
+          type: string
+        oldValue:
+          type: ["object", "null"]
+          properties:
+            id: {}
+            label:
+              type: ["string", "null"]
+        newValue:
+          type: ["object", "null"]
+          properties:
+            id: {}
+            label:
+              type: ["string", "null"]
+        targetType:
+          description: >
+            Where the change is rendered and linked.
+          type: string
+          enum: [deal, person, organization]
+        targetId:
+          type: integer
+        targetTitle:
+          type: ["string", "null"]
+        changedByName:
+          type: ["string", "null"]
+        source:
+          type: string
+          enum: [ui, import, api, automation]
+        changedAt:
+          type: string
+          format: date-time
+
+    ChangesFeed:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChangesFeedItem"
+
+    DealMergeInput:
+      type: object
+      required: [intoDealId]
+      properties:
+        intoDealId:
+          type: integer
+          description: The primary deal that survives the merge.
+        preview:
+          type: boolean
+          description: When true, nothing changes — the response shows what a merge would do.
+
+    DealMergeResult:
+      type: object
+      required: [primaryId, duplicateId, filledFields, moved, preview]
+      properties:
+        primaryId:
+          type: integer
+        duplicateId:
+          type: integer
+        preview:
+          type: boolean
+        filledFields:
+          type: array
+          items:
+            type: string
+        moved:
+          type: object
+          required: [activities, notes, files, historyEvents]
+          properties:
+            activities:
+              type: integer
+            notes:
+              type: integer
+            files:
+              type: integer
+            historyEvents:
+              type: integer
+
+    DealBulkInput:
+      type: object
+      required: [ids, action]
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+          minItems: 1
+        action:
+          type: string
+          enum: [set_stage, set_owner, delete]
+        stageId:
+          type: ["integer", "null"]
+        ownerId:
+          type: ["integer", "null"]
+
+    DealBulkResult:
+      type: object
+      required: [updatedCount]
+      properties:
+        updatedCount:
+          type: integer
+        blocked:
+          type: array
+          description: >
+            set_stage only — deals that were NOT moved because the target stage's required fields are still empty on them. The client prompts for the fields per deal and retries.
+          items:
+            $ref: "#/components/schemas/DealBulkBlocked"
+
+    DealBulkBlocked:
+      type: object
+      required: [id, title, missingRequiredFields]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        missingRequiredFields:
+          type: array
+          items:
+            type: object
+            required: [key, label]
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+
+    ChangeValueSnapshot:
+      type: object
+      properties:
+        id:
+          type: ["integer", "string", "null"]
+        label:
+          type: ["string", "null"]
+
+    ChangeEvent:
+      type: object
+      required: [id, entityType, entityId, fieldKey, changedAt, source]
+      properties:
+        id:
+          type: integer
+        entityType:
+          type: string
+          enum: [deal, person, organization, activity, pipeline, stage, note, label]
+        entityId:
+          type: integer
+        fieldKey:
+          type: string
+        oldValue:
+          oneOf:
+            - $ref: "#/components/schemas/ChangeValueSnapshot"
+            - type: "null"
+        newValue:
+          oneOf:
+            - $ref: "#/components/schemas/ChangeValueSnapshot"
+            - type: "null"
+        changedBy:
+          type: ["integer", "null"]
+        changedByName:
+          type: ["string", "null"]
+        changedAt:
+          type: string
+          format: date-time
+        source:
+          type: string
+          enum: [ui, import, api, automation]
+
+    DealStageDuration:
+      type: object
+      required: [enteredAt, durationSeconds]
+      properties:
+        stageId:
+          type: ["integer", "null"]
+        stageName:
+          type: ["string", "null"]
+        enteredAt:
+          type: string
+          format: date-time
+        exitedAt:
+          type: ["string", "null"]
+          format: date-time
+        durationSeconds:
+          type: number
+
+    DealHistory:
+      type: object
+      required: [events, stageDurations]
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChangeEvent"
+        stageDurations:
+          type: array
+          items:
+            $ref: "#/components/schemas/DealStageDuration"
+
+    EntityHistoryResponse:
+      type: object
+      required: [events]
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChangeEvent"
+
+    PipelineFunnelStage:
+      type: object
+      required:
+        - stageId
+        - stageName
+        - orderIndex
+        - enteredCount
+        - reachedLaterCount
+        - wonCount
+        - conversionRate
+      properties:
+        stageId:
+          type: integer
+        stageName:
+          type: string
+        orderIndex:
+          type: integer
+        enteredCount:
+          type: integer
+        reachedLaterCount:
+          type: integer
+        wonCount:
+          type: integer
+        conversionRate:
+          type: number
+        avgTimeInStageSeconds:
+          type: ["number", "null"]
+
+    PipelineFunnel:
+      type: object
+      required: [pipelineId, pipelineName, totalEntered, stages]
+      properties:
+        pipelineId:
+          type: integer
+        pipelineName:
+          type: string
+        totalEntered:
+          type: integer
+        stages:
+          type: array
+          items:
+            $ref: "#/components/schemas/PipelineFunnelStage"
+
+    DealViewDefinition:
+      type: object
+      properties:
+        view:
+          type: ["string", "null"]
+        pipelineId:
+          type: ["integer", "null"]
+        ownerId:
+          type: ["integer", "null"]
+        status:
+          type: ["string", "null"]
+        sort:
+          type: ["string", "null"]
+        filters:
+          type: ["string", "null"]
+        visibleColumns:
+          type: array
+          items:
+            type: string
+        columnOrder:
+          type: array
+          items:
+            type: string
+
+    DealView:
+      type: object
+      required: [id, name, definition, created, updated]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        definition:
+          $ref: "#/components/schemas/DealViewDefinition"
+        created:
+          type: string
+          format: date-time
+        updated:
+          type: string
+          format: date-time
+
+    DealViewInput:
+      type: object
+      required: [name, definition]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        definition:
+          $ref: "#/components/schemas/DealViewDefinition"
+
+    DealViewUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        definition:
+          $ref: "#/components/schemas/DealViewDefinition"
+
+    TableLayoutPreference:
+      type: object
+      description: >
+        Column visibility/order/sizing (and page size, where the table paginates client-side) for a single table.
+      properties:
+        visibility:
+          type: object
+          additionalProperties:
+            type: boolean
+        order:
+          type: array
+          items:
+            type: string
+        sizing:
+          type: object
+          additionalProperties:
+            type: number
+        sorting:
+          type: array
+          items:
+            type: object
+            required: [id, desc]
+            properties:
+              id:
+                type: string
+              desc:
+                type: boolean
+        pageSize:
+          type: integer
+
+    UserPreferencesLooseObject:
+      type: object
+      additionalProperties: true
+
+    UserPreferencesKanbanSort:
+      type: object
+      required: [id, dir]
+      properties:
+        id:
+          type: string
+        dir:
+          type: string
+          enum: [asc, desc]
+
+    UserPreferencesRecentlyViewedItem:
+      type: object
+      description: >
+        One visited deal/organization/person, keyed for de-dup by `href` (the record's detail-page path).
+      required: [type, href, title, viewedAt]
+      properties:
+        type:
+          type: string
+          enum: [deal, organization, person]
+        href:
+          type: string
+        title:
+          type: string
+        viewedAt:
+          type: string
+
+    UserPreferencesLayout:
+      type: object
+      properties:
+        sidebarCollapsed:
+          type: boolean
+        theme:
+          type: string
+          enum: [light, dark]
+        locale:
+          type: string
+          enum: [en, ar]
+          description: >
+            UI language. Absent means the user has never chosen, which reads as English -- there is no OS-preference fallback the way there is for `theme`, because a browser's Accept-Language says nothing about which language someone wants to do their job in.
+
+    UserPreferencesDealsState:
+      type: object
+      description: >
+        Snapshot of the Deals workspace URL state (see DealsUrlState), restored when /deals is opened with no explicit query params.
+      properties:
+        view:
+          type: ["string", "null"]
+        pipelineId:
+          type: ["integer", "null"]
+        ownerId:
+          type: ["integer", "null"]
+        status:
+          type: ["string", "null"]
+        sort:
+          type: ["string", "null"]
+        filters:
+          type: ["string", "null"]
+        archived:
+          type: boolean
+        limit:
+          type: integer
+
+    UserPreferencesDeals:
+      type: object
+      properties:
+        defaultViewId:
+          description: A deal_views id to auto-apply when /deals has no query params.
+          type: ["integer", "null"]
+        lastState:
+          $ref: "#/components/schemas/UserPreferencesDealsState"
+        openMode:
+          description: >
+            Whether clicking into a deal opens the full `/deal/:id` page or a right-side drawer over the current view.
+          type: string
+          enum: ["page", "drawer"]
+
+    UserPreferencesNotificationChannels:
+      type: object
+      description: Per-category channel toggles. Missing/malformed reads as on (see notify()'s channelPrefsFor).
+      properties:
+        email:
+          type: boolean
+        inApp:
+          type: boolean
+
+    UserPreferencesNotifications:
+      type: object
+      description: >
+        Per-category notification channel preferences. Categories are fixed (assignment/mention); each is optional and defaults to all-on when absent. mention.inApp is stored but inert — that row is written by mentions.ts, not notify().
+      properties:
+        assignment:
+          $ref: "#/components/schemas/UserPreferencesNotificationChannels"
+        mention:
+          $ref: "#/components/schemas/UserPreferencesNotificationChannels"
+
+    UserPreferences:
+      type: object
+      description: >
+        Namespaced per-user preferences document. Every property is optional; a user with nothing saved yet gets back an empty object.
+
+        Namespace conventions (no separate schema version field — the shape below IS the version, and jsonb storage means every change here is additive-safe by construction): - Add a new namespace or leaf field as OPTIONAL. Existing documents
+          simply lack it until the client writes one; never add `required`.
+        - Never change an existing field's meaning or type in place — add a
+          new field/namespace instead and leave the old one alone (or have
+          the client stop reading it, same as the legacy-localStorage
+          migration this replaced). Old stored documents are never rewritten
+          on deploy.
+        - A `Record<string, T>` namespace (filterPanels/viewModes/tables) is
+          keyed by a short semantic surface id (e.g. "deals",
+          "persons") chosen once and then stable — renaming a key
+          orphans whatever data was stored under the old one.
+        - PATCH deep-merges (see UserPreferencesPatch): objects merge
+          recursively, arrays/scalars replace, `null` deletes a key. New
+          namespaces don't need new endpoints or migrations, just new
+          properties here + `pnpm --filter @workspace/api-spec run codegen`.
+      properties:
+        layout:
+          $ref: "#/components/schemas/UserPreferencesLayout"
+        filterPanels:
+          type: object
+          description: Filter-panel collapsed state per surface, e.g. "persons", "organizations".
+          additionalProperties:
+            type: boolean
+        viewModes:
+          type: object
+          description: Current view mode per surface, e.g. deals "pipeline" | "list".
+          additionalProperties:
+            type: string
+        filters:
+          type: object
+          description: Saved live filter state per surface, e.g. "persons", "organizations".
+          additionalProperties:
+            $ref: "#/components/schemas/UserPreferencesLooseObject"
+        kanbanSorts:
+          type: object
+          description: Saved kanban/card sort mode per surface.
+          additionalProperties:
+            $ref: "#/components/schemas/UserPreferencesKanbanSort"
+        tables:
+          type: object
+          description: Column layout per table, e.g. "deals", "persons".
+          additionalProperties:
+            $ref: "#/components/schemas/TableLayoutPreference"
+        deals:
+          $ref: "#/components/schemas/UserPreferencesDeals"
+        notifications:
+          $ref: "#/components/schemas/UserPreferencesNotifications"
+        recentlyViewed:
+          type: array
+          maxItems: 15
+          description: Most-recently-viewed deal/organization/person records, most recent first.
+          items:
+            $ref: "#/components/schemas/UserPreferencesRecentlyViewedItem"
+        resetEpoch:
+          type: integer
+          description: >
+            Server-managed, read-only. Bumped only by DELETE /user-preferences (never by an ordinary PATCH). A PATCH sent with the X-Preferences-Reset-Epoch header set to a stale value (i.e. a write computed before a reset that has since happened elsewhere) is rejected with 409 instead of being applied — see UpdateUserPreferences. Not settable via PATCH; any value sent in the body is ignored.
+
+    UserPreferencesPatch:
+      type: object
+      description: >
+        Partial update, deep-merged into the stored document: objects merge recursively, arrays/scalars replace, and null removes the key (a whole namespace, or a single entry of a map like `tables`/`filterPanels`).
+      properties:
+        layout:
+          oneOf:
+            - $ref: "#/components/schemas/UserPreferencesLayout"
+            - type: "null"
+        filterPanels:
+          type: object
+          additionalProperties:
+            oneOf:
+              - type: boolean
+              - type: "null"
+        viewModes:
+          type: object
+          additionalProperties:
+            oneOf:
+              - type: string
+              - type: "null"
+        filters:
+          oneOf:
+            - type: object
+              additionalProperties: true
+            - type: "null"
+        kanbanSorts:
+          type: object
+          additionalProperties:
+            oneOf:
+              - $ref: "#/components/schemas/UserPreferencesKanbanSort"
+              - type: "null"
+        tables:
+          type: object
+          additionalProperties:
+            oneOf:
+              - $ref: "#/components/schemas/TableLayoutPreference"
+              - type: "null"
+        deals:
+          oneOf:
+            - $ref: "#/components/schemas/UserPreferencesDeals"
+            - type: "null"
+        notifications:
+          oneOf:
+            - $ref: "#/components/schemas/UserPreferencesNotifications"
+            - type: "null"
+        recentlyViewed:
+          oneOf:
+            - type: array
+              maxItems: 15
+              items:
+                $ref: "#/components/schemas/UserPreferencesRecentlyViewedItem"
+            - type: "null"
+
+    Board:
+      type: object
+      required: [pipelineId, pipelineName, totalCount, totalValue, columns]
+      properties:
+        pipelineId:
+          type: integer
+        pipelineName:
+          type: string
+        totalCount:
+          type: integer
+        totalValue:
+          type: number
+        columns:
+          type: array
+          items:
+            $ref: "#/components/schemas/BoardColumn"
+
+    BoardColumn:
+      type: object
+      required: [stageId, stageName, orderIndex, count, sum, deals]
+      properties:
+        stageId:
+          type: integer
+        stageName:
+          type: string
+        orderIndex:
+          type: integer
+        count:
+          type: integer
+        sum:
+          type: number
+        deals:
+          type: array
+          items:
+            $ref: "#/components/schemas/Deal"
+
+    Activity:
+      type: object
+      required: [id, subject, type, done, busy, draft, addTime, updateTime]
+      properties:
+        id:
+          type: integer
+        subject:
+          type: string
+        type:
+          type: string
+          enum: [call, meeting, email, task, deadline, whatsapp]
+        note:
+          type: ["string", "null"]
+        done:
+          type: boolean
+        busy:
+          type: boolean
+        dueDate:
+          type: ["string", "null"]
+        dueTime:
+          type: ["string", "null"]
+        duration:
+          type: ["string", "null"]
+        markedAsDoneTime:
+          type: ["string", "null"]
+          format: date-time
+        outcome:
+          type: ["string", "null"]
+          enum: [successful, no_reply, null]
+          description: >-
+            How a completed activity went; "no_reply" is written only by the no-reply action.
+        dealId:
+          type: ["integer", "null"]
+        dealTitle:
+          type: ["string", "null"]
+        personId:
+          type: ["integer", "null"]
+        personName:
+          type: ["string", "null"]
+        orgId:
+          type: ["integer", "null"]
+        dealOrganizationId:
+          type: ["integer", "null"]
+          description: >-
+            CRM organization of this activity's deal (deals.organizationId). Distinct from `orgId` above, which is the activity's own org link.
+        dealOrganizationName:
+          type: ["string", "null"]
+        ownerId:
+          type: ["integer", "null"]
+        ownerName:
+          type: ["string", "null"]
+        creatorUserId:
+          type: ["integer", "null"]
+        draft:
+          type: boolean
+          description: Unpublished draft, visible only to its creator.
+        addTime:
+          type: string
+          format: date-time
+        updateTime:
+          type: string
+          format: date-time
+
+    ActivityNoReplyResult:
+      type: object
+      required: [closed, followUp]
+      properties:
+        closed:
+          $ref: "#/components/schemas/Activity"
+        followUp:
+          $ref: "#/components/schemas/Activity"
+
+    ActivityInput:
+      type: object
+      required: [subject, type]
+      properties:
+        subject:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          enum: [call, meeting, email, task, deadline, whatsapp]
+        note:
+          type: string
+        done:
+          type: boolean
+        dueDate:
+          type: string
+        dueTime:
+          type: string
+        duration:
+          type: string
+        dealId:
+          type: integer
+        personId:
+          type: integer
+        orgId:
+          type: integer
+        ownerId:
+          type: integer
+        draft:
+          type: boolean
+          description: Create as an unpublished draft (visible only to the creator until posted).
+        outcome:
+          type: string
+          enum: [successful, no_reply]
+          description: >-
+            Log something that already happened, closed on creation: "successful" (they replied; `note` must hold their response) or "no_reply". Only for contact types (call, meeting, email, whatsapp). Omitted means planned work, created open.
+
+    ActivityUpdate:
+      type: object
+      properties:
+        subject:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          enum: [call, meeting, email, task, deadline, whatsapp]
+        note:
+          type: ["string", "null"]
+        done:
+          type: boolean
+        dueDate:
+          type: ["string", "null"]
+        dueTime:
+          type: ["string", "null"]
+        duration:
+          type: ["string", "null"]
+        dealId:
+          type: ["integer", "null"]
+        personId:
+          type: ["integer", "null"]
+        orgId:
+          type: ["integer", "null"]
+        ownerId:
+          type: ["integer", "null"]
+
+    ActivityBulkInput:
+      type: object
+      required: [ids, action]
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+          minItems: 1
+        action:
+          type: string
+          enum: [mark_done, mark_open, delete]
+
+    ActivityBulkResult:
+      type: object
+      required: [updatedCount]
+      properties:
+        updatedCount:
+          type: integer
+          description: >
+            Rows actually changed — already-done rows are skipped by mark_done (and already-open ones by mark_open), and drafts are never touched by any bulk action.
+
+    Note:
+      type: object
+      required: [id, content, activeFlag, draft, addTime, updateTime]
+      properties:
+        id:
+          type: integer
+        content:
+          type: string
+        dealId:
+          type: ["integer", "null"]
+        personId:
+          type: ["integer", "null"]
+        orgId:
+          type: ["integer", "null"]
+        userId:
+          type: ["integer", "null"]
+        userName:
+          type: ["string", "null"]
+        pinnedToDealFlag:
+          type: boolean
+        pinnedToPersonFlag:
+          type: boolean
+        pinnedToOrganizationFlag:
+          type: boolean
+        activeFlag:
+          type: boolean
+        draft:
+          type: boolean
+          description: Unpublished draft, visible only to its creator.
+        addTime:
+          type: string
+          format: date-time
+        updateTime:
+          type: string
+          format: date-time
+        reactions:
+          type: array
+          description: >-
+            Per-emoji reaction aggregate for posted comments. Populated on the list response; absent/empty on single-note responses.
+          items:
+            $ref: "#/components/schemas/NoteReactionSummary"
+        previews:
+          type: array
+          description: >-
+            Cached link-preview cards for http(s) URLs in this comment (list response only). Only successfully-unfurled URLs appear.
+          items:
+            $ref: "#/components/schemas/LinkPreviewCard"
+
+    LinkPreviewCard:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+        title:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        siteName:
+          type: ["string", "null"]
+
+    NoteReactionSummary:
+      type: object
+      required: [emoji, count, reactedByMe, reactorNames]
+      properties:
+        emoji:
+          type: string
+        count:
+          type: integer
+        reactedByMe:
+          type: boolean
+        reactorNames:
+          type: array
+          items:
+            type: string
+
+    NoteInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+        dealId:
+          type: integer
+        personId:
+          type: integer
+        orgId:
+          type: integer
+        pinnedToDealFlag:
+          type: boolean
+        pinnedToPersonFlag:
+          type: boolean
+        pinnedToOrganizationFlag:
+          type: boolean
+        draft:
+          type: boolean
+          description: Create as an unpublished draft (visible only to the creator until posted).
+
+    NoteUpdate:
+      type: object
+      properties:
+        content:
+          type: string
+        pinnedToDealFlag:
+          type: boolean
+        pinnedToPersonFlag:
+          type: boolean
+        pinnedToOrganizationFlag:
+          type: boolean
+        activeFlag:
+          type: boolean
+
+    NotificationsResponse:
+      type: object
+      required: [items, unreadCount]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+        unreadCount:
+          type: integer
+
+    Notification:
+      type: object
+      required: [id, type, message, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        message:
+          type: string
+        actorId:
+          type: ["integer", "null"]
+        actorName:
+          type: ["string", "null"]
+        entityType:
+          type: ["string", "null"]
+        entityId:
+          type: ["integer", "null"]
+        noteId:
+          type: ["integer", "null"]
+        readAt:
+          type: ["string", "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    NotificationRulesResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotificationRule"
+
+    AutomationNotificationsInput:
+      type: object
+      required: [active]
+      properties:
+        active:
+          type: boolean
+          description: Whether automation notifications should reach you.
+    AutomationNotificationsState:
+      type: object
+      required: [active, ruleCount]
+      properties:
+        active:
+          type: boolean
+          description: Whether automation notifications now reach you.
+        ruleCount:
+          type: integer
+          description: Active notification-posting rules this applied to.
+    NotificationRule:
+      type: object
+      required: [id, name, triggerEvent, tunable, subscribed]
+      properties:
+        id:
+          description: The underlying automation's id.
+          type: integer
+        name:
+          type: string
+        triggerEvent:
+          type: string
+          enum: [deal_added, deal_updated]
+        message:
+          description: The rule's message template, shown as a preview.
+          type: ["string", "null"]
+        tunable:
+          description: Knobs this rule lets each subscriber override.
+          type: array
+          items:
+            type: string
+            enum: [days]
+        subscribed:
+          description: Whether the CURRENT user has this rule switched on.
+          type: boolean
+        params:
+          description: >
+            The current user's own tuning. Null when unsubscribed or untuned. Only keys listed in `tunable` are ever present.
+          type: ["object", "null"]
+          additionalProperties: true
+
+    # Named Input rather than ...Body: orval derives a Zod const named
+    # `<operationId>Body` for every request body, so a component called
+    # SetNotificationSubscriptionBody collides with it and the barrel export
+    # becomes ambiguous. Same reason AutomationInput is not CreateAutomationBody.
+    NotificationSubscriptionInput:
+      type: object
+      required: [active]
+      properties:
+        active:
+          type: boolean
+        params:
+          description: >
+            Tuning for this user only. Keys must be declared in the rule's `tunable` list or the request is rejected.
+          type: ["object", "null"]
+          additionalProperties: true
+
+    SearchResults:
+      type: object
+      required: [query, total, groups]
+      properties:
+        query:
+          type: string
+        total:
+          type: integer
+        groups:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResultGroup"
+
+    SearchResultGroup:
+      type: object
+      required: [module, recordType, label, results]
+      properties:
+        module:
+          type: string
+          description: Tab / module the records live in (e.g. "Deals", "Contacts").
+        recordType:
+          type: string
+          enum: [deal, person, organization, activity, note, file]
+        label:
+          type: string
+          description: Display heading for the group (e.g. "Deals", "People").
+        hasMore:
+          type: boolean
+          description: True when more records matched than the per-group cap.
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResultItem"
+
+    SearchResultItem:
+      type: object
+      required: [key, recordType, module, recordId, title, field, matchValue, href]
+      properties:
+        key:
+          type: string
+          description: Stable unique key for the result (recordType + id + field).
+        recordType:
+          type: string
+          enum: [deal, person, organization, activity, note, file]
+        module:
+          type: string
+          description: Module / tab name the record belongs to.
+        recordId:
+          type: integer
+        title:
+          type: string
+          description: Primary label of the matched record.
+        field:
+          type: string
+          description: Human label of the field that matched (e.g. "Email").
+        matchValue:
+          type: string
+          description: The matching value (snippet) from the matched field.
+        relatedName:
+          type: ["string", "null"]
+          description: Related record name (e.g. organization for a person).
+        timestamp:
+          type: ["string", "null"]
+          format: date-time
+        ownerName:
+          type: ["string", "null"]
+          description: Owner / actor associated with the record.
+        href:
+          type: string
+          description: In-app path to navigate to (may carry tab / focus params).
+
+    Label:
+      type: object
+      required: [id, entity, name, color, orderIndex, usageCount]
+      properties:
+        id:
+          type: integer
+        entity:
+          type: string
+          enum: [deal, person, organization]
+        name:
+          type: string
+        color:
+          type: string
+          description: Named palette token (e.g. "teal"); the client maps it to theme classes.
+        orderIndex:
+          type: integer
+        usageCount:
+          type: integer
+          description: How many records of the entity currently carry this label.
+
+    LabelOption:
+      type: object
+      required: [name, color]
+      properties:
+        id:
+          type: ["integer", "null"]
+          description: Registry id; null for an in-use label nobody has registered yet.
+        name:
+          type: string
+        color:
+          type: string
+
+    LabelInput:
+      type: object
+      required: [entity, name]
+      properties:
+        entity:
+          type: string
+          enum: [deal, person, organization]
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        color:
+          type: string
+
+    LabelUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        color:
+          type: string
+        orderIndex:
+          type: integer
+
+    UnregisteredLabel:
+      type: object
+      required: [name, usageCount]
+      properties:
+        name:
+          type: string
+        usageCount:
+          type: integer
+
+    AdminLabelList:
+      type: object
+      required: [labels, unregistered]
+      properties:
+        labels:
+          type: array
+          items:
+            $ref: "#/components/schemas/Label"
+        unregistered:
+          type: array
+          description: Labels present on records but absent from the registry.
+          items:
+            $ref: "#/components/schemas/UnregisteredLabel"
+
+    LabelDeletionResult:
+      type: object
+      required: [removedFrom]
+      properties:
+        removedFrom:
+          type: integer
+          description: Number of records the label was stripped from.
+
+    LostReason:
+      type: object
+      required: [id, name, active, orderIndex, usageCount]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        active:
+          type: boolean
+        orderIndex:
+          type: integer
+        usageCount:
+          type: integer
+          description: Deals currently carrying this reason.
+
+    LostReasonInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+
+    LostReasonUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        active:
+          type: boolean
+        orderIndex:
+          type: integer
+
+    UnmanagedLostReason:
+      type: object
+      required: [name, usageCount]
+      properties:
+        name:
+          type: string
+        usageCount:
+          type: integer
+
+    AdminLostReasonList:
+      type: object
+      required: [reasons, unmanaged]
+      properties:
+        reasons:
+          type: array
+          items:
+            $ref: "#/components/schemas/LostReason"
+        unmanaged:
+          type: array
+          description: Reasons found on deals that aren't in the managed list.
+          items:
+            $ref: "#/components/schemas/UnmanagedLostReason"
+
+    TeamMember:
+      type: object
+      required: [id, name, email]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+
+    TeamOption:
+      type: object
+      required: [id, name, active, orderIndex, memberCount]
+      description: >
+        A team for pickers and assignment rules — no member list (which would expose member emails to every authenticated user). The full member list is admin-only, via GET /admin/teams.
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        active:
+          type: boolean
+        orderIndex:
+          type: integer
+        pipedriveId:
+          type: ["integer", "null"]
+        memberCount:
+          type: integer
+
+    Team:
+      type: object
+      required: [id, name, active, orderIndex, memberCount, members]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        active:
+          type: boolean
+        orderIndex:
+          type: integer
+        pipedriveId:
+          type: ["integer", "null"]
+          description: Set when the team was imported from Pipedrive; null for native teams.
+        memberCount:
+          type: integer
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/TeamMember"
+
+    TeamInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+
+    TeamUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        active:
+          type: boolean
+        orderIndex:
+          type: integer
+
+    AdminTeamList:
+      type: object
+      required: [teams]
+      properties:
+        teams:
+          type: array
+          items:
+            $ref: "#/components/schemas/Team"
+
+    AssignmentRuleCondition:
+      type: object
+      description: A single field/operator/value leaf of the conditions tree.
+      required: [field, operator]
+      properties:
+        field:
+          type: string
+        operator:
+          type: string
+        value:
+          description: >
+            Scalar (string/number/boolean/null) or a two-element array for range operators; absent for presence operators. The server re-validates the whole tree with the shared deals-filter schema.
+      additionalProperties: false
+
+    AssignmentRuleConditionGroup:
+      type: object
+      description: The FilterGroup DSL — a combinator over conditions and nested groups.
+      required: [combinator, conditions]
+      properties:
+        combinator:
+          type: string
+          enum: [and, or]
+        conditions:
+          type: array
+          items:
+            oneOf:
+              - $ref: "#/components/schemas/AssignmentRuleCondition"
+              - $ref: "#/components/schemas/AssignmentRuleConditionGroup"
+
+    AssignmentRule:
+      type: object
+      required: [id, name, triggerEvent, conditions, targetTeamId, targetTeamName, targetAssigneeId, targetAssigneeName, takeoverOwned, priority, active]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        triggerEvent:
+          type: string
+          enum: [deal_added, deal_updated]
+        conditions:
+          $ref: "#/components/schemas/AssignmentRuleConditionGroup"
+        targetTeamId:
+          type: ["integer", "null"]
+        targetTeamName:
+          type: ["string", "null"]
+        targetAssigneeId:
+          type: ["integer", "null"]
+          description: null means round-robin across the target team's active members.
+        targetAssigneeName:
+          type: ["string", "null"]
+        takeoverOwned:
+          type: boolean
+          description: >
+            Deal-updated rules only — when true this rule may reassign a deal that already has an owner (still only on a real pipeline/stage change, never when the request sets the owner itself).
+        priority:
+          type: integer
+        active:
+          type: boolean
+
+    AssignmentRuleInput:
+      type: object
+      required: [name, triggerEvent, conditions, targetTeamId]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        triggerEvent:
+          type: string
+          enum: [deal_added, deal_updated]
+        conditions:
+          $ref: "#/components/schemas/AssignmentRuleConditionGroup"
+        targetTeamId:
+          type: integer
+        targetAssigneeId:
+          type: ["integer", "null"]
+        takeoverOwned:
+          type: boolean
+
+    AssignmentRuleUpdate:
+      type: object
+      description: All fields optional; only supplied fields are changed.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        triggerEvent:
+          type: string
+          enum: [deal_added, deal_updated]
+        conditions:
+          $ref: "#/components/schemas/AssignmentRuleConditionGroup"
+        targetTeamId:
+          type: integer
+        targetAssigneeId:
+          type: ["integer", "null"]
+        takeoverOwned:
+          type: boolean
+        active:
+          type: boolean
+
+    AssignmentRuleReorder:
+      type: object
+      required: [triggerEvent, orderedIds]
+      properties:
+        triggerEvent:
+          type: string
+          enum: [deal_added, deal_updated]
+        orderedIds:
+          type: array
+          items:
+            type: integer
+
+    AdminAssignmentRuleList:
+      type: object
+      required: [rules]
+      properties:
+        rules:
+          type: array
+          items:
+            $ref: "#/components/schemas/AssignmentRule"
+
+    AutomationAssignee:
+      type: object
+      description: >
+        Who receives the automation's output. kind=deal_owner uses the deal's owner; kind=user targets userId; kind=auto (create_deal owner only) leaves the new deal to the deal_added assignment rules.
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [deal_owner, user, auto]
+        userId:
+          type: integer
+      additionalProperties: false
+
+    AutomationActionConfig:
+      type: object
+      description: >
+        Shape is discriminated by the automation's actionType — create_activity uses subject/activityType/dueInDays/assignee; create_deal uses pipelineId/stageId/titleTemplate/owner; call_webhook uses url/method/includeDeal/secretHeaderName. The server re-validates the config strictly against the actionType at write time (same loose-here, strict-there pattern as assignment-rule conditions).
+      properties:
+        subject:
+          type: string
+        activityType:
+          type: string
+          enum: [call, meeting, email, task, deadline, whatsapp]
+        dueInDays:
+          type: integer
+          minimum: 0
+        assignee:
+          $ref: "#/components/schemas/AutomationAssignee"
+        pipelineId:
+          type: integer
+        stageId:
+          type: ["integer", "null"]
+          description: null = first live stage of the pipeline.
+        titleTemplate:
+          type: ["string", "null"]
+          description: null/empty copies the source title; "{title}" interpolates it.
+        owner:
+          $ref: "#/components/schemas/AutomationAssignee"
+        url:
+          type: string
+          description: call_webhook — outbound https URL.
+        method:
+          type: string
+          enum: [POST, PUT]
+        includeDeal:
+          type: boolean
+          description: call_webhook — include the deal row in the payload.
+        secretHeaderName:
+          type: ["string", "null"]
+          description: >
+            call_webhook — header to send the integration webhook secret under; null = no auth header.
+        destination:
+          $ref: "#/components/schemas/SlackDestination"
+          description: send_slack_message — where the message goes.
+        message:
+          type: string
+          description: >
+            send_slack_message and post_notification — body, with {{deal.*}} placeholders interpolated at run time. post_notification also resolves {{params.*}} per subscriber.
+        tunable:
+          description: >
+            post_notification — knobs each subscriber may override on their own subscription. Absent/empty = every subscriber gets the rule identically.
+          type: array
+          items:
+            type: string
+            enum: [days]
+
+    SlackDestination:
+      type: object
+      description: >
+        send_slack_message destination, discriminated by `kind`: channel (channel name/id, blank = the webhook's fixed channel), deal_owner (DM the triggering deal's owner), or user (DM a specific CRM user).
+      properties:
+        kind:
+          type: string
+          enum: [channel, deal_owner, user]
+        channel:
+          type: string
+        userId:
+          type: integer
+      required: [kind]
+
+    Automation:
+      type: object
+      required: [id, name, triggerEvent, conditions, actionType, actionConfig, priority, active]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        triggerEvent:
+          type: string
+          enum: [deal_added, deal_updated]
+        conditions:
+          $ref: "#/components/schemas/AssignmentRuleConditionGroup"
+        actionType:
+          type: string
+          enum: [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
+        actionConfig:
+          $ref: "#/components/schemas/AutomationActionConfig"
+        priority:
+          type: integer
+        active:
+          type: boolean
+
+    AutomationInput:
+      type: object
+      required: [name, triggerEvent, conditions, actionType, actionConfig]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        triggerEvent:
+          type: string
+          enum: [deal_added, deal_updated]
+        conditions:
+          $ref: "#/components/schemas/AssignmentRuleConditionGroup"
+        actionType:
+          type: string
+          enum: [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
+        actionConfig:
+          $ref: "#/components/schemas/AutomationActionConfig"
+
+    AutomationUpdate:
+      type: object
+      description: >
+        All fields optional; only supplied fields are changed. actionType and actionConfig must be supplied together when the type changes.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        triggerEvent:
+          type: string
+          enum: [deal_added, deal_updated]
+        conditions:
+          $ref: "#/components/schemas/AssignmentRuleConditionGroup"
+        actionType:
+          type: string
+          enum: [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
+        actionConfig:
+          $ref: "#/components/schemas/AutomationActionConfig"
+        active:
+          type: boolean
+
+    AutomationReorder:
+      type: object
+      required: [triggerEvent, orderedIds]
+      properties:
+        triggerEvent:
+          type: string
+          enum: [deal_added, deal_updated]
+        orderedIds:
+          type: array
+          items:
+            type: integer
+
+    AdminAutomationList:
+      type: object
+      required: [automations]
+      properties:
+        automations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Automation"
+
+    AutomationTemplate:
+      type: object
+      description: >
+        A saved, org-wide automation template. Prefills the wizard with the same conditions/action shape as a real automation.
+      required: [id, name, description, triggerEvent, conditions, actionType, actionConfig]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        emoji:
+          type: ["string", "null"]
+        triggerEvent:
+          type: string
+          enum: [deal_added, deal_updated]
+        conditions:
+          $ref: "#/components/schemas/AssignmentRuleConditionGroup"
+        actionType:
+          type: string
+          enum: [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
+        actionConfig:
+          $ref: "#/components/schemas/AutomationActionConfig"
+        createdByName:
+          type: ["string", "null"]
+          description: Display name of whoever saved it (null if that user is gone).
+
+    AutomationTemplateInput:
+      type: object
+      required: [name, triggerEvent, conditions, actionType, actionConfig]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: string
+          maxLength: 300
+        emoji:
+          type: ["string", "null"]
+          maxLength: 8
+        triggerEvent:
+          type: string
+          enum: [deal_added, deal_updated]
+        conditions:
+          $ref: "#/components/schemas/AssignmentRuleConditionGroup"
+        actionType:
+          type: string
+          enum: [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
+        actionConfig:
+          $ref: "#/components/schemas/AutomationActionConfig"
+
+    AutomationTemplateList:
+      type: object
+      required: [templates]
+      properties:
+        templates:
+          type: array
+          items:
+            $ref: "#/components/schemas/AutomationTemplate"
+
+    SlackChannel:
+      type: object
+      required: [id, name, isPrivate, isMember]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        isPrivate:
+          type: boolean
+        isMember:
+          type: boolean
+
+    SlackChannelList:
+      type: object
+      required: [available, channels]
+      properties:
+        available:
+          type: boolean
+          description: >
+            false when the bot token lacks the channels:read scope or Slack is unreachable — the wizard then falls back to a free-text field.
+        channels:
+          type: array
+          items:
+            $ref: "#/components/schemas/SlackChannel"
+
+    MessageChip:
+      type: object
+      description: >
+        One clickable field button in the wizard's message editor. `insert` is what clicking adds to the message — either a data placeholder like {{deal.title}} (validated against the server whitelist) or a plain text snippet (e.g. an emoji phrase).
+      required: [insert, label]
+      properties:
+        insert:
+          type: string
+          minLength: 1
+          maxLength: 120
+        label:
+          type: string
+          minLength: 1
+          maxLength: 40
+        labelAr:
+          type: string
+          maxLength: 40
+
+    MessageChipConfig:
+      type: object
+      required: [deal]
+      properties:
+        deal:
+          type: array
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/MessageChip"
+
+    TestAutomationInput:
+      type: object
+      required: [triggerEvent, actionType, actionConfig]
+      properties:
+        triggerEvent:
+          type: string
+          enum: [deal_added, deal_updated]
+        actionType:
+          type: string
+          enum: [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
+        actionConfig:
+          $ref: "#/components/schemas/AutomationActionConfig"
+
+    TestAutomationResult:
+      type: object
+      required: [delivered, detail]
+      properties:
+        delivered:
+          type: boolean
+        detail:
+          type: string
+          description: Human-readable outcome, shown in the wizard toast.
+    # ---- Insights (self-serve analytics) -----------------------------------
+    # The widget query spec's canonical validation lives in
+    # @workspace/insights-spec (Zod); the API re-validates `spec` there before
+    # persisting or executing, like deal-views does for `definition`. The
+    # OpenAPI shape below types the envelope and leaves deep spec/viz payloads
+    # open so the spec lib stays the single source of truth.
+    InsightsWidgetSpec:
+      type: object
+      description: >
+        Widget query spec (version, scope, reportType, measure, viewBy, segmentBy, filters, dateBasis, options, limit, sort). Validated server-side against @workspace/insights-spec.
+      required: [version, scope, reportType, measure, filters]
+      properties:
+        version:
+          type: integer
+        scope:
+          type: string
+          enum: [deals, activities, organizations]
+        reportType:
+          type: string
+          enum: [performance, conversionFunnel, conversionWinLoss, duration, progress, timeToFirstActivity, table, pivot]
+        measure:
+          type: object
+          required: [field, agg]
+          properties:
+            field:
+              type: string
+            agg:
+              type: string
+              enum: [count, sum, avg, median, p25, p75, min, max]
+        viewBy:
+          type: object
+          required: [field]
+          properties:
+            field:
+              type: string
+            dateBucket:
+              type: string
+              enum: [day, week, month, quarter]
+        segmentBy:
+          type: object
+          required: [field]
+          properties:
+            field:
+              type: string
+        filters:
+          description: Graph-level filter group (extended deals-filter DSL).
+          type: object
+          additionalProperties: true
+        dateBasis:
+          type: string
+          enum: [createdAt, closedAt, wonAt, lostAt, enteredStageAt, activityDoneAt]
+        options:
+          type: object
+          additionalProperties: true
+        limit:
+          type: integer
+        sort:
+          type: object
+          required: [field, direction]
+          properties:
+            field:
+              type: string
+            direction:
+              type: string
+              enum: [asc, desc]
+
+    InsightsWidgetViz:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [bar, horizontalBar, line, area, pie, funnel, waterfall, gauge, singleNumber, table, pivot]
+        options:
+          type: object
+          additionalProperties: true
+
+    InsightsLayoutItem:
+      type: object
+      description: react-grid-layout style placement, keyed by widget id.
+      required: [i, x, y, w, h]
+      properties:
+        i:
+          type: string
+        x:
+          type: integer
+        y:
+          type: integer
+        w:
+          type: integer
+        h:
+          type: integer
+
+    InsightsGlobalFilters:
+      type: object
+      description: >
+        Board-level filter state. Composes with each widget's own filters by intersection server-side. `filters` carries the Add-filter condition group, base64url-encoded with the shared deals-filter codec.
+      properties:
+        dateRange:
+          type: object
+          properties:
+            preset:
+              type: string
+            from:
+              type: string
+              format: date
+            to:
+              type: string
+              format: date
+            basis:
+              type: string
+              enum: [createdAt, closedAt, wonAt, lostAt, enteredStageAt, activityDoneAt]
+        ownerIds:
+          type: array
+          items:
+            type: integer
+        pipelineIds:
+          type: array
+          items:
+            type: integer
+        statuses:
+          type: array
+          items:
+            type: string
+            enum: [open, won, lost]
+        filters:
+          type: ["string", "null"]
+
+    InsightsWidget:
+      type: object
+      required: [id, dashboardId, name, spec, viz, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        dashboardId:
+          type: ["integer", "null"]
+        name:
+          type: string
+        spec:
+          $ref: "#/components/schemas/InsightsWidgetSpec"
+        viz:
+          $ref: "#/components/schemas/InsightsWidgetViz"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    InsightsWidgetInput:
+      type: object
+      required: [name, spec, viz]
+      properties:
+        dashboardId:
+          type: ["integer", "null"]
+        name:
+          type: string
+          minLength: 1
+        spec:
+          $ref: "#/components/schemas/InsightsWidgetSpec"
+        viz:
+          $ref: "#/components/schemas/InsightsWidgetViz"
+
+    InsightsWidgetUpdate:
+      type: object
+      properties:
+        dashboardId:
+          type: ["integer", "null"]
+        name:
+          type: string
+          minLength: 1
+        spec:
+          $ref: "#/components/schemas/InsightsWidgetSpec"
+        viz:
+          $ref: "#/components/schemas/InsightsWidgetViz"
+
+    InsightsDashboard:
+      type: object
+      required: [id, name, ownerId, isShared, sharedUserIds, layout, isDefault, widgets, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        section:
+          type: ["string", "null"]
+        ownerId:
+          type: integer
+        isShared:
+          type: boolean
+        sharedUserIds:
+          type: array
+          items:
+            type: integer
+        globalFilters:
+          oneOf:
+            - $ref: "#/components/schemas/InsightsGlobalFilters"
+            - type: "null"
+        layout:
+          type: array
+          items:
+            $ref: "#/components/schemas/InsightsLayoutItem"
+        isDefault:
+          type: boolean
+        defaultKey:
+          type: ["string", "null"]
+        widgets:
+          type: array
+          items:
+            $ref: "#/components/schemas/InsightsWidget"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    InsightsDashboardInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        section:
+          type: ["string", "null"]
+        globalFilters:
+          oneOf:
+            - $ref: "#/components/schemas/InsightsGlobalFilters"
+            - type: "null"
+        layout:
+          type: array
+          items:
+            $ref: "#/components/schemas/InsightsLayoutItem"
+
+    InsightsDashboardUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        section:
+          type: ["string", "null"]
+        globalFilters:
+          oneOf:
+            - $ref: "#/components/schemas/InsightsGlobalFilters"
+            - type: "null"
+        layout:
+          type: array
+          items:
+            $ref: "#/components/schemas/InsightsLayoutItem"
+        isShared:
+          type: boolean
+        sharedUserIds:
+          type: array
+          items:
+            type: integer
+        expectedUpdatedAt:
+          type: string
+          format: date-time
+          description: >
+            Optimistic-concurrency guard: when present, the update only applies if the dashboard's updatedAt still matches; otherwise the server answers 409 instead of letting a stale client clobber a newer layout (last-write-wins across tabs/devices).
+
+    InsightsDuplicateDashboardInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+
+    InsightsDuplicateWidgetInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        dashboardId:
+          type: ["integer", "null"]
+
+    InsightsQueryRequest:
+      type: object
+      required: [spec]
+      properties:
+        spec:
+          $ref: "#/components/schemas/InsightsWidgetSpec"
+        globalFilters:
+          oneOf:
+            - $ref: "#/components/schemas/InsightsGlobalFilters"
+            - type: "null"
+
+    InsightsQueryBatchRequest:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 30
+          items:
+            $ref: "#/components/schemas/InsightsQueryRequest"
+
+    InsightsQueryBatchResult:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          description: Aligned to the request's items by index.
+          items:
+            type: object
+            properties:
+              result:
+                $ref: "#/components/schemas/InsightsQueryResult"
+              error:
+                type: string
+
+    InsightsQueryResult:
+      type: object
+      description: >
+        Chart results carry xKey + series; table/pivot results carry columns + rows. meta always echoes what was actually applied so a number is never mysterious.
+      required: [meta]
+      properties:
+        xKey:
+          type: string
+        series:
+          type: array
+          items:
+            type: object
+            required: [key, data]
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+              data:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+        columns:
+          type: array
+          items:
+            type: object
+            required: [key, label, type]
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+              type:
+                type: string
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        meta:
+          type: object
+          required: [scope, appliedFilters]
+          properties:
+            scope:
+              type: string
+            appliedFilters:
+              type: object
+              properties:
+                board:
+                  type: array
+                  items:
+                    type: string
+                widget:
+                  type: array
+                  items:
+                    type: string
+            freshness:
+              type: string
+              format: date-time
+            totalRows:
+              type: integer
+            rowCap:
+              type: integer
+            headline:
+              type: object
+              description: Report-level headline stat (e.g. the funnel's win rate).
+              required: [label, value]
+              properties:
+                label:
+                  type: string
+                value:
+                  type: number
+
+    InsightsField:
+      type: object
+      required: [key, label, type, kind, filterable, groupable, measurable]
+      properties:
+        key:
+          type: string
+          description: Allow-list key (native key or cf:<registry key>).
+        label:
+          type: string
+        type:
+          type: string
+          description: varchar|text|double|monetary|date|boolean|enum|set|user|stage|pipeline|status
+        kind:
+          type: string
+          enum: [column, custom]
+        filterable:
+          type: boolean
+        groupable:
+          type: boolean
+        measurable:
+          type: boolean
+        options:
+          type: array
+          items:
+            type: object
+            required: [value, label]
+            properties:
+              value:
+                type: string
+              label:
+                type: string
+
+    InsightsFieldList:
+      type: object
+      required: [scope, fields]
+      properties:
+        scope:
+          type: string
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/InsightsField"
