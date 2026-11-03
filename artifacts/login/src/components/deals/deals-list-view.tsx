@@ -39,7 +39,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { RequiredFieldsDialog } from "@/components/deals/detail/required-fields-dialog";
 import { requiredFieldsBlock } from "@/lib/deal-fields-api";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type StatusTone } from "@/components/ui/badge";
 import { ColumnPicker } from "@/components/shared/column-picker";
 import { useDealCustomColumns } from "@/components/deals/deal-custom-columns";
 import {
@@ -89,11 +89,13 @@ const DEFAULT_ORDER = [
   "lastActivity",
 ];
 
-const STATUS_STYLES: Record<string, string> = {
-  open: "bg-brand-subtle text-brand border-brand-200",
-  won: "bg-success-subtle text-success border-success/30",
-  lost: "bg-destructive-subtle text-destructive border-destructive/30",
-  deleted: "bg-muted text-muted-foreground border-border",
+// Status tones: a won deal is live business (success), a lost one refused
+// (critical); open and deleted are neutral.
+const STATUS_TONE: Record<string, StatusTone> = {
+  open: "neutral",
+  won: "success",
+  lost: "critical",
+  deleted: "neutral",
 };
 
 // Inline-editable cells (EditableText / EditableMoney / EditableStage) are
@@ -132,7 +134,7 @@ function DraggableHeader({
     <div
       ref={setNodeRef}
       style={style}
-      className="relative flex shrink-0 items-center border-b border-border bg-surface-whisper px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+      className="relative flex shrink-0 items-center border-b border-border bg-surface-whisper px-3 py-2 text-caption font-medium text-muted-foreground"
     >
       <span
         {...attributes}
@@ -424,11 +426,8 @@ export function DealsListView({
         size: 110,
         cell: ({ row }) => (
           <Badge
-            variant="outline"
-            className={cn(
-              "capitalize",
-              STATUS_STYLES[row.original.status] ?? STATUS_STYLES.deleted,
-            )}
+            tone={STATUS_TONE[row.original.status] ?? "neutral"}
+            className="capitalize"
           >
             {row.original.status}
           </Badge>
@@ -565,7 +564,7 @@ export function DealsListView({
     <div className="flex h-full flex-col">
       {/* Column settings (desktop only) */}
       <div className="hidden items-center justify-between border-b border-border px-4 py-2 md:flex">
-        <div className="text-xs text-subtle">
+        <div className="text-caption text-subtle">
           {isFetching ? t("deals.list.updating") : t("deals.list.totalCount", { count: formatNumber(total) })}
         </div>
         <div className="flex items-center gap-2">
@@ -584,15 +583,15 @@ export function DealsListView({
       {isMobile ? (
         <div ref={scrollRef} className="flex-1 overflow-auto bg-surface-whisper p-3">
           {isLoading ? (
-            <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+            <div className="flex h-40 items-center justify-center text-body text-muted-foreground">
               {t("deals.list.loading")}
             </div>
           ) : isError ? (
-            <div className="flex h-40 items-center justify-center text-sm text-destructive">
+            <div className="flex h-40 items-center justify-center text-body text-destructive">
               {t("deals.list.loadFailed")}
             </div>
           ) : rows.length === 0 ? (
-            <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+            <div className="flex h-40 items-center justify-center text-body text-muted-foreground">
               {t("deals.list.empty")}
             </div>
           ) : (
@@ -617,7 +616,7 @@ export function DealsListView({
                     type="button"
                     onClick={() => onOpenDeal(deal.id)}
                     className={cn(
-                      "w-full rounded-lg border border-border bg-card p-4 text-start shadow-sm",
+                      "w-full rounded-2xl bg-card p-4 text-start shadow-card",
                       deal.isRotting && "border-s-2 border-s-destructive",
                     )}
                   >
@@ -634,27 +633,24 @@ export function DealsListView({
                         </span>
                       </div>
                       <Badge
-                        variant="outline"
-                        className={cn(
-                          "shrink-0 capitalize",
-                          STATUS_STYLES[deal.status] ?? STATUS_STYLES.deleted,
-                        )}
+                        tone={STATUS_TONE[deal.status] ?? "neutral"}
+                        className="shrink-0 capitalize"
                       >
                         {deal.status}
                       </Badge>
                     </div>
-                    <div className="mt-1 text-lg font-bold tabular-nums text-foreground">
+                    <div className="mt-1 text-heading-xs tabular-nums text-foreground">
                       <Money value={deal.value} currency={deal.currency} />
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2.5">
                       {facts.map((f) => (
                         <div key={f.label} className="min-w-0">
-                          <div className="text-[11px] font-medium uppercase tracking-wide text-subtle">
+                          <div className="text-caption text-muted-foreground">
                             {f.label}
                           </div>
                           <div
                             dir="auto"
-                            className="mt-0.5 truncate text-sm text-foreground"
+                            className="mt-0.5 truncate text-body text-foreground"
                           >
                             {f.value}
                           </div>
@@ -712,15 +708,15 @@ export function DealsListView({
 
             {/* Body */}
             {isLoading ? (
-              <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+              <div className="flex h-40 items-center justify-center text-body text-muted-foreground">
                 {t("deals.list.loading")}
               </div>
             ) : isError ? (
-              <div className="flex h-40 items-center justify-center text-sm text-destructive">
+              <div className="flex h-40 items-center justify-center text-body text-destructive">
                 {t("deals.list.loadFailed")}
               </div>
             ) : rows.length === 0 ? (
-              <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+              <div className="flex h-40 items-center justify-center text-body text-muted-foreground">
                 {t("deals.list.empty")}
               </div>
             ) : (
@@ -759,7 +755,7 @@ export function DealsListView({
                             key={cell.id}
                             style={{ width: cell.column.getSize() }}
                             className={cn(
-                              "flex shrink-0 items-center overflow-hidden px-3 text-sm",
+                              "flex shrink-0 items-center overflow-hidden px-3 text-body",
                               align === "right" && "justify-end",
                             )}
                           >

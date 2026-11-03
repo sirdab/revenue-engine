@@ -73,7 +73,7 @@ const hasOptions = (t: string) => t === "enum" || t === "set";
 
 function SourceBadge({ storage }: { storage: string }) {
   const map: Record<string, string> = {
-    custom: "border-brand-200 bg-brand-subtle text-brand",
+    custom: "border-transparent bg-brand-subtle text-brand-subtle-foreground",
     data: "border-attention/30 bg-attention-subtle text-attention",
     column: "border-border bg-surface-whisper text-muted-foreground",
   };
@@ -210,12 +210,12 @@ function FieldDialog({
         </DialogHeader>
 
         <div className="space-y-3">
-          <label className="block text-sm">
+          <label className="block text-body-quiet">
             <span className="mb-1 block font-medium text-muted-foreground">Name</span>
             <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. Contract value" />
           </label>
 
-          <label className="block text-sm">
+          <label className="block text-body-quiet">
             <span className="mb-1 block font-medium text-muted-foreground">Type</span>
             <Select
               value={editing?.fieldType ?? fieldType}
@@ -236,7 +236,7 @@ function FieldDialog({
           </label>
 
           {showOptions && (
-            <div className="text-sm">
+            <div className="text-body-quiet">
               <span className="mb-1 block font-medium text-muted-foreground">Options</span>
               <div className="space-y-1.5">
                 {options.map((o, i) => (
@@ -270,7 +270,7 @@ function FieldDialog({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-7 gap-1 text-xs"
+                  className="h-7 gap-1 text-caption-quiet"
                   onClick={() => setOptions((prev) => [...prev, { value: "", label: "" }])}
                 >
                   <Plus className="h-3 w-3" /> Add option
@@ -291,7 +291,7 @@ function FieldDialog({
             <FlagToggle label="Show in detail" checked={flag("detailVisible")} onChange={(v) => setFlag("detailVisible", v)} />
           </div>
 
-          <label className="block text-sm">
+          <label className="block text-body-quiet">
             <span className="mb-1 block font-medium text-muted-foreground">Group (optional)</span>
             <Input
               value={config.group ?? ""}
@@ -301,9 +301,9 @@ function FieldDialog({
           </label>
 
           {pipelines.length > 0 && (
-            <div className="text-sm">
+            <div className="text-body-quiet">
               <span className="mb-1 block font-medium text-muted-foreground">Pipelines</span>
-              <p className="mb-2 text-xs text-subtle">
+              <p className="mb-2 text-caption-quiet text-subtle">
                 Show this field only on deals in the pipelines you tick. Leave all unticked
                 to show it everywhere. A deal that already has a value keeps showing it.
               </p>
@@ -319,7 +319,7 @@ function FieldDialog({
                 ))}
               </div>
               {groupSiblings.length > 0 && (
-                <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                <label className="mt-2 flex items-center gap-2 text-caption-quiet text-muted-foreground">
                   <Checkbox
                     checked={applyToGroup}
                     onCheckedChange={(v) => setApplyToGroup(v === true)}
@@ -358,7 +358,7 @@ function FlagToggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+    <label className="flex items-center justify-between gap-2 text-body-quiet text-muted-foreground">
       <span>{label}</span>
       <Switch checked={checked} onCheckedChange={onChange} />
     </label>
@@ -448,8 +448,8 @@ export function CustomFieldsSettings() {
     <div className="mx-auto max-w-5xl p-6">
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-lg font-bold text-foreground">Custom Fields</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-heading-sm text-foreground">Custom Fields</h1>
+          <p className="text-body-quiet text-muted-foreground">
             Fields shown on deals, decoded from your dataset or created here. Limit a field to certain pipelines from its edit dialog.
           </p>
         </div>
@@ -465,15 +465,15 @@ export function CustomFieldsSettings() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
+        <div className="flex items-center justify-center py-16 text-body-quiet text-muted-foreground">
           <Loader2 className="me-2 h-4 w-4 animate-spin" /> Loading fields…
         </div>
       ) : (
         <>
           {/* Active fields */}
-          <section className="mb-6 overflow-hidden rounded-xl border border-border">
-            <table className="w-full text-sm">
-              <thead className="bg-surface-whisper text-xs text-muted-foreground">
+          <section className="mb-6 overflow-hidden rounded-2xl bg-card shadow-card">
+            <table className="w-full text-body-quiet">
+              <thead className="bg-surface-whisper text-caption-quiet text-muted-foreground">
                 <tr>
                   <th className="px-3 py-2 text-start font-medium">Name</th>
                   <th className="px-3 py-2 text-start font-medium">Type</th>
@@ -489,7 +489,7 @@ export function CustomFieldsSettings() {
               <tbody>
                 {active.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-3 py-8 text-center text-sm text-subtle">
+                    <td colSpan={9} className="px-3 py-8 text-center text-body-quiet text-subtle">
                       No active fields yet. Discover from your dataset or create one.
                     </td>
                   </tr>
@@ -502,7 +502,7 @@ export function CustomFieldsSettings() {
                     </td>
                     <td className="px-3 py-2 text-muted-foreground">{TYPE_LABEL[f.fieldType] ?? f.fieldType}</td>
                     <td className="px-3 py-2"><SourceBadge storage={f.storage} /></td>
-                    <td className="px-3 py-2 text-xs text-muted-foreground">
+                    <td className="px-3 py-2 text-caption-quiet text-muted-foreground">
                       {f.config?.pipelineIds?.length
                         ? f.config.pipelineIds
                             .map((id) => pipelineName.get(id) ?? `#${id}`)
@@ -541,17 +541,17 @@ export function CustomFieldsSettings() {
           {/* Discovered from dataset */}
           {discovered.length > 0 && (
             <section>
-              <h2 className="mb-2 text-sm font-semibold text-foreground">
+              <h2 className="mb-2 text-body font-semibold text-foreground">
                 Discovered from dataset{" "}
-                <span className="ms-1 rounded-full bg-attention-subtle px-2 py-0.5 text-xs font-medium text-attention">
+                <span className="ms-1 rounded-full bg-attention-subtle px-2 py-0.5 text-caption text-attention">
                   {discovered.length}
                 </span>
               </h2>
-              <p className="mb-3 text-xs text-muted-foreground">
+              <p className="mb-3 text-caption-quiet text-muted-foreground">
                 Keys found in your data. Activate the ones you want on the deal; computed
                 metrics as read-only.
               </p>
-              <div className="divide-y divide-border rounded-xl border border-border">
+              <div className="divide-y divide-border overflow-hidden rounded-2xl bg-card shadow-card">
                 {discovered.map((f) => (
                   <DiscoveredRow
                     key={f.id}
@@ -572,13 +572,13 @@ export function CustomFieldsSettings() {
           {/* Archived */}
           {archived.length > 0 && (
             <section className="mt-6">
-              <h2 className="mb-2 text-sm font-semibold text-foreground">
+              <h2 className="mb-2 text-body font-semibold text-foreground">
                 Archived{" "}
-                <span className="ms-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                <span className="ms-1 rounded-full bg-muted px-2 py-0.5 text-caption text-muted-foreground">
                   {archived.length}
                 </span>
               </h2>
-              <div className="divide-y divide-border rounded-xl border border-border">
+              <div className="divide-y divide-border overflow-hidden rounded-2xl bg-card shadow-card">
                 {archived.map((f) => (
                   <div key={f.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
                     <div className="min-w-0">
@@ -666,7 +666,7 @@ function DiscoveredRow({
         <div className="font-mono text-[10px] text-subtle">{field.sourceKey}</div>
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <label className="flex items-center gap-1.5 text-caption-quiet text-muted-foreground">
           Editable
           <Switch checked={editable} onCheckedChange={setEditable} />
         </label>

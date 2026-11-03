@@ -57,7 +57,7 @@ export function ChangeEventRow({
         {icon}
       </div>
       <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-        <div className="truncate text-sm text-muted-foreground">
+        <div className="truncate text-body text-muted-foreground">
           {title}
           {event.changedByName && (
             <span className="text-subtle"> · {event.changedByName}</span>

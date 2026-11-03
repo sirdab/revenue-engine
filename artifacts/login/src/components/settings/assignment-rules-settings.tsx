@@ -114,15 +114,15 @@ function RuleRow({
         </button>
       </div>
 
-      <span className="shrink-0 text-xs tabular-nums text-subtle">
+      <span className="shrink-0 text-caption-quiet tabular-nums text-subtle">
         #{index + 1}
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-foreground">
+        <p className="truncate text-body font-semibold text-foreground">
           {rule.name}
         </p>
-        <p className="truncate text-xs text-muted-foreground">
+        <p className="truncate text-caption-quiet text-muted-foreground">
           {conditionCount === 0
             ? t("settings.assignmentRules.matchesAll")
             : tPlural("settings.assignmentRules.conditionCount", conditionCount)}
@@ -250,10 +250,10 @@ export function AssignmentRulesSettings() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-6">
       <header className="mb-5">
-        <h1 className="font-heading text-xl font-bold text-foreground">
+        <h1 className="text-heading-sm text-foreground">
           {t("settings.nav.assignmentRules")}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-body-quiet text-muted-foreground">
           {t("settings.assignmentRules.subtitle")}
         </p>
       </header>
@@ -281,7 +281,7 @@ export function AssignmentRulesSettings() {
                 <TabsTrigger key={eventTab.id} value={eventTab.id}>
                   {t(eventTab.labelKey)}
                   {byEvent[eventTab.id].length > 0 && (
-                    <span className="ms-1.5 text-xs tabular-nums text-subtle">
+                    <span className="ms-1.5 text-caption-quiet tabular-nums text-subtle">
                       {formatNumber(byEvent[eventTab.id].length)}
                     </span>
                   )}
@@ -292,17 +292,17 @@ export function AssignmentRulesSettings() {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center gap-2 px-5 py-10 text-sm text-subtle">
+          <div className="flex items-center justify-center gap-2 px-5 py-10 text-body-quiet text-subtle">
             <Loader2 className="h-4 w-4 animate-spin" /> {t("settings.assignmentRules.loading")}
           </div>
         ) : isError || !data ? (
-          <div className="px-5 py-10 text-center text-sm text-destructive">
+          <div className="px-5 py-10 text-center text-body-quiet text-destructive">
             {t("settings.assignmentRules.loadFailed")}
           </div>
         ) : rules.length === 0 ? (
           <div className="px-5 py-10 text-center">
             <Workflow className="mx-auto mb-2 h-6 w-6 text-subtle" />
-            <p className="text-sm text-muted-foreground">
+            <p className="text-body-quiet text-muted-foreground">
               {t("settings.assignmentRules.empty", {
                 trigger: t(
                   EVENT_TABS.find((e) => e.id === tab)?.labelKey ??
@@ -310,7 +310,7 @@ export function AssignmentRulesSettings() {
                 ),
               })}
             </p>
-            <p className="mt-1 text-xs text-subtle">
+            <p className="mt-1 text-caption-quiet text-subtle">
               {t("settings.assignmentRules.emptyHint")}
             </p>
           </div>

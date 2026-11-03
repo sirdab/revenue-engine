@@ -81,7 +81,7 @@ export function TimePicker({
       <div
         data-empty={parsed ? undefined : true}
         className={cn(
-          "relative flex h-9 w-full items-center rounded-md border border-input bg-transparent text-sm shadow-sm data-[empty=true]:text-muted-foreground",
+          "relative flex h-control-lg w-full items-center rounded-lg border border-input bg-background text-body-quiet text-foreground transition-colors hover:border-input-border-hover focus-within:border-ring focus-within:ring-input-focus data-[empty=true]:text-muted-foreground",
           disabled && "cursor-not-allowed opacity-50",
           className,
         )}
@@ -146,7 +146,7 @@ export function TimePicker({
               onChange(formatHm(draft))
               setOpen(false)
             }}
-            className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-hover"
+            className="rounded-lg bg-primary px-2.5 h-control-sm text-label text-primary-foreground hover:bg-primary-hover"
           >
             {t("common.done")}
           </button>
@@ -231,7 +231,7 @@ function Wheel<T extends string | number>({
             aria-selected={item === value}
             onClick={() => go(i)}
             className={cn(
-              "flex cursor-pointer snap-center items-center justify-center text-base tabular-nums transition-opacity select-none",
+              "flex cursor-pointer snap-center items-center justify-center text-body-lg tabular-nums transition-opacity select-none",
               distance === 0 ? "font-semibold text-foreground" : "text-muted-foreground",
             )}
             style={{ height: ITEM_H, opacity: distance === 0 ? 1 : distance === 1 ? 0.6 : 0.3 }}

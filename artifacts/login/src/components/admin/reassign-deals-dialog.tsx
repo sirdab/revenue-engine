@@ -100,7 +100,7 @@ export function ReassignDealsDialog({
           triggerClassName="w-full"
         />
         {selectedUser && (
-          <div className="rounded-md border border-border bg-surface-whisper px-3 py-2 text-sm text-muted-foreground">
+          <div className="rounded-md border border-border bg-surface-whisper px-3 py-2 text-body-quiet text-muted-foreground">
             <span className="font-medium text-foreground">{selectedUser.name}</span>
             {selectedAfterCount == null ? (
               <span> is loading current deal count.</span>

@@ -32,6 +32,7 @@ import {
   useServerTablePreferences,
 } from "@/hooks/use-user-preferences";
 import { cn } from "@/lib/utils";
+import { Segmented, SegmentedItem } from "@sirdab/one/components/segmented";
 import { FiltersToggle } from "@/components/shared/toolbar-controls";
 import { LabelChips } from "@/components/shared/labels-editor";
 import { DataTable } from "@/components/shared/data-table";
@@ -91,29 +92,17 @@ function ViewSwitcher({
 }) {
   const { t } = useI18n();
   return (
-    <div className="flex items-center gap-0.5 rounded-lg border border-border bg-surface-whisper p-0.5">
-      {(
-        [
-          { key: "table", label: "views.table", icon: TableIcon },
-          { key: "cards", label: "contacts.view.cards", icon: LayoutGrid },
-        ] as const
-      ).map(({ key, label: labelKey, icon: Icon }) => (
-        <button
-          key={key}
-          type="button"
-          onClick={() => onChange(key)}
-          className={cn(
-            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-            view === key
-              ? "bg-card text-brand shadow-sm"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          <Icon className="h-4 w-4" />
-          <span className="hidden sm:inline">{t(labelKey)}</span>
-        </button>
-      ))}
-    </div>
+    <Segmented
+      value={view}
+      onValueChange={(v) => onChange(v as ViewMode)}
+    >
+      <SegmentedItem value="table" icon={<TableIcon />} label={t("views.table")} />
+      <SegmentedItem
+        value="cards"
+        icon={<LayoutGrid />}
+        label={t("contacts.view.cards")}
+      />
+    </Segmented>
   );
 }
 
@@ -127,13 +116,13 @@ function SummaryCards({
       {cards.map((card) => (
         <div
           key={card.label}
-          className="rounded-lg border border-border bg-card px-4 py-3"
+          className="rounded-xl bg-card px-4 py-3 shadow-card"
         >
-          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-caption text-muted-foreground">
             <span className={cn("h-2 w-2 rounded-full", card.dot)} />
             {card.label}
           </div>
-          <div className="mt-1 text-2xl font-bold tabular-nums text-foreground">
+          <div className="mt-1 text-heading-sm tabular-nums text-foreground">
             {card.value.toLocaleString()}
           </div>
         </div>
@@ -197,10 +186,10 @@ export default function ContactsPage() {
     <div className="flex h-full flex-col overflow-hidden bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 pb-1 pt-3">
         <div>
-          <h1 className="font-heading text-xl font-bold tracking-tight text-foreground">
+          <h1 className="text-heading-sm text-foreground">
             {t("common.contacts")}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body-quiet text-muted-foreground">
             {t("contacts.subtitle")}
           </p>
         </div>
@@ -217,7 +206,7 @@ export default function ContactsPage() {
               <ViewSwitcher view={personsView} onChange={setPersonsView} />
               <PersonFormDialog
                 trigger={
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary-hover">
+                  <Button>
                     <Plus className="me-2 h-4 w-4" /> {t("contacts.addPerson")}
                   </Button>
                 }
@@ -234,7 +223,7 @@ export default function ContactsPage() {
               <ViewSwitcher view={orgsView} onChange={setOrgsView} />
               <OrgFormDialog
                 trigger={
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary-hover">
+                  <Button>
                     <Plus className="me-2 h-4 w-4" /> {t("contacts.addOrganization")}
                   </Button>
                 }
@@ -350,7 +339,7 @@ function PersonsView({
   const total = data?.total ?? 0;
 
   const summary = useMemo(
-    () => [{ label: t("deals.related.people"), value: total, dot: "bg-gray-400" }],
+    () => [{ label: t("deals.related.people"), value: total, dot: "bg-subtle" }],
     [total],
   );
 
@@ -366,11 +355,11 @@ function PersonsView({
             <Link
               href={`/person/${row.original.id}`}
               dir="auto"
-              className="block truncate font-medium text-foreground hover:text-brand hover:underline"
+              className="block truncate font-medium text-foreground hover:text-foreground underline-offset-2 hover:underline"
             >
               {dash(row.original.name)}
             </Link>
-            <div className="truncate text-xs text-subtle">
+            <div className="truncate text-caption text-subtle">
               #{row.original.id}
             </div>
           </div>
@@ -396,7 +385,7 @@ function PersonsView({
           row.original.email ? (
             <a
               href={`mailto:${row.original.email}`}
-              className="truncate text-brand hover:underline"
+              className="truncate text-foreground underline-offset-2 hover:underline"
             >
               {row.original.email}
             </a>
@@ -464,7 +453,7 @@ function PersonsView({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 px-2 text-xs"
+                className="h-7 px-2 text-caption"
               >
                 <Pencil className="me-1 h-3.5 w-3.5" />
                 {t("common.edit")}
@@ -601,28 +590,28 @@ function PersonsView({
 function PersonCard({ person }: { person: Person }) {
   const { t } = useI18n();
   return (
-    <div className="group flex flex-col rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md">
+    <div className="group flex flex-col rounded-xl bg-card p-4 shadow-card transition-shadow hover:shadow-card-hover">
       <div className="flex items-start justify-between gap-2">
         <Link
           href={`/person/${person.id}`}
           className="flex min-w-0 items-center gap-2.5"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-subtle text-sm font-semibold text-brand">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-label text-primary-foreground">
             {person.name.charAt(0).toUpperCase()}
           </span>
           <div className="min-w-0">
             <div
               dir="auto"
-              className="truncate font-semibold text-foreground hover:text-brand hover:underline"
+              className="truncate text-body font-medium text-foreground underline-offset-2 hover:underline"
             >
               {person.name}
             </div>
             {person.jobTitle && (
-              <div dir="auto" className="truncate text-xs text-muted-foreground">
+              <div dir="auto" className="truncate text-caption text-muted-foreground">
                 {person.jobTitle}
               </div>
             )}
-            <div className="text-xs text-subtle">
+            <div className="text-caption text-subtle">
               {person.dealCount ?? 0} deals
             </div>
           </div>
@@ -640,13 +629,13 @@ function PersonCard({ person }: { person: Person }) {
           }
         />
       </div>
-      <div className="mt-3 space-y-1.5 text-sm text-muted-foreground">
+      <div className="mt-3 space-y-1.5 text-body text-muted-foreground">
         {person.email && (
           <div className="flex items-center gap-2">
             <Mail className="h-3.5 w-3.5 shrink-0 text-subtle" />
             <a
               href={`mailto:${person.email}`}
-              className="truncate hover:text-brand"
+              className="truncate hover:text-foreground"
             >
               {person.email}
             </a>
@@ -663,13 +652,13 @@ function PersonCard({ person }: { person: Person }) {
         {person.organizationName && (
           <div className="flex items-center gap-2">
             <Building2 className="h-3.5 w-3.5 shrink-0 text-subtle" />
-            <span className="truncate text-brand">
+            <span className="truncate text-foreground">
               {person.organizationName}
             </span>
           </div>
         )}
         {!person.email && !person.phone && !person.organizationName && (
-          <div className="text-xs text-subtle">{t("contacts.noContactDetails")}</div>
+          <div className="text-caption text-subtle">{t("contacts.noContactDetails")}</div>
         )}
       </div>
     </div>
@@ -736,7 +725,7 @@ function OrganizationsView({
   const total = data?.total ?? 0;
 
   const summary = useMemo(
-    () => [{ label: t("contacts.organizations"), value: total, dot: "bg-gray-400" }],
+    () => [{ label: t("contacts.organizations"), value: total, dot: "bg-subtle" }],
     [total],
   );
 
@@ -752,11 +741,11 @@ function OrganizationsView({
             <Link
               href={`/organization/${row.original.id}`}
               dir="auto"
-              className="block truncate font-medium text-foreground hover:text-brand hover:underline"
+              className="block truncate font-medium text-foreground hover:text-foreground underline-offset-2 hover:underline"
             >
               {dash(row.original.name)}
             </Link>
-            <div className="truncate text-xs text-subtle">
+            <div className="truncate text-caption text-subtle">
               #{row.original.id}
             </div>
           </div>
@@ -816,7 +805,7 @@ function OrganizationsView({
           <OrgFormDialog
             org={row.original}
             trigger={
-              <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
+              <Button variant="outline" size="sm" className="h-7 px-2 text-caption">
                 <Pencil className="me-1 h-3.5 w-3.5" />
                 {t("common.edit")}
               </Button>
@@ -923,7 +912,7 @@ function OrganizationsView({
 function OrgCard({ org }: { org: Organization }) {
   const { t } = useI18n();
   return (
-    <div className="group flex flex-col rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md">
+    <div className="group flex flex-col rounded-xl bg-card p-4 shadow-card transition-shadow hover:shadow-card-hover">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
@@ -933,7 +922,7 @@ function OrgCard({ org }: { org: Organization }) {
             <div dir="auto" className="truncate font-semibold text-foreground">
               {org.name}
             </div>
-            <div className="text-xs text-subtle">
+            <div className="text-caption text-subtle">
               {t("contacts.orgCardCounts", { contacts: org.personCount ?? 0, deals: org.dealCount ?? 0 })}
             </div>
           </div>
@@ -951,11 +940,11 @@ function OrgCard({ org }: { org: Organization }) {
           }
         />
       </div>
-      <div className="mt-3 text-sm text-muted-foreground">
+      <div className="mt-3 text-body text-muted-foreground">
         {org.address ? (
           <span dir="auto">{org.address}</span>
         ) : (
-          <span className="text-xs text-subtle">{t("contacts.noAddress")}</span>
+          <span className="text-caption text-subtle">{t("contacts.noAddress")}</span>
         )}
       </div>
     </div>
@@ -980,15 +969,15 @@ function CardsGrid({
   const { t } = useI18n();
   if (isLoading) {
     return (
-      <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-        <Loader2 className="me-2 h-5 w-5 animate-spin text-brand" />
+      <div className="flex h-40 items-center justify-center text-body text-muted-foreground">
+        <Loader2 className="me-2 h-5 w-5 animate-spin text-muted-foreground" />
         {t("common.loading")}
       </div>
     );
   }
   if (isEmpty) {
     return (
-      <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+      <div className="flex h-40 items-center justify-center text-body text-muted-foreground">
         {emptyMessage}
       </div>
     );

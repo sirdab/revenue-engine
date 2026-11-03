@@ -154,10 +154,10 @@ function LabelRow({
         <EditableText
           value={label.name}
           onCommit={(next) => next.trim() && onRename(next.trim())}
-          className="-ms-1 text-sm font-medium text-foreground"
+          className="-ms-1 text-body text-foreground"
         />
       </div>
-      <span className="shrink-0 text-xs tabular-nums text-subtle">
+      <span className="shrink-0 text-caption-quiet tabular-nums text-subtle">
         {usageText(label.usageCount, noun)}
       </span>
       <AlertDialog>
@@ -265,14 +265,14 @@ function LabelsPanel({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center gap-2 px-5 py-10 text-sm text-subtle">
+      <div className="flex items-center justify-center gap-2 px-5 py-10 text-body-quiet text-subtle">
         <Loader2 className="h-4 w-4 animate-spin" /> Loading labels…
       </div>
     );
   }
   if (isError || !data) {
     return (
-      <div className="px-5 py-10 text-center text-sm text-destructive">
+      <div className="px-5 py-10 text-center text-body-quiet text-destructive">
         Failed to load labels.
       </div>
     );
@@ -317,8 +317,8 @@ function LabelsPanel({
       {data.labels.length === 0 && data.unregistered.length === 0 ? (
         <div className="px-5 py-10 text-center">
           <Tag className="mx-auto mb-2 h-6 w-6 text-subtle" />
-          <p className="text-sm text-muted-foreground">No labels yet.</p>
-          <p className="mt-1 text-xs text-subtle">
+          <p className="text-body-quiet text-muted-foreground">No labels yet.</p>
+          <p className="mt-1 text-caption-quiet text-subtle">
             Create one here, or add labels directly on records; they'll show
             up here so you can add them to your list.
           </p>
@@ -345,7 +345,7 @@ function LabelsPanel({
 
           {data.unregistered.length > 0 && (
             <div className="border-t border-border bg-surface-whisper/40">
-              <p className="px-5 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-subtle">
+              <p className="px-5 pb-1 pt-3 text-caption text-subtle">
                 In use, not in your list
               </p>
               <ul className="divide-y divide-border">
@@ -360,10 +360,10 @@ function LabelsPanel({
                         labelColorClasses("slate").swatch,
                       )}
                     />
-                    <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                    <span className="min-w-0 flex-1 truncate text-body-quiet text-foreground">
                       {u.name}
                     </span>
-                    <span className="shrink-0 text-xs tabular-nums text-subtle">
+                    <span className="shrink-0 text-caption-quiet tabular-nums text-subtle">
                       {usageText(u.usageCount, noun)}
                     </span>
                     <Button
@@ -373,7 +373,7 @@ function LabelsPanel({
                       onClick={() =>
                         create.mutate({ data: { entity, name: u.name } })
                       }
-                      className="h-7 px-2.5 text-xs"
+                      className="h-7 px-2.5 text-caption-quiet"
                     >
                       <Plus className="me-1 h-3 w-3" /> Add to list
                     </Button>
@@ -414,7 +414,7 @@ function LabelsSection() {
           >
             <TabsList className="h-8">
               {ENTITY_TABS.map((t) => (
-                <TabsTrigger key={t.value} value={t.value} className="text-xs">
+                <TabsTrigger key={t.value} value={t.value} className="text-caption-quiet">
                   {t.label}
                 </TabsTrigger>
               ))}
@@ -470,15 +470,15 @@ function LostReasonRow({
         <EditableText
           value={reason.name}
           onCommit={(next) => next.trim() && onRename(next.trim())}
-          className="-ms-1 text-sm font-medium text-foreground"
+          className="-ms-1 text-body text-foreground"
         />
       </div>
       {!reason.active && (
-        <span className="shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <span className="shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 text-caption font-medium text-muted-foreground">
           Archived
         </span>
       )}
-      <span className="shrink-0 text-xs tabular-nums text-subtle">
+      <span className="shrink-0 text-caption-quiet tabular-nums text-subtle">
         {reason.usageCount === 0
           ? "No deals"
           : `${reason.usageCount.toLocaleString()} ${reason.usageCount === 1 ? "deal" : "deals"}`}
@@ -594,17 +594,17 @@ function LostReasonsSection() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center gap-2 px-5 py-10 text-sm text-subtle">
+        <div className="flex items-center justify-center gap-2 px-5 py-10 text-body-quiet text-subtle">
           <Loader2 className="h-4 w-4 animate-spin" /> Loading reasons…
         </div>
       ) : isError || !data ? (
-        <div className="px-5 py-10 text-center text-sm text-destructive">
+        <div className="px-5 py-10 text-center text-body-quiet text-destructive">
           Failed to load lost reasons.
         </div>
       ) : (
         <>
           {data.reasons.length === 0 ? (
-            <div className="px-5 py-8 text-center text-sm text-muted-foreground">
+            <div className="px-5 py-8 text-center text-body-quiet text-muted-foreground">
               No managed reasons yet. Add your first above.
             </div>
           ) : (
@@ -631,7 +631,7 @@ function LostReasonsSection() {
 
           {data.unmanaged.length > 0 && (
             <div className="border-t border-border bg-surface-whisper/40">
-              <p className="px-5 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-subtle">
+              <p className="px-5 pb-1 pt-3 text-caption text-subtle">
                 Found on lost deals
               </p>
               <ul className="divide-y divide-border">
@@ -641,12 +641,12 @@ function LostReasonsSection() {
                     className="flex items-center gap-3 px-5 py-2"
                   >
                     <span
-                      className="min-w-0 flex-1 truncate text-sm text-foreground"
+                      className="min-w-0 flex-1 truncate text-body-quiet text-foreground"
                       title={u.name}
                     >
                       {u.name}
                     </span>
-                    <span className="shrink-0 text-xs tabular-nums text-subtle">
+                    <span className="shrink-0 text-caption-quiet tabular-nums text-subtle">
                       {u.usageCount.toLocaleString()}{" "}
                       {u.usageCount === 1 ? "deal" : "deals"}
                     </span>
@@ -655,7 +655,7 @@ function LostReasonsSection() {
                       size="sm"
                       disabled={busy}
                       onClick={() => create.mutate({ data: { name: u.name } })}
-                      className="h-7 px-2.5 text-xs"
+                      className="h-7 px-2.5 text-caption-quiet"
                     >
                       <Plus className="me-1 h-3 w-3" /> Add to list
                     </Button>
@@ -686,19 +686,19 @@ function CurrencySection() {
       description="The workspace default used for deal values, forecasts and totals."
     >
       <div className="flex items-center gap-4 px-5 py-4">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-brand-200 bg-brand-subtle text-brand">
+        <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-brand-subtle text-brand-subtle-foreground">
           <SaudiRiyal className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-foreground">
+            <span className="text-body font-semibold text-foreground">
               Saudi Riyal
             </span>
-            <span className="rounded-full border border-brand-200 bg-brand-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand">
+            <span className="rounded-full bg-brand-subtle px-2 py-0.5 text-caption text-brand-subtle-foreground">
               Default
             </span>
           </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="mt-0.5 text-caption-quiet text-muted-foreground">
             SAR: amounts across the app render with the official riyal symbol
             introduced by SAMA.
           </p>
@@ -714,10 +714,10 @@ export function LabelsSettings() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-6">
       <header className="mb-5">
-        <h1 className="font-heading text-xl font-bold text-foreground">
+        <h1 className="text-heading-sm text-foreground">
           Labels &amp; lost reasons
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-body-quiet text-muted-foreground">
           Curate the shared vocabulary your team uses to classify deals,
           contacts and losses.
         </p>

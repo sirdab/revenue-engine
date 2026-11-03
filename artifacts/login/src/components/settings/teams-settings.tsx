@@ -84,20 +84,20 @@ function TeamCard({
           <EditableText
             value={team.name}
             onCommit={(next) => next.trim() && onRename(next.trim())}
-            className="-ms-1 text-sm font-semibold text-foreground"
+            className="-ms-1 text-body font-semibold text-foreground"
           />
         </div>
         {team.pipedriveId != null && (
-          <span className="shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <span className="shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 text-caption font-medium text-muted-foreground">
             Pipedrive
           </span>
         )}
         {!team.active && (
-          <span className="shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <span className="shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 text-caption font-medium text-muted-foreground">
             {t("common.archived")}
           </span>
         )}
-        <span className="shrink-0 text-xs tabular-nums text-subtle">
+        <span className="shrink-0 text-caption-quiet tabular-nums text-subtle">
           {team.memberCount === 0
             ? t("settings.teams.noMembers")
             : tPlural("settings.teams.memberCount", team.memberCount, {
@@ -162,7 +162,7 @@ function TeamCard({
         {team.members.map((member) => (
           <span
             key={member.id}
-            className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-whisper py-0.5 ps-2.5 pe-1 text-xs text-foreground"
+            className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-whisper py-0.5 ps-2.5 pe-1 text-caption-quiet text-foreground"
           >
             {member.name}
             <button
@@ -184,7 +184,7 @@ function TeamCard({
           value=""
           onChange={(v) => v && onAddMember(Number(v))}
           placeholder={t("settings.teams.addMemberPlaceholder")}
-          triggerClassName="h-7 w-40 text-xs"
+          triggerClassName="h-7 w-40 text-caption-quiet"
         />
       </div>
     </li>
@@ -249,8 +249,8 @@ export function TeamsSettings() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-6">
       <header className="mb-5">
-        <h1 className="font-heading text-xl font-bold text-foreground">{t("settings.teams.title")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="text-heading-sm text-foreground">{t("settings.teams.title")}</h1>
+        <p className="mt-1 text-body-quiet text-muted-foreground">
           {t("settings.teams.subtitle")}
         </p>
       </header>
@@ -279,18 +279,18 @@ export function TeamsSettings() {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center gap-2 px-5 py-10 text-sm text-subtle">
+          <div className="flex items-center justify-center gap-2 px-5 py-10 text-body-quiet text-subtle">
             <Loader2 className="h-4 w-4 animate-spin" /> {t("settings.teams.loading")}
           </div>
         ) : isError || !data ? (
-          <div className="px-5 py-10 text-center text-sm text-destructive">
+          <div className="px-5 py-10 text-center text-body-quiet text-destructive">
             {t("settings.teams.loadFailed")}
           </div>
         ) : data.teams.length === 0 ? (
           <div className="px-5 py-10 text-center">
             <Users className="mx-auto mb-2 h-6 w-6 text-subtle" />
-            <p className="text-sm text-muted-foreground">{t("settings.teams.empty")}</p>
-            <p className="mt-1 text-xs text-subtle">
+            <p className="text-body-quiet text-muted-foreground">{t("settings.teams.empty")}</p>
+            <p className="mt-1 text-caption-quiet text-subtle">
               {t("settings.teams.emptyHint")}
             </p>
           </div>

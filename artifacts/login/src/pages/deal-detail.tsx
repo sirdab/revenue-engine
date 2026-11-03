@@ -96,7 +96,7 @@ export function DealDetailDrawer({
     <Sheet side="end" open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex w-full flex-col p-0 sm:max-w-2xl lg:max-w-4xl">
         <div className="flex shrink-0 items-center justify-between gap-3 border-b bg-background px-4 py-2.5">
-          <SheetTitle className="truncate text-sm font-semibold text-foreground">
+          <SheetTitle className="truncate text-body font-semibold text-foreground">
             {deal?.title ?? t("dealDetail.title")}
           </SheetTitle>
           <SheetClose className="rounded-sm p-1 text-subtle opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
@@ -287,7 +287,7 @@ function DealDetailContent({ dealId }: { dealId: number }) {
     <>
       <div className="flex flex-col gap-3">
         {/* Combined header + chevron pipeline card */}
-        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="overflow-hidden rounded-2xl bg-card shadow-card">
           <DealHeader
             deal={deal}
             onCommit={commit}

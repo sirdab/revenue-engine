@@ -156,10 +156,10 @@ function AutomationRow({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-foreground">
+        <p className="truncate text-body font-semibold text-foreground">
           {automation.name}
         </p>
-        <p className="truncate text-xs text-muted-foreground">
+        <p className="truncate text-caption-quiet text-muted-foreground">
           {automation.triggerEvent === "deal_updated"
             ? conditionCount === 0
               ? "Any change to any deal"
@@ -300,10 +300,10 @@ export function AutomationsSettings() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-6">
       <header className="mb-5">
-        <h1 className="font-heading text-xl font-bold text-foreground">
+        <h1 className="text-heading-sm text-foreground">
           Automations
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-body-quiet text-muted-foreground">
           When something happens — a deal comes in, a deal moves stage, a deal
           is won — have the app do the next step for you.
         </p>
@@ -323,18 +323,18 @@ export function AutomationsSettings() {
         }
       >
         {isLoading ? (
-          <div className="flex items-center justify-center gap-2 px-5 py-10 text-sm text-subtle">
+          <div className="flex items-center justify-center gap-2 px-5 py-10 text-body-quiet text-subtle">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading automations…
           </div>
         ) : isError || !data ? (
-          <div className="px-5 py-10 text-center text-sm text-destructive">
+          <div className="px-5 py-10 text-center text-body-quiet text-destructive">
             Failed to load automations.
           </div>
         ) : total === 0 ? (
           <div className="px-5 py-10 text-center">
             <Zap className="mx-auto mb-2 h-6 w-6 text-subtle" />
-            <p className="text-sm text-muted-foreground">No automations yet.</p>
-            <p className="mt-1 text-xs text-subtle">
+            <p className="text-body-quiet text-muted-foreground">No automations yet.</p>
+            <p className="mt-1 text-caption-quiet text-subtle">
               Add one to take a repetitive step off your plate.
             </p>
           </div>

@@ -81,15 +81,15 @@ export function MultiSelectFilter({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
-          className={cn("gap-1.5", selected.length > 0 && "border-brand-500 text-brand")}
+          className={cn("gap-1.5", selected.length > 0 && "border-btn-border-hover text-foreground")}
           data-testid={testId}
         >
           {icon}
           {label}
           {selected.length > 0 && (
-            <span className="rounded-full bg-brand-subtle px-1.5 text-xs font-semibold text-brand">
+            <span className="rounded-full bg-primary px-1.5 text-caption text-primary-foreground">
               {selected.length}
             </span>
           )}
@@ -126,9 +126,9 @@ export function MultiSelectFilter({
                     >
                       <span
                         className={cn(
-                          "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
+                          "flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border",
                           on
-                            ? "border-brand-500 bg-primary text-primary-foreground"
+                            ? "border-primary bg-primary text-primary-foreground"
                             : "border-input",
                         )}
                       >
@@ -148,7 +148,7 @@ export function MultiSelectFilter({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-full text-xs text-muted-foreground"
+                className="h-7 w-full text-caption text-muted-foreground"
                 onClick={() => onChange([])}
               >
                 {t("filter.clearCount", { count: selected.length })}

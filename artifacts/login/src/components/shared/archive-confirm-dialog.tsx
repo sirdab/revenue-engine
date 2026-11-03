@@ -53,7 +53,7 @@ export function ArchiveConfirmDialog({
               : t("archive.description", { record: recordLabel })}
           </DialogDescription>
         </DialogHeader>
-        <ul className="space-y-1.5 py-1 text-sm text-muted-foreground">
+        <ul className="space-y-1.5 py-1 text-body text-muted-foreground">
           {CONSEQUENCES.map((c) => (
             <li key={c} className="flex gap-2">
               <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-gray-400" />
@@ -63,7 +63,7 @@ export function ArchiveConfirmDialog({
         </ul>
         <DialogFooter>
           <Button
-            variant="outline"
+            variant="secondary"
             onClick={() => onOpenChange(false)}
             disabled={confirming}
           >

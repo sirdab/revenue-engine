@@ -39,9 +39,9 @@ export function DueDateChips({
             // Tapping the active chip again clears it (back to no date).
             onClick={() => onChange(active ? "" : ymd)}
             className={cn(
-              "rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
+              "rounded-full border px-3 py-1 text-caption font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
               active
-                ? "border-brand-500 bg-brand-subtle text-brand"
+                ? "border-btn-border-hover bg-btn-ghost-surface-active text-foreground"
                 : "border-border text-muted-foreground hover:border-input hover:bg-gray-alpha-50",
             )}
           >

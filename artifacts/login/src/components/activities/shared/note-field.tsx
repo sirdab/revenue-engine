@@ -87,5 +87,5 @@ export const NoteField = forwardRef<
 
 /** An existing note, read-only. */
 export function NoteView({ note }: { note: string }) {
-  return <RichText html={note} className="text-sm text-muted-foreground" />;
+  return <RichText html={note} className="text-body text-muted-foreground" />;
 }

@@ -16,7 +16,7 @@ function Metric({
   value: number;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-whisper px-2.5 py-1 text-xs text-muted-foreground">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-whisper px-2.5 py-1 text-caption text-muted-foreground">
       <span className="text-subtle">{icon}</span>
       <span className="font-semibold text-foreground">{value}</span>
       {label}
@@ -36,28 +36,28 @@ export function OrganizationHeader({
     <div className="px-4 py-3">
       <Link
         href="/contacts"
-        className="inline-flex items-center gap-1 text-xs font-medium text-subtle transition-colors hover:text-brand"
+        className="inline-flex items-center gap-1 text-caption text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-3.5 w-3.5" /> {t("contacts.backToContactsLower")}
       </Link>
 
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-subtle text-brand">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
           <Building2 className="h-4 w-4" />
         </span>
         <EditableText
           value={organization.name}
           onCommit={(name) => onCommit({ name })}
           placeholder={t("contacts.orgNamePlaceholder")}
-          className="-ms-1 min-w-0 font-heading text-lg font-bold text-foreground"
+          className="-ms-1 min-w-0 text-heading-sm text-foreground"
         />
-        <span className="hidden h-4 w-px bg-gray-200 sm:block" />
+        <span className="hidden h-4 w-px bg-border sm:block" />
         <span
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+          className="inline-flex items-center gap-1.5 text-caption text-muted-foreground"
           title={organization.ownerName ?? t("common.unassigned")}
         >
-          <Avatar className="h-4 w-4">
-            <AvatarFallback className="bg-brand-subtle text-[9px] font-semibold text-brand">
+          <Avatar size="sm" className="size-4">
+            <AvatarFallback className="text-badge">
               {initials(organization.ownerName)}
             </AvatarFallback>
           </Avatar>

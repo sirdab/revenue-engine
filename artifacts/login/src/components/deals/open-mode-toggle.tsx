@@ -106,7 +106,7 @@ export function OpenModeToggle({
   }
 
   const segClass =
-    "pointer-events-none relative z-10 flex items-center justify-center gap-1.5 rounded-[5px] transition-colors";
+    "pointer-events-none relative z-10 flex items-center justify-center gap-1.5 rounded-md transition-colors";
 
   return (
     <div
@@ -125,22 +125,22 @@ export function OpenModeToggle({
       onKeyDown={onKeyDown}
       style={{ width: SEG * 2 + 6 }}
       className={cn(
-        "relative inline-flex h-8 shrink-0 touch-none select-none items-stretch rounded-md border border-input bg-background p-0.5 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "relative inline-flex h-control shrink-0 touch-none select-none items-stretch rounded-lg bg-muted p-0.5 text-caption outline-none focus-visible:ring-2 focus-visible:ring-ring",
         preview != null ? "cursor-grabbing" : "cursor-grab",
       )}
     >
-      {/* Teal knob — positioned imperatively (see place()). */}
+      {/* Knob — positioned imperatively (see place()). */}
       <span
         ref={knobRef}
         aria-hidden
         style={{ width: SEG }}
-        className="pointer-events-none absolute inset-y-0.5 start-0.5 rounded-[5px] bg-primary shadow-sm"
+        className="pointer-events-none absolute inset-y-0.5 start-0.5 rounded-md bg-background shadow-raised"
       />
       <span
         role="radio"
         aria-checked={!activeIsDrawer}
         style={{ width: SEG }}
-        className={cn(segClass, !activeIsDrawer ? "font-medium text-white" : "text-muted-foreground")}
+        className={cn(segClass, !activeIsDrawer ? "font-medium text-foreground" : "text-muted-foreground")}
       >
         <Maximize2 className="h-3.5 w-3.5" /> {t("deals.openMode.fullPage")}
       </span>
@@ -148,7 +148,7 @@ export function OpenModeToggle({
         role="radio"
         aria-checked={activeIsDrawer}
         style={{ width: SEG }}
-        className={cn(segClass, activeIsDrawer ? "font-medium text-white" : "text-muted-foreground")}
+        className={cn(segClass, activeIsDrawer ? "font-medium text-foreground" : "text-muted-foreground")}
       >
         <PanelRight className="h-3.5 w-3.5" /> {t("deals.openMode.drawer")}
       </span>

@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
-import { Loader2, Upload } from "lucide-react";
+import { useState } from "react";
+import { FileUp, Loader2, Upload } from "lucide-react";
+import { Dropzone, type FileRejection } from "@sirdab/one/components/dropzone";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -21,7 +22,6 @@ import {
   useUploadFile,
   FILE_CATEGORY_OPTIONS,
   ACCEPTED_FILE_EXTENSIONS,
-  ACCEPTED_FILE_ACCEPT_ATTR,
   type FileCategory,
   type FileTarget,
 } from "@/lib/files-api";
@@ -30,6 +30,29 @@ import { useI18n } from "@/lib/i18n/i18n";
 const ACCEPTED_EXTENSIONS_LABEL = ACCEPTED_FILE_EXTENSIONS.map((ext) =>
   ext.toUpperCase(),
 ).join(", ");
+
+// The file picker filters by these types; the server validates again.
+const MIME_BY_EXTENSION: Record<string, string> = {
+  pdf: "application/pdf",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+};
+const ACCEPT: Record<string, string[]> = {};
+for (const ext of ACCEPTED_FILE_EXTENSIONS) {
+  const mime = MIME_BY_EXTENSION[ext] ?? "application/octet-stream";
+  (ACCEPT[mime] ??= []).push(`.${ext}`);
+}
+
+/** A browser can report an empty or odd MIME type for a valid file; trust
+ *  the extension then, the way the old `<input accept>` did. */
+function hasAcceptedExtension(name: string): boolean {
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  return (ACCEPTED_FILE_EXTENSIONS as readonly string[]).includes(ext);
+}
 
 export function UploadFileDialog({
   open,
@@ -43,14 +66,12 @@ export function UploadFileDialog({
   const { t } = useI18n();
   const [file, setFile] = useState<File | null>(null);
   const [category, setCategory] = useState<FileCategory>("contract");
-  const inputRef = useRef<HTMLInputElement>(null);
   const upload = useUploadFile(target);
   const { toast } = useToast();
 
   const reset = () => {
     setFile(null);
     setCategory("contract");
-    if (inputRef.current) inputRef.current.value = "";
   };
 
   const handleSubmit = async () => {
@@ -78,21 +99,29 @@ export function UploadFileDialog({
     >
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle className="font-heading">{t("files.uploadTitle")}</DialogTitle>
+          <DialogTitle>{t("files.uploadTitle")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <Label htmlFor="file-upload-input">{t("files.file")}</Label>
-            <input
-              id="file-upload-input"
-              ref={inputRef}
-              type="file"
-              accept={ACCEPTED_FILE_ACCEPT_ATTR}
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="block w-full text-sm text-muted-foreground file:me-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground hover:file:bg-gray-alpha-150"
-            />
-            <p className="text-[11px] text-subtle">
+            <Label>{t("files.file")}</Label>
+            <Dropzone
+              accept={ACCEPT}
+              multiple={false}
+              label={t("files.file")}
+              onDrop={(accepted: File[], rejected: FileRejection[]) => {
+                const next =
+                  accepted[0] ??
+                  rejected.find((r) => hasAcceptedExtension(r.file.name))?.file;
+                if (next) setFile(next);
+              }}
+            >
+              <FileUp className="h-5 w-5 text-muted-foreground" />
+              <span className="text-body text-foreground">
+                {file ? file.name : t("files.dropzone")}
+              </span>
+            </Dropzone>
+            <p className="text-caption text-subtle">
               {t("files.acceptedTypes", { types: ACCEPTED_EXTENSIONS_LABEL })}
             </p>
           </div>
@@ -124,7 +153,6 @@ export function UploadFileDialog({
           <Button
             onClick={handleSubmit}
             disabled={!file || upload.isPending}
-            className="bg-primary text-primary-foreground hover:bg-primary-hover"
           >
             {upload.isPending ? (
               <Loader2 className="me-2 h-4 w-4 animate-spin" />

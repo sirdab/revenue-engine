@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { CheckCircle2, ChevronRight, History, Pencil, PhoneMissed, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n/i18n";
 import { formatDate, formatTimestamp } from "@/lib/format";
@@ -103,7 +104,7 @@ export function ActivityActions({
             size="icon"
             onClick={() => controller.edit(view)}
             aria-label={t("activity.row.edit")}
-            className={cn(iconButton, "hover:text-brand")}
+            className={cn(iconButton, "hover:text-foreground")}
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
@@ -149,7 +150,7 @@ export function ActivityMeta({
       <Link
         key="deal"
         href={`/deal/${view.links.deal.id}`}
-        className="truncate text-brand hover:underline"
+        className="truncate text-foreground underline-offset-2 hover:underline"
       >
         {view.links.deal.label}
       </Link>,
@@ -162,13 +163,13 @@ export function ActivityMeta({
         {closedUnsuccessful(view) ? (
           <PhoneMissed className="h-3 w-3" />
         ) : (
-          <CheckCircle2 className="h-3 w-3 text-brand" />
+          <CheckCircle2 className="h-3 w-3 text-success-glyph" />
         )}
         {completed}
       </span>,
     );
   return (
-    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-subtle">
+    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-caption text-subtle">
       {parts.flatMap((p, i) => (i === 0 ? [p] : [<span key={`sep${i}`}>·</span>, p]))}
     </div>
   );
@@ -198,7 +199,7 @@ export function ActivityNote({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="inline-flex items-center gap-1 text-xs text-subtle transition-colors hover:text-muted-foreground"
+        className="inline-flex items-center gap-1 text-caption text-subtle transition-colors hover:text-muted-foreground"
       >
         <ChevronRight
           className={cn(
@@ -269,8 +270,8 @@ export function ActivityItem({
           view.done
             ? "bg-muted text-subtle"
             : status === "overdue"
-              ? "bg-destructive-subtle text-destructive"
-              : "bg-brand-subtle text-brand",
+              ? "bg-destructive-subtle text-destructive-glyph"
+              : "bg-muted text-muted-foreground",
         )}
       >
         <Icon className="h-3.5 w-3.5" />
@@ -279,7 +280,7 @@ export function ActivityItem({
         className={cn(
           "min-w-0 flex-1 rounded-lg border px-3 py-2",
           view.draft
-            ? "border-dashed border-warning/30 bg-warning-subtle/40"
+            ? "border-dashed border-border bg-surface-whisper"
             : "border-border bg-surface-whisper",
           flash,
         )}
@@ -297,7 +298,7 @@ export function ActivityItem({
               <span
                 dir="auto"
                 className={cn(
-                  "min-w-0 text-sm font-medium",
+                  "min-w-0 text-body font-medium",
                   view.done ? "text-muted-foreground" : "text-foreground",
                 )}
               >
@@ -305,9 +306,7 @@ export function ActivityItem({
               </span>
             </span>
             {view.draft && (
-              <span className="inline-flex items-center rounded-full border border-warning/30 bg-warning-subtle px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-warning">
-                {t("common.draft")}
-              </span>
+              <Badge tone="attention">{t("common.draft")}</Badge>
             )}
           </div>
           {/* Wraps too: a page extra (the agenda's reschedule picker) plus

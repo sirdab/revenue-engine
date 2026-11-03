@@ -104,7 +104,7 @@ function DraggableHeader<T>({
     <div
       ref={setNodeRef}
       style={style}
-      className="relative flex shrink-0 items-center border-b border-border bg-surface-whisper px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+      className="relative flex h-control-xl shrink-0 items-center border-b border-row-divider bg-background px-3 text-label text-muted-foreground"
     >
       <span
         {...attributes}
@@ -127,9 +127,9 @@ function DraggableHeader<T>({
         </span>
         {canSort &&
           (sortDir === "asc" ? (
-            <ChevronUp className="h-3.5 w-3.5 text-brand" />
+            <ChevronUp className="size-3.5 text-foreground" />
           ) : sortDir === "desc" ? (
-            <ChevronDown className="h-3.5 w-3.5 text-brand" />
+            <ChevronDown className="size-3.5 text-foreground" />
           ) : (
             <ChevronsUpDown className="h-3 w-3 text-subtle" />
           ))}
@@ -146,8 +146,8 @@ function DraggableHeader<T>({
         >
           <div
             className={cn(
-              "my-2 w-px bg-gray-200 group-hover/resize:my-0 group-hover/resize:w-0.5 group-hover/resize:bg-brand-400",
-              header.column.getIsResizing() && "my-0 w-0.5 bg-brand-500",
+              "my-2.5 w-px bg-border group-hover/resize:my-0 group-hover/resize:w-0.5 group-hover/resize:bg-gray-alpha-400",
+              header.column.getIsResizing() && "my-0 w-0.5 bg-foreground",
             )}
           />
         </div>
@@ -206,7 +206,7 @@ function RowActivator({ label, onOpen }: { label: string; onOpen: () => void }) 
           e.stopPropagation();
           onOpen();
         }}
-        className="rounded p-0.5 text-subtle transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:text-muted-foreground"
+        className="rounded-sm p-0.5 text-subtle transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:text-muted-foreground"
       >
         <ChevronRight className="h-4 w-4" aria-hidden />
       </button>
@@ -338,7 +338,7 @@ function ExportButton<T>({
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="secondary"
       size="sm"
       className="h-8 gap-1.5"
       disabled={disabled || busy}
@@ -583,8 +583,8 @@ export function DataTable<T>({
   return (
     <div className="flex h-full flex-col">
       {/* Column settings */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-2">
-        <div className="text-xs text-subtle">
+      <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+        <div className="text-caption text-subtle">
           {isLoading ? (
             <Skeleton className="h-3 w-16" />
           ) : (
@@ -615,7 +615,7 @@ export function DataTable<T>({
 
       {/* Grid (desktop) / cards (mobile) */}
       {isMobile ? (
-        <div ref={scrollRef} className="flex-1 overflow-auto bg-surface-whisper p-3">
+        <div ref={scrollRef} className="flex-1 overflow-auto bg-background p-3">
           {isLoading ? (
             <div
               className="space-y-3"
@@ -625,7 +625,7 @@ export function DataTable<T>({
               {Array.from({ length: 4 }, (_, i) => (
                 <div
                   key={i}
-                  className="space-y-2.5 rounded-lg border border-border bg-card p-3.5 shadow-sm"
+                  className="space-y-2.5 rounded-2xl bg-card p-3.5 shadow-card"
                 >
                   <Skeleton className="h-4 w-2/3" />
                   <Skeleton className="h-3 w-1/2" />
@@ -634,11 +634,11 @@ export function DataTable<T>({
               ))}
             </div>
           ) : isError ? (
-            <div className="flex h-40 items-center justify-center text-sm text-destructive">
+            <div className="flex h-40 items-center justify-center text-body text-destructive">
               {errorMessage}
             </div>
           ) : rows.length === 0 ? (
-            <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+            <div className="flex h-40 items-center justify-center text-body text-muted-foreground">
               {emptyMessage}
             </div>
           ) : (
@@ -650,10 +650,9 @@ export function DataTable<T>({
                     onRowClick ? () => onRowClick(row.original) : undefined
                   }
                   className={cn(
-                    "rounded-lg border border-border bg-card p-3.5 shadow-sm",
+                    "rounded-2xl bg-card p-3.5 shadow-card",
                     onRowClick && "group cursor-pointer",
-                    row.id === highlightRowId &&
-                      "border-brand-400 ring-2 ring-ring",
+                    row.id === highlightRowId && "ring-2 ring-ring",
                   )}
                 >
                   {row.getVisibleCells().map((cell) => {
@@ -665,11 +664,11 @@ export function DataTable<T>({
                         className="border-b border-border py-1.5 first:pt-0 last:border-0 last:pb-0"
                       >
                         {label && (
-                          <div className="text-[11px] font-medium uppercase tracking-wide text-subtle">
+                          <div className="text-caption text-muted-foreground">
                             {label}
                           </div>
                         )}
-                        <div className="mt-0.5 text-sm text-foreground">
+                        <div className="mt-0.5 text-body text-foreground">
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext(),
@@ -705,7 +704,7 @@ export function DataTable<T>({
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
             >
-              <div className="sticky top-0 z-10 flex bg-surface-whisper">
+              <div className="sticky top-0 z-10 flex bg-background">
                 <SortableContext
                   items={sortableIds}
                   strategy={horizontalListSortingStrategy}
@@ -719,7 +718,7 @@ export function DataTable<T>({
                         <div
                           key={header.id}
                           style={{ width: header.getSize() }}
-                          className="flex shrink-0 items-center border-b border-border bg-surface-whisper px-3 py-2"
+                          className="flex h-control-xl shrink-0 items-center border-b border-row-divider bg-background px-3"
                         >
                           {flexRender(
                             header.column.columnDef.header,
@@ -750,7 +749,7 @@ export function DataTable<T>({
                   <div
                     key={i}
                     style={{ height: estimateRowSize }}
-                    className="flex items-center border-b border-border"
+                    className="flex items-center border-b border-row-divider"
                   >
                     {headers.map((h, j) => (
                       <div
@@ -759,7 +758,7 @@ export function DataTable<T>({
                         className="flex shrink-0 items-center px-3"
                       >
                         <Skeleton
-                          className="h-3.5 rounded"
+                          className="h-3.5 rounded-sm"
                           style={{ width: `${45 + ((i * 7 + j * 13) % 40)}%` }}
                         />
                       </div>
@@ -768,11 +767,11 @@ export function DataTable<T>({
                 ))}
               </div>
             ) : isError ? (
-              <div className="flex h-40 items-center justify-center text-sm text-destructive">
+              <div className="flex h-40 items-center justify-center text-body text-destructive">
                 {errorMessage}
               </div>
             ) : rows.length === 0 ? (
-              <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+              <div className="flex h-40 items-center justify-center text-body text-muted-foreground">
                 {emptyMessage}
               </div>
             ) : (
@@ -799,10 +798,10 @@ export function DataTable<T>({
                         onRowClick ? () => onRowClick(row.original) : undefined
                       }
                       className={cn(
-                        "flex items-center border-b border-border hover:bg-gray-alpha-50",
+                        "flex items-center border-b border-row-divider hover:bg-row-surface-hover",
                         onRowClick && "group cursor-pointer",
                         row.id === highlightRowId &&
-                          "bg-brand-subtle ring-2 ring-inset ring-ring",
+                          "bg-row-surface-selected hover:bg-row-surface-selected-hover",
                       )}
                     >
                       {row.getVisibleCells().map((cell) => {
@@ -812,7 +811,7 @@ export function DataTable<T>({
                             key={cell.id}
                             style={{ width: cell.column.getSize() }}
                             className={cn(
-                              "flex shrink-0 items-center overflow-hidden px-3 text-sm",
+                              "flex shrink-0 items-center overflow-hidden px-3 text-body",
                               align === "right" && "justify-end",
                             )}
                           >

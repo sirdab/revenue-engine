@@ -180,7 +180,7 @@ function AddUserDialog() {
       </Button>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-heading">New user</DialogTitle>
+          <DialogTitle>New user</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -253,7 +253,7 @@ function AddUserDialog() {
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
                   <div>
-                    <FormLabel className="text-sm">Administrator</FormLabel>
+                    <FormLabel className="text-body-quiet">Administrator</FormLabel>
                     <FormDescription>
                       Can manage users and import data.
                     </FormDescription>
@@ -273,7 +273,7 @@ function AddUserDialog() {
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
                   <div>
-                    <FormLabel className="text-sm">
+                    <FormLabel className="text-body-quiet">
                       Email login details
                     </FormLabel>
                     <FormDescription>
@@ -378,7 +378,7 @@ function EditUserDialog({ user, isSelf }: { user: User; isSelf: boolean }) {
       </Button>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-heading">Edit user</DialogTitle>
+          <DialogTitle>Edit user</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -564,7 +564,7 @@ function StatusActions({ user, isSelf }: { user: User; isSelf: boolean }) {
       size="sm"
       disabled={updateUser.isPending}
       onClick={() => setActive(true)}
-      className="h-8 border-brand-200 text-brand hover:bg-brand-subtle"
+      className="h-8"
     >
       {updateUser.isPending ? (
         <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
@@ -703,7 +703,7 @@ export default function AdminUsersPage() {
           const isSelf = currentUser?.id === u.id;
           return (
             <div className="flex min-w-0 items-center gap-2.5">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-subtle text-xs font-semibold text-brand">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-subtle text-caption font-semibold text-brand">
                 {initials(u.name)}
               </span>
               <div className="min-w-0">
@@ -721,12 +721,12 @@ export default function AdminUsersPage() {
                     />
                   )}
                   {isSelf && (
-                    <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <span className="shrink-0 rounded-sm bg-muted px-1.5 py-0.5 text-caption text-muted-foreground">
                       You
                     </span>
                   )}
                 </div>
-                <div className="truncate text-xs text-subtle">#{u.id}</div>
+                <div className="truncate text-caption-quiet text-subtle">#{u.id}</div>
               </div>
             </div>
           );
@@ -765,7 +765,7 @@ export default function AdminUsersPage() {
         cell: ({ row }) => (
           <span
             className={cn(
-              "rounded px-2 py-0.5 text-xs font-medium",
+              "rounded-sm px-2 py-0.5 text-caption",
               row.original.isAdmin
                 ? "bg-brand-subtle text-brand"
                 : "bg-muted text-muted-foreground",
@@ -821,7 +821,7 @@ export default function AdminUsersPage() {
         cell: ({ row }) => (
           <span
             className={cn(
-              "rounded-full px-2 py-0.5 text-xs font-medium",
+              "rounded-full px-2 py-0.5 text-caption",
               row.original.activeFlag
                 ? "bg-success-subtle text-success"
                 : "bg-destructive-subtle text-destructive",
@@ -872,10 +872,10 @@ export default function AdminUsersPage() {
     <div className="flex h-full flex-col overflow-hidden bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 pb-1 pt-3">
         <div>
-          <h1 className="font-heading text-xl font-bold tracking-tight text-foreground">
+          <h1 className="text-heading-sm text-foreground">
             User Management
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body-quiet text-muted-foreground">
             Create teammates and control who can access the CRM.
           </p>
         </div>
@@ -886,13 +886,13 @@ export default function AdminUsersPage() {
         {cards.map((card) => (
           <div
             key={card.label}
-            className="rounded-lg border border-border bg-card px-4 py-3"
+            className="rounded-2xl bg-card px-4 py-3 shadow-card"
           >
-            <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-caption text-muted-foreground">
               <span className={cn("h-2 w-2 rounded-full", card.dot)} />
               {card.label}
             </div>
-            <div className="mt-1 text-2xl font-bold tabular-nums text-foreground">
+            <div className="mt-1 text-heading-sm tabular-nums text-foreground">
               {card.value.toLocaleString()}
             </div>
           </div>

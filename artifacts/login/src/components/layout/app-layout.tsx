@@ -48,7 +48,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const toggleSidebar = () => setCollapsed((prev) => !prev);
 
   return (
-    <div className="flex h-[100dvh] bg-surface-whisper overflow-hidden w-full text-foreground">
+    <div className="flex h-[100dvh] bg-background overflow-hidden w-full text-foreground">
       <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
       <MobileSidebar open={mobileOpen} onOpenChange={setMobileOpen} />
       <div className="flex flex-col flex-1 min-w-0">
@@ -56,7 +56,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           onOpenMobile={() => setMobileOpen(true)}
           onOpenSearch={() => setSearchOpen(true)}
         />
-        <main ref={mainRef} className="flex-1 overflow-auto bg-surface-whisper">
+        <main ref={mainRef} className="flex-1 overflow-auto bg-background">
           {children}
         </main>
       </div>

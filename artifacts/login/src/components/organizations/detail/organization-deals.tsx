@@ -1,24 +1,18 @@
 import { Link } from "wouter";
 import { Handshake, ChevronRight, Flame } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyMedia,
-} from "@/components/ui/empty";
-import { cn } from "@/lib/utils";
+import { EmptyState } from "@sirdab/one/components/empty-state";
+import { Badge, type StatusTone } from "@/components/ui/badge";
 import { Money } from "@/components/shared/money";
 import { DealSectionCard } from "@/components/deals/detail/deal-section-card";
 import type { Deal } from "@workspace/api-client-react";
 import { useI18n } from "@/lib/i18n/i18n";
 
-const STATUS_PILL: Record<string, string> = {
-  open: "bg-brand-subtle text-brand border-brand-200",
-  won: "bg-success-subtle text-success border-success/30",
-  lost: "bg-destructive-subtle text-destructive border-destructive/30",
-  deleted: "bg-muted text-muted-foreground border-border",
+const STATUS_TONE: Record<string, StatusTone> = {
+  open: "neutral",
+  won: "success",
+  lost: "critical",
+  deleted: "neutral",
 };
 
 export function OrganizationDeals({
@@ -34,7 +28,7 @@ export function OrganizationDeals({
       title={t("common.deals")}
       action={
         deals.length > 0 ? (
-          <span className="text-[11px] font-medium text-subtle">
+          <span className="text-caption font-medium text-subtle">
             {deals.length}
           </span>
         ) : undefined
@@ -48,17 +42,12 @@ export function OrganizationDeals({
           ))}
         </div>
       ) : deals.length === 0 ? (
-        <Empty className="border-dashed py-8">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Handshake className="h-4 w-4" />
-            </EmptyMedia>
-            <EmptyTitle>{t("contacts.noDeals")}</EmptyTitle>
-            <EmptyDescription>
-              {t("contacts.orgDealsHint")}
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <EmptyState
+          className="py-8"
+          icon={Handshake}
+          title={t("contacts.noDeals")}
+          caption={t("contacts.orgDealsHint")}
+        />
       ) : (
         <ul className="divide-y divide-border">
           {deals.map((d) => (
@@ -69,29 +58,27 @@ export function OrganizationDeals({
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="truncate text-sm font-medium text-foreground">
+                    <span className="truncate text-body font-medium text-foreground">
                       {d.title}
                     </span>
                     {d.isRotting && d.status === "open" && (
                       <Flame className="h-3 w-3 shrink-0 text-warning-glyph" />
                     )}
                   </div>
-                  <div className="mt-0.5 flex items-center gap-2 text-[11px] text-subtle">
-                    <span
-                      className={cn(
-                        "rounded-full border px-1.5 py-px font-semibold uppercase tracking-wide",
-                        STATUS_PILL[d.status] ?? STATUS_PILL.deleted,
-                      )}
+                  <div className="mt-0.5 flex items-center gap-2 text-caption text-subtle">
+                    <Badge
+                      tone={STATUS_TONE[d.status] ?? "neutral"}
+                      className="capitalize"
                     >
                       {d.status}
-                    </span>
+                    </Badge>
                     {d.stageName && <span className="truncate">{d.stageName}</span>}
                   </div>
                 </div>
-                <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
+                <span className="shrink-0 text-body font-medium tabular-nums text-foreground">
                   <Money value={d.value} currency={d.currency} />
                 </span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-subtle transition-colors group-hover:text-brand" />
+                <ChevronRight className="h-4 w-4 shrink-0 text-subtle transition-colors group-hover:text-foreground" />
               </Link>
             </li>
           ))}

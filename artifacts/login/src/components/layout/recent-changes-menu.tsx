@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { changeFullSentence, changeHref } from "@/lib/change-feed";
 import { useI18n } from "@/lib/i18n/i18n";
+import { TOPBAR_ICON_BUTTON } from "@/components/layout/topbar-icon";
 
 // Recent changes on your records, in the topbar next to the bell.
 //
@@ -39,19 +40,19 @@ export function RecentChangesMenu() {
       <DropdownMenuTrigger
         aria-label={t("recentChanges.title")}
         title={t("recentChanges.title")}
-        className="relative flex-shrink-0 rounded-md p-2 text-muted-foreground transition-colors hover:bg-gray-alpha-100 hover:text-foreground focus:outline-none"
+        className={TOPBAR_ICON_BUTTON}
       >
-        <History className="h-5 w-5" />
+        <History />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
-        <div className="border-b border-border px-3 py-2">
-          <p className="text-sm font-semibold text-foreground">{t("recentChanges.title")}</p>
-          <p className="text-xs text-subtle">
+        <div className="border-b border-border px-3 py-2.5">
+          <p className="text-label text-foreground">{t("recentChanges.title")}</p>
+          <p className="text-caption text-subtle">
             {t("recentChanges.subtitle")}
           </p>
         </div>
         {items.length === 0 ? (
-          <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+          <p className="px-3 py-6 text-center text-body text-muted-foreground">
             {t("recentChanges.empty")}
           </p>
         ) : (
@@ -61,12 +62,12 @@ export function RecentChangesMenu() {
                 key={item.id}
                 type="button"
                 onClick={() => navigate(changeHref(item))}
-                className="block w-full px-3 py-2 text-start hover:bg-gray-alpha-50"
+                className="block w-full px-3 py-2 text-start transition-colors hover:bg-btn-ghost-surface-hover"
               >
-                <p className="text-sm leading-snug text-muted-foreground">
+                <p className="text-body leading-snug text-muted-foreground">
                   {changeFullSentence(item)}
                 </p>
-                <p className="text-xs text-subtle">
+                <p className="text-caption text-subtle">
                   {formatRelativeShort(item.changedAt)}
                 </p>
               </button>

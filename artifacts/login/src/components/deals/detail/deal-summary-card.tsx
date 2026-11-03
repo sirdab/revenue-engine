@@ -35,12 +35,12 @@ function Metric({
 }) {
   return (
     <div className="min-w-0">
-      <div className="text-[10px] font-medium uppercase tracking-wide text-subtle">
+      <div className="text-caption text-muted-foreground">
         {label}
       </div>
       {control ?? (
         <div
-          className="mt-0.5 truncate text-sm font-semibold text-foreground"
+          className="mt-0.5 truncate text-body font-semibold text-foreground"
           title={title ?? value ?? undefined}
         >
           {value != null && value !== "" ? (
@@ -94,7 +94,7 @@ export function DealSummaryCard({
               value={deal.value}
               currency={deal.currency}
               onCommit={(v) => onCommit({ value: v })}
-              className="-ms-1 mt-0.5 w-full text-sm font-semibold text-foreground"
+              className="-ms-1 mt-0.5 w-full text-body font-semibold text-foreground"
             />
           }
         />
@@ -150,11 +150,11 @@ export function DealSummaryCard({
                   // can't be wheel-scrolled. In-place is clip-safe — Radix
                   // positions the popover `fixed`, so page mode is unaffected.
                   inModal
-                  triggerClassName="h-8 w-full justify-between border-transparent bg-transparent px-1 text-sm font-semibold text-foreground shadow-none hover:bg-gray-alpha-100"
+                  triggerClassName="h-8 w-full justify-between border-transparent bg-transparent px-1 text-body font-semibold text-foreground shadow-none hover:bg-gray-alpha-100"
                 />
               ) : (
                 <div
-                  className="flex h-8 items-center truncate px-1 text-sm font-semibold text-foreground"
+                  className="flex h-8 items-center truncate px-1 text-body font-semibold text-foreground"
                   title={deal.ownerName ?? undefined}
                 >
                   {deal.ownerName ?? (

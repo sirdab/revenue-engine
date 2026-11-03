@@ -68,19 +68,21 @@ const FUNNEL_RAMP = [
 
 // Reserved status colors — state, not identity; keyed, never positional.
 const STATUS_COLORS: Record<string, string> = {
-  won: "#0ca30c",
-  lost: "#d03b3b",
-  open: "#2a78d6",
+  won: "var(--success-glyph)",
+  lost: "var(--destructive-glyph)",
+  open: "var(--attention-glyph)",
 };
 
+// UI chrome around the data (text, grid, axes) comes from One's tokens, so it
+// follows light and dark. SVG presentation attributes accept var().
 const INK = {
-  primary: "#0f172a",
-  secondary: "#475569",
-  muted: "#94a3b8",
-  grid: "#eef0f4",
-  baseline: "#cbd5e1",
-  surface: "#ffffff",
-  goal: "#7c3aed",
+  primary: "var(--foreground)",
+  secondary: "var(--muted-foreground)",
+  muted: "var(--subtle)",
+  grid: "var(--border)",
+  baseline: "var(--input)",
+  surface: "var(--card)",
+  goal: "var(--attention-glyph)",
 };
 
 const OTHER_KEY = "__other__";
@@ -356,7 +358,7 @@ function ChartTooltip({
   if (!active || !payload || payload.length === 0) return null;
   return (
     <div
-      className="rounded-lg border border-border bg-background px-3 py-2 shadow-md"
+      className="rounded-lg border border-border bg-background px-3 py-2 shadow-raised"
       style={{ fontSize: 12 }}
     >
       {label != null && label !== "" && (
@@ -444,9 +446,9 @@ function FunnelChart({
   return (
     <div className="flex h-full flex-col">
       {headline && typeof headline.value === "number" && Number.isFinite(headline.value) && (
-        <div className="mb-1 flex shrink-0 items-baseline justify-end gap-1.5 text-xs text-muted-foreground">
+        <div className="mb-1 flex shrink-0 items-baseline justify-end gap-1.5 text-caption-quiet text-muted-foreground">
           {headline.label}
-          <span className="text-sm font-semibold text-foreground">
+          <span className="text-body font-semibold text-foreground">
             {(headline.value * 100).toFixed(1)}%
           </span>
         </div>
@@ -483,7 +485,7 @@ function FunnelChart({
                   title={`${d.stage}: ${formatExact(d.value, monetary)}`}
                 >
                   <div
-                    className="absolute inset-x-0 bottom-0 mx-auto w-6 max-w-full rounded-t"
+                    className="absolute inset-x-0 bottom-0 mx-auto w-6 max-w-full rounded-t-sm"
                     style={{ height: `${pct}%`, background: rampAt(i) }}
                   />
                   <span
@@ -558,14 +560,14 @@ function KpiTile({
         {onOpen ? (
           <button
             type="button"
-            className="cursor-pointer text-4xl font-semibold tracking-tight text-foreground underline-offset-4 decoration-gray-300 hover:underline focus-visible:underline"
+            className="cursor-pointer text-display-sm text-foreground underline-offset-4 decoration-gray-300 hover:underline focus-visible:underline"
             title={t("insights.chart.seeDeals")}
             onClick={onOpen}
           >
             {formatValue(total, monetary)}
           </button>
         ) : (
-          <span className="text-4xl font-semibold tracking-tight text-foreground">
+          <span className="text-display-sm text-foreground">
             {formatValue(total, monetary)}
           </span>
         )}
@@ -573,10 +575,10 @@ function KpiTile({
           <span
             className={
               flat
-                ? "inline-flex items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground"
+                ? "inline-flex items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-caption font-semibold text-muted-foreground"
                 : up
-                  ? "inline-flex items-center gap-0.5 rounded-md bg-success-subtle px-1.5 py-0.5 text-xs font-semibold text-success"
-                  : "inline-flex items-center gap-0.5 rounded-md bg-destructive-subtle px-1.5 py-0.5 text-xs font-semibold text-destructive"
+                  ? "inline-flex items-center gap-0.5 rounded-md bg-success-subtle px-1.5 py-0.5 text-caption font-semibold text-success"
+                  : "inline-flex items-center gap-0.5 rounded-md bg-destructive-subtle px-1.5 py-0.5 text-caption font-semibold text-destructive"
             }
           >
             {flat ? null : up ? (
@@ -589,7 +591,7 @@ function KpiTile({
         )}
       </div>
       {(Math.abs(total) >= 1000 || (delta != null && trend)) && (
-        <div className="mt-0.5 text-xs text-subtle">
+        <div className="mt-0.5 text-caption-quiet text-subtle">
           {Math.abs(total) >= 1000 ? formatExact(total, monetary) : ""}
           {delta != null && trend
             ? `${Math.abs(total) >= 1000 ? " · " : ""}${t("insights.chart.vsPeriod", { period: trend.periodLabel })}`
@@ -680,7 +682,7 @@ function BarListChart({
           >
             <div className="relative h-7 min-w-0 flex-1">
               <div
-                className="absolute inset-y-0 start-0 rounded-e"
+                className="absolute inset-y-0 start-0 rounded-e-sm"
                 style={{
                   width: `${Math.max(1.5, (v / max) * 100)}%`,
                   background: other ? INK.muted : accent,
@@ -693,13 +695,13 @@ function BarListChart({
               />
               <span
                 dir="auto"
-                className="absolute inset-y-0 start-2.5 flex max-w-[85%] items-center truncate text-xs font-medium text-foreground"
+                className="absolute inset-y-0 start-2.5 flex max-w-[85%] items-center truncate text-caption text-foreground"
                 title={p.x}
               >
                 {p.x}
               </span>
             </div>
-            <span className="w-16 shrink-0 text-end text-xs font-semibold tabular-nums text-foreground">
+            <span className="w-16 shrink-0 text-end text-caption font-semibold tabular-nums text-foreground">
               {formatValue(v, monetary)}
             </span>
           </div>
@@ -729,7 +731,7 @@ function ResultTable({
   const showX = data.some((p) => p.x !== "");
   return (
     <div className="h-full overflow-auto">
-      <table className="w-full border-collapse text-xs">
+      <table className="w-full border-collapse text-caption-quiet">
         <thead className="sticky top-0 bg-background">
           <tr className="border-b border-border text-start text-muted-foreground">
             {showX && <th className="py-1.5 pe-3 font-medium"> </th>}
@@ -803,7 +805,7 @@ export function WidgetChart({
   // instead of falling through to an accidental bar chart.
   if (!RENDERABLE_VIZ.has(viz.type)) {
     return (
-      <div className="flex h-full items-center justify-center px-4 text-center text-sm text-subtle">
+      <div className="flex h-full items-center justify-center px-4 text-center text-body-quiet text-subtle">
         {t("insights.chart.unsupported", { type: viz.type })}
       </div>
     );
@@ -854,7 +856,7 @@ export function WidgetChart({
 
   if (data.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-subtle">
+      <div className="flex h-full items-center justify-center text-body-quiet text-subtle">
         {t("insights.chart.noData")}
       </div>
     );
@@ -946,7 +948,7 @@ export function WidgetChart({
   const tooltip = (
     <Tooltip
       content={<ChartTooltip monetary={monetary} />}
-      cursor={{ fill: "rgba(148,163,184,0.08)" }}
+      cursor={{ fill: "var(--gray-alpha-50)" }}
     />
   );
 

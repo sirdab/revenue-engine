@@ -27,38 +27,38 @@ export const ACTIVITY_TYPE_CONFIG: Record<ActivityType, ActivityTypeOption> = {
   call: {
     label: "dealActivity.type.call",
     Icon: Phone,
-    selected: "border-attention bg-attention-subtle text-attention",
-    iconColor: "text-attention-glyph",
+    selected: "border-btn-border-hover bg-btn-ghost-surface-active text-foreground",
+    iconColor: "text-foreground",
   },
   meeting: {
     label: "dealActivity.type.meeting",
     Icon: Users,
-    selected: "border-attention bg-attention-subtle text-attention",
-    iconColor: "text-attention-glyph",
+    selected: "border-btn-border-hover bg-btn-ghost-surface-active text-foreground",
+    iconColor: "text-foreground",
   },
   email: {
     label: "dealActivity.type.email",
     Icon: Mail,
-    selected: "border-warning bg-warning-subtle text-warning",
-    iconColor: "text-warning-glyph",
+    selected: "border-btn-border-hover bg-btn-ghost-surface-active text-foreground",
+    iconColor: "text-foreground",
   },
   task: {
     label: "dealActivity.type.task",
     Icon: CheckSquare,
-    selected: "border-brand-500 bg-brand-subtle text-brand",
-    iconColor: "text-brand",
+    selected: "border-btn-border-hover bg-btn-ghost-surface-active text-foreground",
+    iconColor: "text-foreground",
   },
   deadline: {
     label: "dealActivity.type.deadline",
     Icon: Flag,
-    selected: "border-destructive bg-destructive-subtle text-destructive",
-    iconColor: "text-destructive",
+    selected: "border-btn-border-hover bg-btn-ghost-surface-active text-foreground",
+    iconColor: "text-foreground",
   },
   whatsapp: {
     label: "dealActivity.type.whatsapp",
     Icon: MessageCircle,
-    selected: "border-success bg-success-subtle text-success",
-    iconColor: "text-success-glyph",
+    selected: "border-btn-border-hover bg-btn-ghost-surface-active text-foreground",
+    iconColor: "text-foreground",
   },
 };
 
@@ -141,9 +141,9 @@ export function DurationPicker({
             aria-checked={isActive}
             onClick={() => onChange(v)}
             className={cn(
-              "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+              "rounded-full border px-3 py-1 text-caption font-medium transition-colors",
               isActive
-                ? "border-brand-500 bg-brand-subtle text-brand"
+                ? "border-btn-border-hover bg-btn-ghost-surface-active text-foreground"
                 : "border-border text-muted-foreground hover:border-input hover:bg-gray-alpha-50",
             )}
           >

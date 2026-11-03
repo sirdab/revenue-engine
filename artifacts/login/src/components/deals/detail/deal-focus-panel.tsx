@@ -87,7 +87,7 @@ export function DealFocusPanel({
           ))}
         </div>
       ) : open.length === 0 ? (
-        <div className="flex items-center gap-2 rounded-lg bg-brand-subtle px-3 py-2.5 text-xs text-brand">
+        <div className="flex items-center gap-2 rounded-lg bg-brand-subtle px-3 py-2.5 text-caption text-brand">
           <Sparkles className="h-3.5 w-3.5 shrink-0" />
           <span>{t("deals.focus.caughtUp")}</span>
         </div>

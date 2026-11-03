@@ -27,14 +27,14 @@ export function MarkDoneToggle({
       onClick={onToggle}
       aria-label={done ? t("activity.toggle.markNotDone") : t("activity.toggle.markDone")}
       className={cn(
-        "shrink-0 text-subtle transition-colors hover:text-brand",
+        "shrink-0 text-subtle transition-colors hover:text-foreground",
         className,
       )}
     >
       {done && noReply ? (
         <PhoneMissed className="h-4 w-4 text-subtle" />
       ) : done ? (
-        <CheckCircle2 className="h-4 w-4 text-brand" />
+        <CheckCircle2 className="h-4 w-4 text-success-glyph" />
       ) : (
         <Circle className="h-4 w-4" />
       )}

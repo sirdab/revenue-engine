@@ -52,6 +52,7 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty";
 import { cn } from "@/lib/utils";
+import { Segmented, SegmentedItem } from "@sirdab/one/components/segmented";
 import { DealSectionCard } from "./deal-section-card";
 import { RichText } from "./rich-text";
 import { ReactionBar } from "./reaction-bar";
@@ -340,7 +341,6 @@ function InlineNoteEditor({
           size="sm"
           onClick={submit}
           disabled={saving || empty}
-          className="bg-primary text-primary-foreground hover:bg-primary-hover"
         >
           {saving ? t("common.saving") : t("common.save")}
         </Button>
@@ -416,7 +416,6 @@ function TimelineRow({
         size="sm"
         onClick={onPost}
         disabled={mutating}
-        className="bg-primary text-primary-foreground hover:bg-primary-hover"
       >
         {mutating ? t("activity.drafts.posting") : t("activity.drafts.post")}
       </Button>
@@ -459,7 +458,7 @@ function TimelineRow({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
-            <span className="truncate text-sm font-medium text-foreground">
+            <span className="truncate text-body font-medium text-foreground">
               {t("activity.type.note")}
             </span>
             {draft && (
@@ -538,7 +537,7 @@ function TimelineRow({
           body && (
             <RichText
               html={body}
-              className="mt-1 break-words text-sm text-muted-foreground"
+              className="mt-1 break-words text-body text-muted-foreground"
             />
           )
         )}
@@ -578,7 +577,7 @@ function AttachmentChips({ attachments }: { attachments: CrmFile[] }) {
         return (
           <div
             key={f.id}
-            className="inline-flex max-w-[18rem] items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-xs text-muted-foreground"
+            className="inline-flex max-w-[18rem] items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-caption text-muted-foreground"
           >
             <button
               type="button"
@@ -921,23 +920,20 @@ export function DealTimeline({
     <DealSectionCard
       title={t("deals.timeline.title")}
       action={
-        <div className="flex items-center gap-0.5 rounded-lg border border-border bg-surface-whisper p-0.5">
+        <Segmented
+          value={tab}
+          onValueChange={(next) => setTab(next as typeof tab)}
+          className="h-control p-0.5"
+        >
           {TABS.map(({ key, label: labelKey }) => (
-            <button
+            <SegmentedItem
               key={key}
-              type="button"
-              onClick={() => setTab(key)}
-              className={cn(
-                "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
-                tab === key
-                  ? "bg-card text-brand shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {t(labelKey)}
-            </button>
+              value={key}
+              label={t(labelKey)}
+              className="h-7 text-caption"
+            />
           ))}
-        </div>
+        </Segmented>
       }
     >
       {loading ? (
@@ -967,7 +963,7 @@ export function DealTimeline({
         <div className="space-y-5">
           {groups.map(([key, entries]) => (
             <div key={key}>
-              <div className="sticky top-0 z-[1] -mx-1 mb-2.5 bg-card/95 px-1 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-subtle backdrop-blur">
+              <div className="sticky top-0 z-[1] -mx-1 mb-2.5 bg-card/95 px-1 py-0.5 text-caption font-medium text-muted-foreground backdrop-blur">
                 {dayLabel(new Date(key))}
               </div>
               <div className="space-y-2.5">

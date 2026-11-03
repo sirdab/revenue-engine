@@ -166,7 +166,7 @@ export function LabelsEditor({
           <span
             key={label}
             className={cn(
-              "inline-flex items-center gap-1 rounded-full border py-0.5 ps-2.5 pe-1.5 text-xs font-medium",
+              "inline-flex items-center gap-1 rounded-full border py-0.5 ps-2.5 pe-1.5 text-caption font-medium",
               colors.chip,
             )}
           >
@@ -188,7 +188,7 @@ export function LabelsEditor({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded-full border border-dashed border-input px-2.5 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:border-brand-300 hover:text-brand"
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-input px-2.5 py-0.5 text-caption font-medium text-muted-foreground transition-colors hover:border-brand-300 hover:text-brand"
           >
             <Plus className="h-3 w-3" />
             {labels.length === 0 && t("labels.add")}

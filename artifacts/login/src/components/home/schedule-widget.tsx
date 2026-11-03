@@ -44,16 +44,16 @@ export function ScheduleWidget({ userId }: { userId: number }) {
           const meta = ACTIVITY_TYPE_CONFIG[a.type];
           return (
             <div key={a.id} className="group flex items-center gap-3 py-2">
-              <span className="w-11 shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">
+              <span className="w-11 shrink-0 text-caption font-semibold tabular-nums text-muted-foreground">
                 {a.dueTime ?? "—"}
               </span>
               <meta.Icon className={cn("h-4 w-4 shrink-0", meta.iconColor)} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">
+                <p className="truncate text-body font-medium text-foreground">
                   {a.subject}
                 </p>
                 {(a.personName || a.dealTitle) && (
-                  <p className="truncate text-xs text-muted-foreground">
+                  <p className="truncate text-caption text-muted-foreground">
                     {a.personName ?? a.dealTitle}
                   </p>
                 )}
@@ -63,7 +63,7 @@ export function ScheduleWidget({ userId }: { userId: number }) {
                 onClick={() => removeActivity(a)}
                 aria-label={t("activities.deleteSubject", { subject: a.subject })}
                 title={t("activity.row.delete")}
-                className="rounded p-1 text-subtle transition-colors hover:bg-destructive-subtle hover:text-destructive"
+                className="rounded-sm p-1 text-subtle transition-colors hover:bg-destructive-subtle hover:text-destructive"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>

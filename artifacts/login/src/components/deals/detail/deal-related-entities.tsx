@@ -14,6 +14,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Segmented, SegmentedItem } from "@sirdab/one/components/segmented";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -43,7 +44,7 @@ const TABS: { key: Tab; label: MessageKey; icon: typeof User }[] = [
 
 function EmptyPanel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-dashed border-border py-6 text-center text-sm text-subtle">
+    <div className="rounded-lg border border-dashed border-border py-6 text-center text-body text-subtle">
       {children}
     </div>
   );
@@ -134,7 +135,7 @@ function RelatedEditableField({
               }}
               rows={2}
               disabled={saving}
-              className="min-h-[56px] w-full rounded-md border border-input bg-card px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:opacity-60"
+              className="min-h-[56px] w-full rounded-md border border-input bg-card px-2.5 py-1.5 text-body focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:opacity-60"
               autoFocus
             />
           ) : (
@@ -181,10 +182,10 @@ function RelatedEditableField({
               <X className="h-3.5 w-3.5" /> {t("common.cancel")}
             </Button>
             {error ? (
-              <span className="text-xs text-destructive">{error}</span>
+              <span className="text-caption text-destructive">{error}</span>
             ) : (
               multiline && (
-                <span className="text-xs text-subtle">
+                <span className="text-caption text-subtle">
                   {t("deals.related.editorHint")}
                 </span>
               )
@@ -212,7 +213,7 @@ function RelatedEditableField({
             ref={pencilRef}
             type="button"
             onClick={onStartEdit}
-            className="inline-flex items-center gap-1 text-sm text-brand hover:underline"
+            className="inline-flex items-center gap-1 text-body text-brand hover:underline"
           >
             <Plus className="h-3.5 w-3.5" />{" "}
             {addLabel ?? t("deals.related.addField", { field: label.toLowerCase() })}
@@ -224,7 +225,7 @@ function RelatedEditableField({
             type="button"
             onClick={onStartEdit}
             aria-label={t("deals.related.editField", { field: label.toLowerCase() })}
-            className="ms-auto shrink-0 rounded p-1 text-subtle hover:bg-gray-alpha-100 hover:text-foreground"
+            className="ms-auto shrink-0 rounded-sm p-1 text-subtle hover:bg-gray-alpha-100 hover:text-foreground"
           >
             <Pencil className="h-3.5 w-3.5" />
           </button>
@@ -438,24 +439,22 @@ export function DealRelatedEntities({
 
   return (
     <DealSectionCard title={t("deals.related.title")}>
-      <div className="mb-4 flex items-center gap-0.5 rounded-lg border border-border bg-surface-whisper p-0.5">
+      <Segmented
+        animated={false}
+        value={tab}
+        onValueChange={(next) => setTab(next as Tab)}
+        className="mb-4 w-full"
+      >
         {TABS.map(({ key, label: labelKey, icon: Icon }) => (
-          <button
+          <SegmentedItem
             key={key}
-            type="button"
-            onClick={() => setTab(key)}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors",
-              tab === key
-                ? "bg-card text-brand shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <Icon className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{t(labelKey)}</span>
-          </button>
+            value={key}
+            label={t(labelKey)}
+            icon={<Icon />}
+            className="flex-1"
+          />
         ))}
-      </div>
+      </Segmented>
 
       {tab === "person" && (
         <PersonPanel

@@ -26,12 +26,12 @@ export function DealSectionCard({
   return (
     <section
       className={cn(
-        "rounded-xl border border-border bg-card shadow-sm",
+        "rounded-2xl bg-card shadow-card",
         className,
       )}
     >
       {(title || action) && (
-        <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-2.5">
+        <header className="flex min-h-12 items-center justify-between gap-3 border-b border-border px-4 py-2">
           <button
             type="button"
             disabled={!collapsible}
@@ -43,7 +43,7 @@ export function DealSectionCard({
           >
             {icon && <span className="shrink-0 text-subtle">{icon}</span>}
             {title && (
-              <h2 className="truncate text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <h2 className="truncate text-label font-semibold text-foreground">
                 {title}
               </h2>
             )}
@@ -80,11 +80,11 @@ export function DealField({
     <div className={cn("min-w-0", className)}>
       <div
         dir="auto"
-        className="text-[10px] font-medium uppercase tracking-wide text-subtle"
+        className="text-caption text-muted-foreground"
       >
         {label}
       </div>
-      <div className="mt-0.5 break-words text-sm text-foreground">
+      <div className="mt-1 break-words text-body text-foreground">
         {children ??
           (hasValue ? value : <span className="text-subtle">—</span>)}
       </div>

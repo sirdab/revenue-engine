@@ -42,7 +42,7 @@ export function AuthGuard({
     return (
       <div className="flex h-[100dvh] w-full flex-col items-center justify-center gap-3 bg-surface-whisper">
         <img src={logoMark} alt="Sirdab" className="h-10 w-10 animate-pulse object-contain" />
-        <span className="text-xs text-subtle">{t("auth.loadingWorkspace")}</span>
+        <span className="text-caption text-subtle">{t("auth.loadingWorkspace")}</span>
       </div>
     );
   }

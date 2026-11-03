@@ -16,7 +16,7 @@ function Metric({
   value: number;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-whisper px-2.5 py-1 text-xs text-muted-foreground">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-whisper px-2.5 py-1 text-caption text-muted-foreground">
       <span className="text-subtle">{icon}</span>
       <span className="font-semibold text-foreground">{value}</span>
       {label}
@@ -36,14 +36,14 @@ export function PersonHeader({
     <div className="px-4 py-3">
       <Link
         href="/contacts"
-        className="inline-flex items-center gap-1 text-xs font-medium text-subtle transition-colors hover:text-brand"
+        className="inline-flex items-center gap-1 text-caption text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-3.5 w-3.5" /> {t("contacts.backToContactsLower")}
       </Link>
 
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <Avatar className="h-8 w-8 shrink-0">
-          <AvatarFallback className="bg-brand-subtle text-xs font-semibold text-brand">
+        <Avatar className="shrink-0">
+          <AvatarFallback>
             {initials(person.name) || <UserRound className="h-4 w-4" />}
           </AvatarFallback>
         </Avatar>
@@ -51,34 +51,34 @@ export function PersonHeader({
           value={person.name}
           onCommit={(name) => onCommit({ name })}
           placeholder={t("contacts.personNamePlaceholder")}
-          className="-ms-1 min-w-0 font-heading text-lg font-bold text-foreground"
+          className="-ms-1 min-w-0 text-heading-sm text-foreground"
         />
         {person.jobTitle && (
           <>
-            <span className="hidden h-4 w-px bg-gray-200 sm:block" />
-            <span dir="auto" className="text-xs font-medium text-muted-foreground">
+            <span className="hidden h-4 w-px bg-border sm:block" />
+            <span dir="auto" className="text-caption font-medium text-muted-foreground">
               {person.jobTitle}
             </span>
           </>
         )}
         {person.organizationId && person.organizationName && (
           <>
-            <span className="hidden h-4 w-px bg-gray-200 sm:block" />
+            <span className="hidden h-4 w-px bg-border sm:block" />
             <Link
               href={`/organization/${person.organizationId}`}
-              className="text-xs text-brand hover:underline"
+              className="text-caption text-foreground underline-offset-2 hover:underline"
             >
               {person.organizationName}
             </Link>
           </>
         )}
-        <span className="hidden h-4 w-px bg-gray-200 sm:block" />
+        <span className="hidden h-4 w-px bg-border sm:block" />
         <span
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+          className="inline-flex items-center gap-1.5 text-caption text-muted-foreground"
           title={person.ownerName ?? t("common.unassigned")}
         >
-          <Avatar className="h-4 w-4">
-            <AvatarFallback className="bg-brand-subtle text-[9px] font-semibold text-brand">
+          <Avatar size="sm" className="size-4">
+            <AvatarFallback className="text-badge">
               {initials(person.ownerName)}
             </AvatarFallback>
           </Avatar>

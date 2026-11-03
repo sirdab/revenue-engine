@@ -149,7 +149,7 @@ function ValueEditor({
             value={typeof arr[0] === "string" ? arr[0] : ""}
             onChange={(next) => onChange([next === "" ? null : next, arr[1] ?? null])}
           />
-          <span className="text-xs text-subtle">and</span>
+          <span className="text-caption-quiet text-subtle">and</span>
           <DatePicker
             className="h-8 w-40"
             value={typeof arr[1] === "string" ? arr[1] : ""}
@@ -167,7 +167,7 @@ function ValueEditor({
           value={arr[0] == null ? "" : String(arr[0])}
           onChange={(e) => onChange([parse(e.target.value), arr[1] ?? null])}
         />
-        <span className="text-xs text-subtle">and</span>
+        <span className="text-caption-quiet text-subtle">and</span>
         <Input
           type="number"
           className="h-8 w-28"
@@ -438,7 +438,7 @@ export function InsightsFilterEditor({
             <SelectItem value="or">OR</SelectItem>
           </SelectContent>
         </Select>
-        <span className="text-xs text-subtle">
+        <span className="text-caption-quiet text-subtle">
           match {group.combinator === "and" ? "all" : "any"} of
         </span>
         {onRemove && (
@@ -456,7 +456,7 @@ export function InsightsFilterEditor({
 
       <div className="space-y-2 ps-2">
         {nodes.length === 0 && (
-          <p className="text-xs text-subtle">
+          <p className="text-caption-quiet text-subtle">
             {t("insights.noConditions")}
           </p>
         )}

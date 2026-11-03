@@ -60,8 +60,8 @@ export function ActivitiesBulkBar({
   };
 
   return (
-    <div className="fixed bottom-6 start-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-border bg-card px-4 py-2.5 shadow-lg">
-      <span className="text-sm font-medium text-foreground">
+    <div className="fixed bottom-6 start-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-xl bg-popover px-4 py-2.5 shadow-popover-sm backdrop-blur-popover">
+      <span className="text-body font-medium text-foreground">
         {selectedIds.length} selected
       </span>
       <div className="h-5 w-px bg-gray-200" />
@@ -72,7 +72,7 @@ export function ActivitiesBulkBar({
         disabled={bulk.isPending}
         onClick={() => run("mark_done", t("activity.bulk.completed"))}
       >
-        <CheckCircle2 className="me-1.5 h-4 w-4 text-brand" />
+        <CheckCircle2 className="me-1.5 h-4 w-4" />
         {t("activity.bulk.markComplete")}
       </Button>
 
@@ -121,7 +121,7 @@ export function ActivitiesBulkBar({
       </AlertDialog>
 
       {bulk.isPending && (
-        <Loader2 className="h-4 w-4 animate-spin text-brand" />
+        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
       )}
 
       <Button

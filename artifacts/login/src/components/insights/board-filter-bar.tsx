@@ -122,9 +122,9 @@ export function BoardFilterBar({
           aria-pressed={filters.statuses.includes(s)}
           data-testid={`status-chip-${s}`}
           className={cn(
-            "rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors",
+            "rounded-full border px-3 py-1 text-caption capitalize transition-colors",
             filters.statuses.includes(s)
-              ? "border-brand-600 bg-brand-subtle text-brand"
+              ? "border-gray-alpha-400 bg-gray-alpha-100 text-foreground"
               : "border-border text-muted-foreground hover:border-input",
           )}
         >
@@ -138,7 +138,7 @@ export function BoardFilterBar({
           <Button
             variant="outline"
             size="sm"
-            className={cn("gap-1.5", presetLabel && "border-brand-500 text-brand")}
+            className={cn("gap-1.5", presetLabel && "border-btn-border-hover bg-btn-surface-hover")}
             data-testid="date-filter"
           >
             <CalendarDays className="h-3.5 w-3.5 text-subtle" />
@@ -148,7 +148,7 @@ export function BoardFilterBar({
         </PopoverTrigger>
         <PopoverContent align="start" className="w-80 max-w-[92vw] p-0">
           <div className="p-3">
-            <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-subtle">
+            <p className="mb-2 text-caption font-medium text-subtle">
               {t("insights.quickRanges")}
             </p>
             <div className="grid grid-cols-2 gap-1.5">
@@ -168,9 +168,9 @@ export function BoardFilterBar({
                       }))
                     }
                     className={cn(
-                      "rounded-md border px-2.5 py-1.5 text-start text-xs font-medium transition-colors",
+                      "rounded-md border px-2.5 py-1.5 text-start text-caption transition-colors",
                       active
-                        ? "border-brand-600 bg-brand-subtle text-brand"
+                        ? "border-gray-alpha-400 bg-gray-alpha-100 text-foreground"
                         : "border-border text-muted-foreground hover:border-input hover:bg-gray-alpha-50",
                     )}
                   >
@@ -181,14 +181,14 @@ export function BoardFilterBar({
             </div>
           </div>
           <div className="border-t border-border p-3">
-            <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-subtle">
+            <p className="mb-2 text-caption font-medium text-subtle">
               {t("insights.customRange")}
             </p>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <span className="text-xs text-muted-foreground">{t("insights.from")}</span>
+                <span className="text-caption-quiet text-muted-foreground">{t("insights.from")}</span>
                 <DatePicker
-                  className="h-8 w-full text-xs"
+                  className="h-8 w-full text-caption-quiet"
                   value={filters.from ?? ""}
                   onChange={(next) =>
                     setFilters((f) => ({
@@ -200,9 +200,9 @@ export function BoardFilterBar({
                 />
               </div>
               <div className="space-y-1">
-                <span className="text-xs text-muted-foreground">{t("insights.to")}</span>
+                <span className="text-caption-quiet text-muted-foreground">{t("insights.to")}</span>
                 <DatePicker
-                  className="h-8 w-full text-xs"
+                  className="h-8 w-full text-caption-quiet"
                   value={filters.to ?? ""}
                   onChange={(next) =>
                     setFilters((f) => ({
@@ -215,7 +215,7 @@ export function BoardFilterBar({
               </div>
             </div>
             <div className="mt-2.5 flex items-center justify-between gap-2">
-              <span className="shrink-0 text-xs text-muted-foreground">{t("insights.basedOn")}</span>
+              <span className="shrink-0 text-caption-quiet text-muted-foreground">{t("insights.basedOn")}</span>
               <Select
                 value={filters.basis ?? "createdAt"}
                 onValueChange={(v) =>
@@ -225,7 +225,7 @@ export function BoardFilterBar({
                   }))
                 }
               >
-                <SelectTrigger className="h-8 w-44 text-xs" data-testid="date-basis">
+                <SelectTrigger className="h-8 w-44 text-caption-quiet" data-testid="date-basis">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -243,7 +243,7 @@ export function BoardFilterBar({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-full text-xs text-muted-foreground"
+                className="h-7 w-full text-caption-quiet text-muted-foreground"
                 onClick={() =>
                   setFilters((f) => ({
                     ...f,
@@ -274,7 +274,7 @@ export function BoardFilterBar({
             size="sm"
             className={cn(
               "gap-1.5",
-              boardConditionCount > 0 && "border-brand-500 text-brand",
+              boardConditionCount > 0 && "border-btn-border-hover bg-btn-surface-hover",
             )}
             data-testid="board-add-filter"
           >

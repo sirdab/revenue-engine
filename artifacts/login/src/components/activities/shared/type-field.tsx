@@ -34,13 +34,13 @@ export function TypeField({
             disabled={disabled}
             onClick={() => onChange(o.value)}
             className={cn(
-              "inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 text-sm font-medium transition-colors",
+              "inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 text-body font-medium transition-colors",
               selected
-                ? "border-brand-500 bg-brand-subtle text-brand"
+                ? "border-btn-border-hover bg-btn-ghost-surface-active text-foreground"
                 : "border-border bg-card text-muted-foreground hover:border-input",
             )}
           >
-            <o.icon className={cn("h-4 w-4", selected ? "text-brand" : "text-subtle")} />
+            <o.icon className={cn("h-4 w-4", selected ? "text-foreground" : "text-subtle")} />
             {t(o.labelKey)}
           </button>
         );

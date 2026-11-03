@@ -43,7 +43,7 @@ function FileTypeIcon({ mimeType }: { mimeType: string }) {
     return <FileText className="h-4 w-4 text-destructive" />;
   }
   if (mimeType.startsWith("image/")) {
-    return <ImageIcon className="h-4 w-4 text-brand" />;
+    return <ImageIcon className="h-4 w-4 text-muted-foreground" />;
   }
   return <FileIcon className="h-4 w-4 text-subtle" />;
 }
@@ -85,7 +85,7 @@ function FileNameButton({
     <button
       ref={boxRef}
       type="button"
-      className="block w-full overflow-hidden whitespace-nowrap text-start text-sm font-medium text-foreground hover:text-brand"
+      className="block w-full overflow-hidden whitespace-nowrap text-start text-body font-medium text-foreground hover:text-foreground"
       style={{ textOverflow: sliding ? "clip" : "ellipsis" }}
       title={fileName}
       aria-label={`${actionLabel} ${fileName}`}
@@ -136,8 +136,8 @@ function FileRow({
             previewable ? openFile(file.id) : downloadFile(file.id, file.fileName)
           }
         />
-        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-subtle">
-          <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-caption text-subtle">
+          <Badge variant="outline" className="px-1.5 py-0 text-caption">
             {fileCategoryLabel(file.category)}
           </Badge>
           <span>{formatFileSize(file.sizeBytes)}</span>
@@ -214,7 +214,7 @@ export function FileList({
   }, [users]);
 
   if (files.length === 0) {
-    return <p className="text-sm text-subtle">{emptyMessage ?? t("files.empty")}</p>;
+    return <p className="text-body text-subtle">{emptyMessage ?? t("files.empty")}</p>;
   }
 
   return (

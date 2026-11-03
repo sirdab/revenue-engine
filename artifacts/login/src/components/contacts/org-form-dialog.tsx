@@ -177,7 +177,7 @@ export function OrgFormDialog({
               )}
             />
             <div className="space-y-2">
-              <div className="text-sm font-medium text-foreground">{t("deals.field.labels")}</div>
+              <div className="text-body font-medium text-foreground">{t("deals.field.labels")}</div>
               <LabelsEditor
                 entity="organization"
                 labels={labels}
@@ -188,7 +188,7 @@ export function OrgFormDialog({
             <Button
               type="submit"
               disabled={pending}
-              className="w-full bg-primary text-primary-foreground hover:bg-primary-hover"
+              className="w-full"
             >
               {pending ? t("contacts.savingDots") : t("common.save")}
             </Button>

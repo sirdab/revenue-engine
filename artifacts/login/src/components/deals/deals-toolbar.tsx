@@ -20,12 +20,10 @@ import { DealsFilterBuilder } from "./deals-filter-builder";
 import { DealsSavedViews } from "./deals-saved-views";
 import { DealsSearchInput } from "./deals-search-input";
 import { Money } from "@/components/shared/money";
-import { OpenModeToggle } from "./open-mode-toggle";
 import {
   useDealsSummary,
   type DealCurrencyTotal,
 } from "@/lib/deals-summary-api";
-import { useDealOpenMode } from "@/hooks/use-user-preferences";
 import type { DealsUrlState } from "./use-deals-url-state";
 import { useI18n } from "@/lib/i18n/i18n";
 import { formatNumber } from "@/lib/format";
@@ -56,7 +54,7 @@ function TotalsRow({ total }: { total: DealCurrencyTotal }) {
 
 // Live count plus the totals popover: overall and per-currency sums of deal
 // value alongside the stage-probability-weighted forecast value.
-function DealsCount({ state }: { state: DealsUrlState }) {
+export function DealsCount({ state }: { state: DealsUrlState }) {
   const { t } = useI18n();
   const { data, isFetching } = useDealsSummary({
     view: state.view === "funnel" ? "list" : state.view,
@@ -71,7 +69,7 @@ function DealsCount({ state }: { state: DealsUrlState }) {
   const totals = data?.totals ?? [];
 
   return (
-    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+    <div className="flex items-center gap-1.5 text-body text-muted-foreground">
       {isFetching && data == null ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
       ) : (
@@ -83,18 +81,18 @@ function DealsCount({ state }: { state: DealsUrlState }) {
           <button
             type="button"
             aria-label={t("deals.toolbar.totalsAria")}
-            className="rounded-full text-subtle transition-colors hover:text-muted-foreground"
+            className="rounded-full text-subtle transition-colors hover:text-foreground"
           >
             <Info className="h-4 w-4" />
           </button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-[340px] p-3 text-sm">
+        <PopoverContent align="start" kind="dialog" className="w-[340px] p-3 text-body">
           {totals.length === 0 ? (
             <p className="text-subtle">{t("deals.toolbar.noneInView")}</p>
           ) : (
             <div className="space-y-2">
               <div>
-                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-subtle">
+                <div className="mb-1 text-caption font-medium text-muted-foreground">
                   {t("common.total")}
                 </div>
                 {totals.length === 1 ? (
@@ -108,7 +106,7 @@ function DealsCount({ state }: { state: DealsUrlState }) {
                 )}
               </div>
               <div className="border-t border-border pt-2">
-                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-subtle">
+                <div className="mb-1 text-caption font-medium text-muted-foreground">
                   {t("deals.toolbar.byCurrency")}
                 </div>
                 <div className="space-y-1">
@@ -117,7 +115,7 @@ function DealsCount({ state }: { state: DealsUrlState }) {
                   ))}
                 </div>
               </div>
-              <p className="border-t border-border pt-2 text-xs text-subtle">
+              <p className="border-t border-border pt-2 text-caption text-muted-foreground">
                 <Scale className="me-1 inline h-3 w-3" />
                 {t("deals.toolbar.weightedNote")}
               </p>
@@ -141,15 +139,10 @@ export function DealsToolbar({
   const { data: pipelines } = useListPipelines();
   // Owners that actually have deals — old users with zero deals never appear.
   const { data: owners } = useListDealOwners();
-  const [openMode, setOpenMode] = useDealOpenMode();
 
   return (
     <div className="ms-auto flex flex-wrap items-center gap-2">
       <DealsSearchInput state={state} update={update} />
-      <DealsCount state={state} />
-
-      {/* Deal-click open mode: full page vs. right-side drawer (deals.openMode). */}
-      <OpenModeToggle value={openMode} onChange={setOpenMode} />
 
       {/* Pipeline selector */}
       <Combobox
@@ -164,7 +157,7 @@ export function DealsToolbar({
         allValue={ALL}
         allLabel={t("activities.allPipelines")}
         placeholder={t("activities.searchPipelines")}
-        triggerClassName="w-[180px]"
+        triggerClassName="w-[170px]"
       />
 
       {/* Owner filter + clear */}
@@ -181,13 +174,12 @@ export function DealsToolbar({
           allValue={ALL}
           allLabel={t("deals.toolbar.allOwners")}
           placeholder={t("deals.toolbar.searchOwners")}
-          triggerClassName="w-[160px]"
+          triggerClassName="w-[150px]"
         />
         {state.ownerId != null && (
           <Button
             variant="ghost"
-            size="icon"
-            className="h-9 w-9 text-muted-foreground"
+            size="icon-sm"
             onClick={() => update({ ownerId: undefined })}
             aria-label={t("deals.toolbar.clearOwner")}
           >
@@ -202,10 +194,13 @@ export function DealsToolbar({
       {/* Saved views */}
       <DealsSavedViews state={state} update={update} />
 
+
       {/* Archived lens: flips the list to read-only archived deals. */}
       <Button
-        variant={state.archived ? "default" : "outline"}
+        variant="outline"
         size="sm"
+        data-state={state.archived ? "on" : "off"}
+        aria-pressed={state.archived === true}
         onClick={() =>
           update({ archived: state.archived ? undefined : true, view: "list" })
         }
@@ -214,13 +209,8 @@ export function DealsToolbar({
             ? t("deals.toolbar.showingArchived")
             : t("deals.toolbar.showArchived")
         }
-        className={
-          state.archived
-            ? "h-8 gap-1.5 bg-warning px-2.5 text-xs text-white hover:bg-warning"
-            : "h-8 gap-1.5 px-2.5 text-xs text-muted-foreground"
-        }
       >
-        <ArchiveIcon className="h-3.5 w-3.5" />
+        <ArchiveIcon />
         {t("common.archived")}
       </Button>
     </div>

@@ -127,7 +127,7 @@ function renderNode(node: Node, key: number): ReactNode {
     // Inline code outside a <pre> gets a subtle chip; inside <pre> the parent
     // styles it, so keep this element unstyled-but-monospace either way.
     return (
-      <code key={key} className="rounded bg-muted px-1 py-0.5 text-[13px]">
+      <code key={key} className="rounded-sm bg-muted px-1 py-0.5 text-[13px]">
         {children}
       </code>
     );

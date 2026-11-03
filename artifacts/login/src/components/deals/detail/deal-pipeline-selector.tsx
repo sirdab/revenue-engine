@@ -34,7 +34,7 @@ function StageChevrons({
   const { t } = useI18n();
   const selectedIndex = stages.findIndex((s) => s.id === selectedId);
   if (stages.length === 0) {
-    return <p className="text-xs text-subtle">{t("deals.pipeline.noStages")}</p>;
+    return <p className="text-caption text-subtle">{t("deals.pipeline.noStages")}</p>;
   }
   return (
     <div className="flex items-stretch">
@@ -122,7 +122,7 @@ export function DealPipelineSelector({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:border-brand-300 hover:bg-brand-subtle"
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-caption font-medium text-foreground transition-colors hover:border-brand-300 hover:bg-brand-subtle"
         >
           <span className="text-muted-foreground">{currentPipeline?.name ?? t("common.pipeline")}</span>
           <ArrowRight className="h-3 w-3 text-subtle" />
@@ -133,7 +133,7 @@ export function DealPipelineSelector({
       <PopoverContent align="start" className="w-80">
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-subtle">
+            <label className="mb-1 block text-caption font-medium text-muted-foreground">
               {t("common.pipeline")}
             </label>
             <Select value={String(pipelineId)} onValueChange={(v) => changePipeline(Number(v))}>
@@ -146,14 +146,14 @@ export function DealPipelineSelector({
             </Select>
           </div>
           <div>
-            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-subtle">
+            <label className="mb-1 block text-caption font-medium text-muted-foreground">
               {t("deals.pipeline.stage")}
             </label>
             <StageChevrons stages={draftStages} selectedId={stageId} onSelect={setStageId} />
           </div>
           <div className="flex justify-end gap-2 pt-1">
             <Button variant="outline" size="sm" onClick={() => setOpen(false)}>{t("common.cancel")}</Button>
-            <Button size="sm" disabled={!changed || !valid} onClick={save} className="bg-primary text-primary-foreground hover:bg-primary-hover">
+            <Button size="sm" disabled={!changed || !valid} onClick={save}>
               {t("common.save")}
             </Button>
           </div>

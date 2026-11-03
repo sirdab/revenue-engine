@@ -44,14 +44,14 @@ export function AddActivityDialog({
     >
       <DialogTrigger asChild>
         {trigger ?? (
-          <Button className="bg-primary text-primary-foreground hover:bg-primary-hover">
+          <Button>
             <Plus className="me-2 h-4 w-4" /> {t("activity.add.button")}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-heading">{t("activity.add.title")}</DialogTitle>
+          <DialogTitle>{t("activity.add.title")}</DialogTitle>
         </DialogHeader>
         <ActivityComposer
           key={openCount}

@@ -30,20 +30,20 @@ export function WidgetCard({
   const { t } = useI18n();
   return (
     <Card className="h-full">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 py-3">
-        <CardTitle className="text-sm font-semibold text-foreground">
+      <CardHeader className="flex flex-row items-center justify-between gap-3 px-5 pt-4 max-sm:px-4">
+        <CardTitle className="text-label text-foreground">
           {title}
         </CardTitle>
         {action && (
           <Link
             href={action.href}
-            className="text-xs font-medium text-brand hover:text-brand"
+            className="text-caption text-muted-foreground transition-colors hover:text-foreground"
           >
             {action.label}
           </Link>
         )}
       </CardHeader>
-      <CardContent className="px-4 pb-4 pt-0">
+      <CardContent className="px-5 pb-5 max-sm:px-4 [[data-slot=card-header]+&]:pt-3">
         {isLoading ? (
           <div className="space-y-2 py-1">
             <Skeleton className="h-5 w-full" />
@@ -51,17 +51,17 @@ export function WidgetCard({
             <Skeleton className="h-5 w-3/5" />
           </div>
         ) : isError ? (
-          <div className="flex items-center justify-between gap-2 rounded-md border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
+          <div className="flex items-center justify-between gap-2 rounded-lg bg-surface-whisper px-3 py-4 text-body-quiet text-muted-foreground">
             <span>{t("home.widget.loadFailed")}</span>
             {onRetry && (
-              <Button variant="outline" size="sm" onClick={onRetry}>
+              <Button variant="secondary" size="sm" onClick={onRetry}>
                 <RotateCcw className="me-1.5 h-3.5 w-3.5" />
                 {t("common.retry")}
               </Button>
             )}
           </div>
         ) : isEmpty ? (
-          <p className="rounded-md border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
+          <p className="rounded-lg bg-surface-whisper px-3 py-6 text-center text-body-quiet text-muted-foreground">
             {emptyText ?? t("common.nothingYet")}
           </p>
         ) : (

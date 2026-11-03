@@ -126,13 +126,13 @@ export function MergeDealDialog({
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-muted-foreground">
             {tNode("deals.merge.body", {
               title: <span className="font-medium text-foreground">{deal.title}</span>,
             })}
           </p>
           <div className="space-y-1.5">
-            <div className="text-xs font-medium text-muted-foreground">
+            <div className="text-caption font-medium text-muted-foreground">
               {t("deals.merge.targetLabel")}
             </div>
             <AsyncSelect
@@ -157,14 +157,14 @@ export function MergeDealDialog({
           </div>
 
           {merge.isPending && !preview && targetId && (
-            <div className="flex items-center gap-2 text-sm text-subtle">
+            <div className="flex items-center gap-2 text-body text-subtle">
               <Loader2 className="h-4 w-4 animate-spin" /> {t("deals.merge.checking")}
             </div>
           )}
 
           {preview && (
-            <div className="rounded-lg border border-border bg-surface-whisper/60 p-3 text-sm">
-              <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-subtle">
+            <div className="rounded-lg border border-border bg-surface-whisper/60 p-3 text-body">
+              <div className="mb-1.5 text-caption font-medium text-muted-foreground">
                 {t("deals.merge.whatHappens")}
               </div>
               <ul className="space-y-1 text-muted-foreground">

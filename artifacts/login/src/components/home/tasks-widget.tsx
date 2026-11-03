@@ -81,10 +81,10 @@ export function TasksWidget({ userId }: { userId: number }) {
                 type="button"
                 onClick={() => setSelected(t.key)}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium",
+                  "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-caption font-medium",
                   tab === t.key
                     ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:bg-gray-alpha-50",
+                    : "text-muted-foreground hover:bg-row-surface-hover",
                 )}
               >
                 <span className={cn("h-1.5 w-1.5 rounded-full", t.dot)} />
@@ -94,7 +94,7 @@ export function TasksWidget({ userId }: { userId: number }) {
             ))}
           </div>
           {data.items.length === 0 ? (
-            <p className="rounded-md border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
+            <p className="rounded-lg bg-surface-whisper px-3 py-6 text-center text-body text-muted-foreground">
               {emptyText}
             </p>
           ) : (
@@ -112,18 +112,18 @@ export function TasksWidget({ userId }: { userId: number }) {
                       className={cn("h-4 w-4 shrink-0", meta.iconColor)}
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">
+                      <p className="truncate text-body font-medium text-foreground">
                         {a.subject}
                       </p>
                       {(a.dealTitle || a.personName) && (
-                        <p className="truncate text-xs text-muted-foreground">
+                        <p className="truncate text-caption text-muted-foreground">
                           {a.dealTitle ?? a.personName}
                         </p>
                       )}
                     </div>
                     <span
                       className={cn(
-                        "shrink-0 text-xs tabular-nums",
+                        "shrink-0 text-caption tabular-nums",
                         tab === "overdue" ? "text-destructive" : "text-muted-foreground",
                       )}
                     >
@@ -134,7 +134,7 @@ export function TasksWidget({ userId }: { userId: number }) {
                       onClick={() => removeActivity(a)}
                       aria-label={tr("activities.deleteSubject", { subject: a.subject })}
                       title={tr("activity.row.delete")}
-                      className="rounded p-1 text-subtle transition-colors hover:bg-destructive-subtle hover:text-destructive"
+                      className="rounded-sm p-1 text-subtle transition-colors hover:bg-destructive-subtle hover:text-destructive"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { Check, ChevronsUpDown, Loader2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import {
+  FIELD_HEIGHT,
+  FIELD_RADIUS,
+  FIELD_TRIGGER,
+} from "@sirdab/one/components/field-chrome";
 import {
   Command,
   CommandEmpty,
@@ -152,20 +156,19 @@ export function AsyncSelect({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
+        <button
           type="button"
-          variant="outline"
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "justify-between font-normal",
+            FIELD_TRIGGER, FIELD_HEIGHT.md, FIELD_RADIUS.md, "px-3",
             isAll && "text-muted-foreground",
             triggerClassName,
           )}
         >
           <span className="truncate">{display}</span>
-          <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
+          <ChevronsUpDown className="ms-2 size-4 shrink-0 text-subtle" />
+        </button>
       </PopoverTrigger>
       <PopoverContent
         className={cn("w-[260px] p-0", contentClassName)}
@@ -180,11 +183,11 @@ export function AsyncSelect({
                 <Loader2 className="h-4 w-4 animate-spin text-subtle" />
               </div>
             ) : belowMinChars ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">
+              <div className="py-6 text-center text-body text-muted-foreground">
                 {searchPromptLabel}
               </div>
             ) : errored ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">
+              <div className="py-6 text-center text-body text-muted-foreground">
                 {t("common.loadResultsFailed")}
               </div>
             ) : (

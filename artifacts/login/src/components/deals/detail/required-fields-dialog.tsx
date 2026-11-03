@@ -124,7 +124,7 @@ export function RequiredFieldsDialog({
                   style={{ width: `${(filled / shown.length) * 100}%` }}
                 />
               </div>
-              <span className="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">
+              <span className="shrink-0 text-caption font-medium tabular-nums text-muted-foreground">
                 {filled}/{shown.length} filled
               </span>
             </div>
@@ -133,7 +133,7 @@ export function RequiredFieldsDialog({
 
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
           {fields == null ? (
-            <div className="flex items-center justify-center py-16 text-sm text-subtle">
+            <div className="flex items-center justify-center py-16 text-body text-subtle">
               <Loader2 className="me-2 h-4 w-4 animate-spin" /> {t("deals.requiredFields.loading")}
             </div>
           ) : (

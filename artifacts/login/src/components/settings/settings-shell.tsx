@@ -65,8 +65,8 @@ export function SettingsShell({
   return (
     <div className="flex h-full min-h-0 flex-col md:flex-row">
       {/* Section nav: horizontal scrollable bar on phones, sidebar on md+. */}
-      <nav className="shrink-0 border-b border-border bg-surface-whisper/50 p-2 md:w-56 md:overflow-y-auto md:border-b-0 md:border-e md:p-3">
-        <p className="mb-2 hidden px-2 text-xs font-semibold uppercase tracking-wider text-subtle md:block">
+      <nav className="shrink-0 border-b border-border bg-surface-rail p-2 md:w-56 md:overflow-y-auto md:border-b-0 md:border-e md:p-3">
+        <p className="mb-2 hidden px-2 text-caption text-subtle md:block">
           {t("common.settings")}
         </p>
         <div className="flex gap-1 overflow-x-auto md:flex-col md:gap-0.5 md:overflow-visible">
@@ -78,10 +78,10 @@ export function SettingsShell({
               <Link
                 href={s.href ?? `/admin/settings/${s.slug}`}
                 className={cn(
-                  "block whitespace-nowrap rounded-md px-3 py-2 text-sm transition-colors",
+                  "block whitespace-nowrap rounded-lg px-3 py-1.5 text-body-quiet transition-colors",
                   active === s.slug
-                    ? "bg-card font-medium text-brand shadow-sm"
-                    : "text-muted-foreground hover:bg-card hover:text-foreground",
+                    ? "bg-gray-alpha-100 text-foreground"
+                    : "text-muted-foreground hover:bg-gray-alpha-100 hover:text-foreground",
                 )}
               >
                 {t(s.labelKey)}

@@ -44,21 +44,21 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
                 if (sibling) (sibling as HTMLElement).style.display = "block";
               }}
             />
-            <div className="hidden text-2xl font-heading font-bold text-primary mb-8 tracking-tight">
+            <div className="hidden text-heading-sm font-heading font-bold text-primary mb-8 tracking-tight">
               Sirdab
             </div>
 
-            <h1 className="text-3xl font-heading font-semibold text-foreground tracking-tight mb-2">
+            <h1 className="text-heading-sm text-foreground mb-2">
               {title}
             </h1>
             {subtitle && (
-              <p className="text-muted-foreground text-sm">{subtitle}</p>
+              <p className="text-muted-foreground text-body">{subtitle}</p>
             )}
           </div>
 
           {children}
 
-          {footer && <div className="mt-8 text-sm">{footer}</div>}
+          {footer && <div className="mt-8 text-body">{footer}</div>}
         </div>
       </div>
     </div>

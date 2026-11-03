@@ -254,7 +254,7 @@ export function WidgetShell({
   return (
     <Card
       className={cn(
-        "flex h-full flex-col overflow-hidden rounded-xl border-border p-3 shadow-sm transition-shadow hover:shadow-md",
+        "flex h-full flex-col overflow-hidden p-3 transition-shadow hover:shadow-card-hover",
         modified && "ring-1 ring-warning/30",
       )}
       data-testid={`widget-${widget.id}`}
@@ -267,7 +267,7 @@ export function WidgetShell({
           )}
           {...dragHandleProps}
         >
-          <h3 className="truncate text-sm font-semibold text-foreground">
+          <h3 className="truncate text-body font-semibold text-foreground">
             {widget.name}
           </h3>
           {modified && (
@@ -287,7 +287,7 @@ export function WidgetShell({
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" align="end" className="max-w-72">
-                <div className="space-y-1.5 text-xs">
+                <div className="space-y-1.5 text-caption-quiet">
                   <div>
                     <span className="font-semibold">{t("insights.widget.boardFilters")}</span>{" "}
                     {appliedBoard.length > 0 ? appliedBoard.join("; ") : t("insights.widget.none")}
@@ -335,7 +335,7 @@ export function WidgetShell({
                 />
               </div>
               <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-                <span className="text-xs text-subtle">
+                <span className="text-caption-quiet text-subtle">
                   {modified ? t("insights.widget.unsavedLive") : t("insights.widget.editsLive")}
                 </span>
                 <div className="flex gap-2">
@@ -447,7 +447,7 @@ export function WidgetShell({
           </div>
         ) : isError ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
-            <p className="text-sm text-destructive">{error?.message || t("insights.queryFailed")}</p>
+            <p className="text-body-quiet text-destructive">{error?.message || t("insights.queryFailed")}</p>
             <Button variant="outline" size="sm" onClick={() => void refetch()}>
               <RefreshCw className="me-1.5 h-3.5 w-3.5" /> {t("common.retry")}
             </Button>

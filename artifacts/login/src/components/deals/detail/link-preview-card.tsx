@@ -35,12 +35,12 @@ export function LinkPreviewCards({
             <span className="truncate">{p.siteName || domainOf(p.url)}</span>
           </div>
           {p.title && (
-            <div className="mt-0.5 truncate text-sm font-medium text-foreground">
+            <div className="mt-0.5 truncate text-body font-medium text-foreground">
               {p.title}
             </div>
           )}
           {p.description && (
-            <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+            <div className="mt-0.5 line-clamp-2 text-caption text-muted-foreground">
               {p.description}
             </div>
           )}

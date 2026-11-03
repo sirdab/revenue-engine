@@ -93,7 +93,7 @@ export function ReactionBar({
           onClick={() => toggle(r.emoji)}
           title={r.reactorNames.join(", ")}
           className={cn(
-            "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs transition-colors",
+            "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-caption transition-colors",
             r.reactedByMe
               ? "border-brand-300 bg-brand-subtle text-brand"
               : "border-border bg-background text-muted-foreground hover:bg-gray-alpha-50",

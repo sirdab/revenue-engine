@@ -292,7 +292,7 @@ export default function InsightsPage() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="group flex items-center gap-1.5 rounded-md px-1 py-0.5 text-2xl font-semibold tracking-tight text-foreground hover:bg-gray-alpha-100"
+              className="group flex items-center gap-1.5 rounded-md px-1 py-0.5 text-heading-sm text-foreground hover:bg-gray-alpha-100"
               data-testid="dashboard-switcher"
             >
               {dashboard?.name ?? t("insights.title")}
@@ -382,7 +382,7 @@ export default function InsightsPage() {
         </div>
       </div>
       {dashboard && (
-        <p className="mb-4 text-sm text-muted-foreground">
+        <p className="mb-4 text-body-quiet text-muted-foreground">
           {tPlural("insights.widgetCount", dashboard.widgets.length)}
           {" · "}
           {t("insights.liveData")}
@@ -410,8 +410,8 @@ export default function InsightsPage() {
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
           <Sparkles className="h-10 w-10 text-brand" />
           <div>
-            <h2 className="text-lg font-semibold text-foreground">{t("insights.noDashboards")}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <h2 className="text-heading-xs text-foreground">{t("insights.noDashboards")}</h2>
+            <p className="mt-1 text-body-quiet text-muted-foreground">
               {t("insights.noDashboardsBody")}
             </p>
           </div>
@@ -426,7 +426,7 @@ export default function InsightsPage() {
         </div>
       ) : dashboard.widgets.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-          <p className="text-sm text-muted-foreground">{t("insights.emptyDashboard")}</p>
+          <p className="text-body-quiet text-muted-foreground">{t("insights.emptyDashboard")}</p>
           {!readOnly && (
             <Button
               onClick={() => {

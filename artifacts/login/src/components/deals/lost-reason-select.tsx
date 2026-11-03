@@ -68,7 +68,7 @@ export function LostReasonSelect({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "flex h-9 w-full items-center justify-between rounded-md border border-border bg-card px-3 text-sm shadow-sm transition-colors hover:border-input focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "flex h-9 w-full items-center justify-between rounded-md border border-border bg-card px-3 text-body shadow-card transition-colors hover:border-input focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             value ? "text-foreground" : "text-subtle",
           )}
         >

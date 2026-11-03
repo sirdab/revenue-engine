@@ -20,10 +20,10 @@ function AttributionField({
 }) {
   return (
     <div className="min-w-0">
-      <div className="text-[10px] font-medium uppercase tracking-wide text-subtle">
+      <div className="text-caption text-muted-foreground">
         {label}
       </div>
-      <div className="mt-0.5 truncate text-sm text-foreground" title={value}>
+      <div className="mt-0.5 truncate text-body text-foreground" title={value}>
         {value}
       </div>
     </div>
@@ -55,7 +55,7 @@ export function DealDetailsCard({
     <DealSectionCard title={t("common.details")} collapsible defaultOpen>
       {/* Additional requirements — editable multi-line */}
       <div>
-        <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-subtle">
+        <div className="mb-1 text-caption text-muted-foreground">
           {t("deals.details.additionalRequirements")}
         </div>
         <EditableTextarea
@@ -79,7 +79,7 @@ export function DealDetailsCard({
             allLabel={t("activity.add.noPerson")}
             placeholder={t("common.searchPeople")}
             inModal
-            triggerClassName="h-8 w-full border-transparent bg-transparent px-1 text-sm shadow-none hover:bg-gray-alpha-100"
+            triggerClassName="h-8 w-full border-transparent bg-transparent px-1 text-body shadow-none hover:bg-gray-alpha-100"
           />
         </DealField>
         <DealField label={t("common.organization")}>
@@ -96,7 +96,7 @@ export function DealDetailsCard({
             allLabel={t("deals.create.noOrg")}
             placeholder={t("common.searchOrganizations")}
             inModal
-            triggerClassName="h-8 w-full border-transparent bg-transparent px-1 text-sm shadow-none hover:bg-gray-alpha-100"
+            triggerClassName="h-8 w-full border-transparent bg-transparent px-1 text-body shadow-none hover:bg-gray-alpha-100"
           />
         </DealField>
         <DealField label={t("common.phone")} value={person?.phone} />
@@ -106,7 +106,7 @@ export function DealDetailsCard({
       {/* Source / attribution — read-only, tracking IDs hidden */}
       {attribution.length > 0 && (
         <div className="mt-4 border-t border-border pt-4">
-          <div className="mb-2 text-[11px] font-medium uppercase tracking-wide text-subtle">
+          <div className="mb-2 text-caption text-muted-foreground">
             {t("deals.details.attribution")}
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-4">
@@ -121,12 +121,12 @@ export function DealDetailsCard({
       <div className="mt-4 border-t border-border pt-4">
         {deal.status === "lost" && deal.lostReason && (
           <div className="mb-3 rounded-md border border-destructive/30 bg-destructive-subtle px-3 py-2">
-            <div className="text-[10px] font-medium uppercase tracking-wide text-destructive">
+            <div className="text-caption text-destructive">
               {t("deals.field.lostReason")}
             </div>
-            <div className="mt-0.5 text-sm text-destructive">{deal.lostReason}</div>
+            <div className="mt-0.5 text-body text-destructive">{deal.lostReason}</div>
             {deal.lostReasonNote && (
-              <div className="mt-1.5 whitespace-pre-wrap text-sm text-destructive/90">
+              <div className="mt-1.5 whitespace-pre-wrap text-body text-destructive/90">
                 {deal.lostReasonNote}
               </div>
             )}
@@ -158,10 +158,10 @@ export function DealDetailsCard({
             .filter((m) => m.value)
             .map((m) => (
               <div key={m.label} className="min-w-0">
-                <div className="text-[10px] font-medium uppercase tracking-wide text-subtle">
+                <div className="text-caption text-muted-foreground">
                   {m.label}
                 </div>
-                <div className="mt-0.5 text-xs text-muted-foreground">{m.value}</div>
+                <div className="mt-0.5 text-caption text-muted-foreground">{m.value}</div>
               </div>
             ))}
         </div>

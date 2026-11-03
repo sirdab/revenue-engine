@@ -1,12 +1,6 @@
 import { Sparkles, Trash2, User, Tag, PencilLine, History } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyMedia,
-} from "@/components/ui/empty";
+import { EmptyState } from "@sirdab/one/components/empty-state";
 import { DealSectionCard } from "@/components/deals/detail/deal-section-card";
 import {
   snapshotLabel,
@@ -32,7 +26,7 @@ function describeOrgChange({ t, tNode }: Pick<I18n, "t" | "tNode">, e: ChangeEve
       return {
         title: t("contacts.history.orgCreated"),
         icon: <Sparkles className="h-3.5 w-3.5" />,
-        accent: "bg-brand-subtle text-brand",
+        accent: "bg-muted text-muted-foreground",
       };
     case "deleted":
       return {
@@ -94,22 +88,17 @@ export function OrganizationHistory({
           ))}
         </div>
       ) : groups.length === 0 ? (
-        <Empty className="border-dashed py-8">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <History className="h-4 w-4" />
-            </EmptyMedia>
-            <EmptyTitle>{t("history.empty")}</EmptyTitle>
-            <EmptyDescription>
-              {t("contacts.history.orgHint")}
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <EmptyState
+          className="py-8"
+          icon={History}
+          title={t("history.empty")}
+          caption={t("contacts.history.orgHint")}
+        />
       ) : (
         <div className="space-y-5">
           {groups.map(([key, dayEvents]) => (
             <div key={key}>
-              <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-wide text-subtle">
+              <div className="mb-2.5 text-caption text-muted-foreground">
                 {dayLabel(new Date(key))}
               </div>
               <div className="space-y-2.5">

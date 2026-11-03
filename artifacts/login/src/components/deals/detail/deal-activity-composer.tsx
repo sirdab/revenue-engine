@@ -361,8 +361,8 @@ export function DealActivityComposer({
   };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-      <div className="flex flex-wrap gap-1 border-b border-border bg-surface-whisper/60 p-2">
+    <div className="overflow-hidden rounded-2xl bg-card shadow-card">
+      <div className="flex flex-wrap gap-1 border-b border-border p-2">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = active === tab.key;
@@ -372,10 +372,10 @@ export function DealActivityComposer({
               type="button"
               onClick={() => selectTab(tab)}
               className={cn(
-                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                "flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-label transition-colors",
                 isActive
-                  ? "bg-card text-brand shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:bg-gray-alpha-50 hover:text-foreground",
               )}
             >
               <Icon className="h-4 w-4" />
@@ -422,7 +422,7 @@ export function DealActivityComposer({
             type="button"
             title={t("deals.composer.attachFiles")}
             onClick={() => fileInput.current?.click()}
-            className="me-auto inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-gray-alpha-100 hover:text-foreground"
+            className="me-auto inline-flex items-center gap-1 rounded-md px-2 py-1 text-body text-muted-foreground transition-colors hover:bg-gray-alpha-100 hover:text-foreground"
           >
             <Paperclip className="h-4 w-4" />
             {t("deals.composer.attach")}

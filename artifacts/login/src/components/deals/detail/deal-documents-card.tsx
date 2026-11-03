@@ -40,7 +40,7 @@ export function DealDocumentsCard({
                     variant="ghost"
                     size="sm"
                     disabled
-                    className="h-7 gap-1 px-2 text-xs text-brand hover:text-brand"
+                    className="h-7 gap-1 px-2 text-caption text-brand hover:text-brand"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     {t("common.upload")}
@@ -54,7 +54,7 @@ export function DealDocumentsCard({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 gap-1 px-2 text-xs text-brand hover:text-brand"
+            className="h-7 gap-1 px-2 text-caption text-brand hover:text-brand"
             onClick={() => setUploadOpen(true)}
           >
             <Plus className="h-3.5 w-3.5" />

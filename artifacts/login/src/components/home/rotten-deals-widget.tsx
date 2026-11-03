@@ -57,19 +57,19 @@ export function RottenDealsWidget({ userId }: { userId: number }) {
           <Link
             key={d.id}
             href={`/deal/${d.id}`}
-            className="flex items-center gap-3 py-2 hover:bg-gray-alpha-50"
+            className="flex items-center gap-3 py-2 hover:bg-row-surface-hover"
           >
             <Flame className="h-4 w-4 shrink-0 text-destructive" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-foreground">
+              <p className="truncate text-body font-medium text-foreground">
                 {d.title}
               </p>
-              <p className="truncate text-xs text-muted-foreground">
+              <p className="truncate text-caption text-muted-foreground">
                 {formatCurrency(d.value, d.currency)}
                 {d.stageName ? ` · ${d.stageName}` : ""}
               </p>
             </div>
-            <span className="shrink-0 text-xs font-medium tabular-nums text-destructive">
+            <span className="shrink-0 text-caption font-medium tabular-nums text-destructive">
               {t("home.rotten.idle", { count: daysIdle(d) })}
             </span>
           </Link>

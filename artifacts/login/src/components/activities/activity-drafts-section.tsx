@@ -86,8 +86,8 @@ export function ActivityDraftsSection({
 
   return (
     <div className="border-b border-border px-4 py-3">
-      <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-warning">
-        <span className="h-2 w-2 rounded-full bg-warning" />
+      <div className="mb-2 flex items-center gap-1.5 text-label text-foreground">
+        <span className="h-2 w-2 rounded-full bg-attention-glyph" />
         {t("activity.drafts.title")}
         <span className="text-subtle">· {drafts.length}</span>
       </div>
@@ -103,38 +103,38 @@ export function ActivityDraftsSection({
           return (
             <div
               key={a.id}
-              className="rounded-lg border border-dashed border-warning/30 bg-warning-subtle/40 px-3 py-2"
+              className="rounded-lg border border-dashed border-border bg-surface-whisper px-3 py-2"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                     <TypeIcon className="h-3.5 w-3.5" />
                   </span>
-                  <span className="truncate text-sm font-medium text-foreground">
+                  <span className="truncate text-body font-medium text-foreground">
                     {a.subject}
                   </span>
                   <span
                     className={cn(
                       STATUS_PILL_CLASS,
-                      "border-warning/30 bg-warning-subtle text-warning",
+                      "bg-attention-subtle text-attention",
                     )}
                   >
                     {t("common.draft")}
                   </span>
                   {meta && (
-                    <span className="truncate text-[11px] text-subtle">
+                    <span className="truncate text-caption text-subtle">
                       · {meta}
                     </span>
                   )}
                 </div>
-                <time className="shrink-0 text-[11px] text-subtle">
+                <time className="shrink-0 text-caption text-subtle">
                   {formatTimestamp(a.addTime)}
                 </time>
               </div>
               {a.note && (
                 <RichText
                   html={a.note}
-                  className="mt-1 break-words text-sm text-muted-foreground"
+                  className="mt-1 break-words text-body text-muted-foreground"
                 />
               )}
               <div className="mt-2 flex items-center justify-end gap-2">
@@ -153,7 +153,6 @@ export function ActivityDraftsSection({
                   size="sm"
                   onClick={() => post(a)}
                   disabled={mutating}
-                  className="bg-primary text-primary-foreground hover:bg-primary-hover"
                 >
                   {mutating ? t("activity.drafts.posting") : t("activity.drafts.post")}
                 </Button>

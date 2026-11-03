@@ -40,7 +40,7 @@ export function ActivityPriorityLegend({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground",
+        "flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted-foreground",
         className,
       )}
     >

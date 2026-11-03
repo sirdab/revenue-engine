@@ -90,13 +90,14 @@ export default function ResetPasswordPage() {
         title={t("auth.reset.updatedTitle")}
         subtitle={t("auth.reset.updatedSubtitle")}
       >
-        <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground mb-6">
+        <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-body text-foreground mb-6">
           <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" />
           <span>{t("auth.reset.allSet")}</span>
         </div>
         <Button
           asChild
-          className="w-full h-12 text-base font-medium bg-primary hover:bg-primary/90 text-primary-foreground"
+          size="touch"
+          className="w-full"
         >
           <Link href="/">{t("auth.reset.continue")}</Link>
         </Button>
@@ -120,13 +121,14 @@ export default function ResetPasswordPage() {
           </Link>
         }
       >
-        <div className="flex items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-foreground mb-6">
+        <div className="flex items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-body text-foreground mb-6">
           <XCircle className="h-5 w-5 shrink-0 text-destructive" />
           <span>{t("auth.reset.onceOnly")}</span>
         </div>
         <Button
           asChild
-          className="w-full h-12 text-base font-medium bg-primary hover:bg-primary/90 text-primary-foreground"
+          size="touch"
+          className="w-full"
         >
           <Link href="/forgot-password">{t("auth.reset.requestNew")}</Link>
         </Button>
@@ -138,7 +140,7 @@ export default function ResetPasswordPage() {
   if (validating) {
     return (
       <AuthShell title={t("auth.resetPassword")}>
-        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+        <div className="flex items-center gap-2 text-muted-foreground text-body">
           <Loader2 className="h-4 w-4 animate-spin" />
           {t("auth.reset.verifying")}
         </div>
@@ -168,7 +170,7 @@ export default function ResetPasswordPage() {
                       type={showPassword ? "text" : "password"}
                       autoComplete="new-password"
                       autoFocus
-                      className="h-12 bg-card px-4 pe-10 border-border transition-colors focus-visible:ring-primary/20 focus-visible:border-primary"
+                      size="touch" inputClassName="pe-10"
                       {...field}
                     />
                     <button
@@ -203,7 +205,7 @@ export default function ResetPasswordPage() {
                     placeholder="••••••••"
                     type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
-                    className="h-12 bg-card px-4 border-border transition-colors focus-visible:ring-primary/20 focus-visible:border-primary"
+                    size="touch"
                     {...field}
                   />
                 </FormControl>
@@ -214,7 +216,8 @@ export default function ResetPasswordPage() {
 
           <Button
             type="submit"
-            className="w-full h-12 text-base font-medium shadow-sm hover:shadow transition-all bg-primary hover:bg-primary/90 text-primary-foreground"
+            size="touch"
+                className="w-full"
             disabled={reset.isPending}
           >
             {reset.isPending ? (

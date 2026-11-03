@@ -61,6 +61,8 @@ import {
   ACTIVITY_TYPE_CONFIG,
 } from "@/components/activities/activity-fields";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Segmented, SegmentedItem } from "@sirdab/one/components/segmented";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DataTable } from "@/components/shared/data-table";
 import { useI18n, type MessageKey } from "@/lib/i18n/i18n";
@@ -83,7 +85,7 @@ function ReschedulePicker({
       onChange={onReschedule}
       clearable={false}
       className={cn(
-        "h-auto min-h-0 w-auto gap-1.5 px-2 py-1 text-xs",
+        "h-auto min-h-0 w-auto gap-1.5 px-2 py-1 text-caption",
         overdue
           ? "border-destructive/30 text-destructive"
           : "border-border text-muted-foreground",
@@ -117,31 +119,27 @@ const UNDONE = "__undone__";
 
 const BUCKET_META: Record<
   Bucket,
-  { label: MessageKey; dot: string; headerText: string; headerBg: string }
+  { label: MessageKey; dot: string; headerText: string }
 > = {
   overdue: {
     label: "activity.status.overdue",
-    dot: "bg-destructive",
+    dot: "bg-destructive-glyph",
     headerText: "text-destructive",
-    headerBg: "bg-destructive-subtle",
   },
   today: {
     label: "activity.status.today",
-    dot: "bg-warning",
-    headerText: "text-warning",
-    headerBg: "bg-warning-subtle",
+    dot: "bg-attention-glyph",
+    headerText: "text-attention",
   },
   upcoming: {
     label: "activity.status.upcoming",
-    dot: "bg-attention",
-    headerText: "text-attention",
-    headerBg: "bg-attention-subtle",
+    dot: "bg-subtle",
+    headerText: "text-foreground",
   },
   done: {
     label: "activity.status.done",
-    dot: "bg-brand-500",
-    headerText: "text-brand",
-    headerBg: "bg-brand-subtle",
+    dot: "bg-subtle",
+    headerText: "text-muted-foreground",
   },
 };
 
@@ -154,33 +152,18 @@ function ViewSwitcher({
 }) {
   const { t } = useI18n();
   return (
-    <div className="flex items-center gap-0.5 rounded-lg border border-border bg-surface-whisper p-0.5">
-      {(
-        [
-          { key: "table", label: t("views.table"), icon: TableIcon },
-          { key: "board", label: t("views.board"), icon: LayoutGrid },
-          { key: "agenda", label: t("activities.view.agenda"), icon: ListChecks },
-        ] as const
-      ).map(({ key, label, icon: Icon }) => (
-        <button
-          key={key}
-          type="button"
-          onClick={() => onChange(key)}
-          // The label is hidden on phones, where the button is icon-only.
-          aria-label={label}
-          aria-pressed={view === key}
-          className={cn(
-            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-            view === key
-              ? "bg-card text-brand shadow-sm"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          <Icon className="h-4 w-4" />
-          <span className="hidden sm:inline">{label}</span>
-        </button>
-      ))}
-    </div>
+    <Segmented
+      value={view}
+      onValueChange={(v) => onChange(v as ViewMode)}
+    >
+      <SegmentedItem value="table" icon={<TableIcon />} label={t("views.table")} />
+      <SegmentedItem value="board" icon={<LayoutGrid />} label={t("views.board")} />
+      <SegmentedItem
+        value="agenda"
+        icon={<ListChecks />}
+        label={t("activities.view.agenda")}
+      />
+    </Segmented>
   );
 }
 
@@ -356,10 +339,10 @@ export default function ActivitiesPage() {
       ? buckets.overdue + buckets.today + buckets.upcoming + buckets.done
       : total;
     return [
-      { label: t("common.total"), value: overall, dot: "bg-gray-400" },
-      { label: t("activity.status.overdue"), value: buckets?.overdue ?? 0, dot: "bg-destructive" },
-      { label: t("activity.status.today"), value: buckets?.today ?? 0, dot: "bg-warning" },
-      { label: t("activity.status.done"), value: buckets?.done ?? 0, dot: "bg-brand-500" },
+      { label: t("common.total"), value: overall, dot: "bg-subtle" },
+      { label: t("activity.status.overdue"), value: buckets?.overdue ?? 0, dot: "bg-destructive-glyph" },
+      { label: t("activity.status.today"), value: buckets?.today ?? 0, dot: "bg-attention-glyph" },
+      { label: t("activity.status.done"), value: buckets?.done ?? 0, dot: "bg-subtle" },
     ];
   }, [buckets, total, t]);
 
@@ -418,7 +401,7 @@ export default function ActivitiesPage() {
               {row.original.subject}
             </div>
             {row.original.note && (
-              <div className="truncate text-xs text-subtle">
+              <div className="truncate text-caption text-subtle">
                 {noteToPlainText(row.original.note)}
               </div>
             )}
@@ -440,9 +423,9 @@ export default function ActivitiesPage() {
         header: t("common.type"),
         size: 120,
         cell: ({ row }) => (
-          <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+          <Badge variant="outline">
             {source.typeLabel(dealToView(row.original), t)}
-          </span>
+          </Badge>
         ),
       },
       {
@@ -455,7 +438,7 @@ export default function ActivitiesPage() {
           const isOverdue = bucketOf(dealToView(a), today) === "overdue";
           if (a.done) {
             return a.dueDate ? (
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1 text-caption text-muted-foreground">
                 <CalendarDays className="h-3 w-3" />
                 {formatShortDate(parseISO(a.dueDate))}
               </span>
@@ -481,7 +464,7 @@ export default function ActivitiesPage() {
           row.original.dealId ? (
             <Link
               href={`/deal/${row.original.dealId}`}
-              className="truncate text-brand hover:underline"
+              className="truncate text-foreground underline-offset-2 hover:underline"
             >
               {row.original.dealTitle || t("activities.dealFallback", { id: row.original.dealId })}
             </Link>
@@ -503,7 +486,7 @@ export default function ActivitiesPage() {
           return (
             <Link
               href={`/organization/${dealOrganizationId}`}
-              className="truncate text-brand hover:underline"
+              className="truncate text-foreground underline-offset-2 hover:underline"
               dir="auto"
             >
               {dealOrganizationName || t("activities.orgFallback", { id: dealOrganizationId })}
@@ -560,7 +543,7 @@ export default function ActivitiesPage() {
 
   if (isError)
     return (
-      <div className="m-auto mt-10 text-sm text-destructive">
+      <div className="m-auto mt-10 text-body text-destructive">
         {t("activities.loadFailedRefresh")}
       </div>
     );
@@ -584,10 +567,10 @@ export default function ActivitiesPage() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 pb-1 pt-3">
         <div>
-          <h1 className="font-heading text-xl font-bold tracking-tight text-foreground">
+          <h1 className="text-heading-sm text-foreground">
             {t("common.activities")}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body-quiet text-muted-foreground">
             {t("activities.subtitle")}
           </p>
         </div>
@@ -616,13 +599,13 @@ export default function ActivitiesPage() {
         {summary.map((card) => (
           <div
             key={card.label}
-            className="rounded-lg border border-border bg-card px-4 py-3"
+            className="rounded-xl bg-card px-4 py-3 shadow-card"
           >
-            <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-caption text-muted-foreground">
               <span className={cn("h-2 w-2 rounded-full", card.dot)} />
               {card.label}
             </div>
-            <div className="mt-1 text-2xl font-bold tabular-nums text-foreground">
+            <div className="mt-1 text-heading-sm tabular-nums text-foreground">
               {card.value.toLocaleString()}
             </div>
           </div>
@@ -820,30 +803,27 @@ function BoardView({ groups, source, controller, today, onReschedule }: ViewProp
           return (
             <div
               key={bucket}
-              className="flex w-[85vw] max-w-80 shrink-0 snap-start flex-col rounded-xl border border-border bg-surface-whisper/60 sm:w-80"
+              className="flex w-[85vw] max-w-80 shrink-0 snap-start flex-col rounded-xl bg-surface-whisper sm:w-80"
             >
               <div
-                className={cn(
-                  "flex items-center justify-between rounded-t-xl px-3 py-2.5",
-                  meta.headerBg,
-                )}
+                className="flex items-center justify-between px-3 py-2.5"
               >
                 <span
                   className={cn(
-                    "flex items-center gap-1.5 text-sm font-semibold",
+                    "flex items-center gap-1.5 text-label",
                     meta.headerText,
                   )}
                 >
                   <span className={cn("h-2 w-2 rounded-full", meta.dot)} />
                   {t(meta.label)}
                 </span>
-                <span className="rounded-full bg-card/70 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                <span className="rounded-full bg-card px-2 py-0.5 text-caption tabular-nums text-muted-foreground shadow-card">
                   {items.length.toLocaleString()}
                 </span>
               </div>
               <div className="min-h-0 flex-1 space-y-2 overflow-auto p-2">
                 {items.length === 0 ? (
-                  <div className="px-2 py-6 text-center text-xs text-subtle">
+                  <div className="px-2 py-6 text-center text-caption text-subtle">
                     {t("activities.nothingHere")}
                   </div>
                 ) : (
@@ -889,7 +869,7 @@ function ActivityCard({
   return (
     <div
       className={cn(
-        "rounded-lg border border-border bg-card p-3 shadow-sm",
+        "rounded-lg bg-card p-3 shadow-card",
         activity.done && "opacity-70",
       )}
     >
@@ -900,7 +880,7 @@ function ActivityCard({
             <div
               dir="auto"
               className={cn(
-                "min-w-0 text-sm font-medium",
+                "min-w-0 text-body font-medium",
                 activity.done ? "text-muted-foreground" : "text-foreground",
               )}
             >
@@ -908,7 +888,7 @@ function ActivityCard({
             </div>
             <ActivityActions view={view} source={source} controller={controller} />
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted-foreground">
             <span className="font-medium">{source.typeLabel(view, t)}</span>
             {activity.dueTime && <span>{activity.dueTime.slice(0, 5)}</span>}
             {/* The column already says open work's status; a finished card
@@ -918,13 +898,13 @@ function ActivityCard({
           {activity.dealId && (
             <Link
               href={`/deal/${activity.dealId}`}
-              className="mt-1 block truncate text-xs text-brand hover:underline"
+              className="mt-1 block truncate text-caption text-foreground underline-offset-2 hover:underline"
             >
               {activity.dealTitle || t("activities.dealFallback", { id: activity.dealId })}
             </Link>
           )}
           {activity.personName && (
-            <div dir="auto" className="truncate text-xs text-muted-foreground">
+            <div dir="auto" className="truncate text-caption text-muted-foreground">
               {activity.personName}
             </div>
           )}
@@ -957,7 +937,7 @@ function AgendaView({ groups, source, controller, today, onReschedule }: ViewPro
 
   if (total === 0) {
     return (
-      <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+      <div className="flex h-40 items-center justify-center text-body text-muted-foreground">
         {t("activities.empty")}
       </div>
     );
@@ -975,7 +955,7 @@ function AgendaView({ groups, source, controller, today, onReschedule }: ViewPro
               <div className="mb-2 flex items-center gap-2">
                 <h2
                   className={cn(
-                    "text-sm font-semibold uppercase tracking-wider",
+                    "text-label",
                     key === "overdue" ? "text-destructive" : "text-muted-foreground",
                   )}
                 >
@@ -983,7 +963,7 @@ function AgendaView({ groups, source, controller, today, onReschedule }: ViewPro
                 </h2>
                 <span
                   className={cn(
-                    "rounded-full px-2 py-0.5 text-xs font-medium",
+                    "rounded-full px-2 py-0.5 text-caption font-medium",
                     key === "overdue"
                       ? "bg-destructive-subtle text-destructive"
                       : "bg-muted text-muted-foreground",

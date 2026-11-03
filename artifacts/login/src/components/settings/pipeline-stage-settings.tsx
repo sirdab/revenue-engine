@@ -189,7 +189,7 @@ function RequiredFieldsPicker({
   return (
     <>
       {fieldOptions.length === 0 ? (
-        <p className="text-xs text-subtle">
+        <p className="text-caption-quiet text-subtle">
           No deal fields available yet. Activate or create some under Settings › Custom
           Fields to require them here.
         </p>
@@ -200,18 +200,18 @@ function RequiredFieldsPicker({
             value={fieldSearch}
             onChange={(e) => setFieldSearch(e.target.value)}
             placeholder="Search fields…"
-            className="h-7 text-xs"
+            className="h-7 text-caption-quiet"
           />
         </div>
         <div className="max-h-48 space-y-2.5 overflow-y-auto p-2">
           {fieldGroups.length === 0 && (
-            <p className="py-2 text-center text-xs text-subtle">
+            <p className="py-2 text-center text-caption-quiet text-subtle">
               No fields match "{fieldSearch.trim()}".
             </p>
           )}
           {fieldGroups.map((g) => (
             <div key={g.title}>
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-subtle">
+              <p className="mb-1 text-caption text-subtle">
                 {g.title}
               </p>
               <div className="flex flex-wrap gap-1">
@@ -239,11 +239,11 @@ function RequiredFieldsPicker({
                       }
                       onClick={() => toggle(f.key)}
                       className={cn(
-                        "inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs transition-colors",
+                        "inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-caption-quiet transition-colors",
                         lockedBy != null
-                          ? "cursor-default border-brand-200 bg-brand-subtle/70 text-brand"
+                          ? "cursor-default border-gray-alpha-300 bg-gray-alpha-100 text-foreground"
                           : on
-                            ? "border-brand-300 bg-brand-subtle text-brand"
+                            ? "border-gray-alpha-300 bg-gray-alpha-50 text-foreground"
                             : "border-border text-muted-foreground hover:border-input",
                       )}
                     >
@@ -264,7 +264,7 @@ function RequiredFieldsPicker({
       )}
       {staleRequired.length > 0 && (
         <div className="mt-2">
-          <p className="mb-1 text-xs text-warning">
+          <p className="mb-1 text-caption-quiet text-warning">
             These required fields no longer exist or are inactive. Remove them to save:
           </p>
           <div className="flex flex-wrap gap-1">
@@ -274,7 +274,7 @@ function RequiredFieldsPicker({
                 type="button"
                 title="Click to remove"
                 onClick={() => toggle(k)}
-                className="inline-flex items-center gap-1 rounded border border-warning/30 bg-warning-subtle px-2 py-0.5 text-xs text-warning"
+                className="inline-flex items-center gap-1 rounded-sm border border-warning/30 bg-warning-subtle px-2 py-0.5 text-caption-quiet text-warning"
               >
                 {k} <X className="h-3 w-3" />
               </button>
@@ -395,7 +395,7 @@ function StageDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <label className="block text-sm">
+          <label className="block text-body-quiet">
             <span className="mb-1 block font-medium text-muted-foreground">Name</span>
             <Input
               autoFocus
@@ -405,7 +405,7 @@ function StageDialog({
               onKeyDown={(e) => e.key === "Enter" && save()}
             />
           </label>
-          <div className="text-sm">
+          <div className="text-body-quiet">
             <div className="mb-2 flex items-center justify-between">
               <span className="font-medium text-muted-foreground">Win probability</span>
               <div className="flex items-center gap-1">
@@ -428,7 +428,7 @@ function StageDialog({
               aria-label="Win probability"
             />
           </div>
-          <label className="block text-sm">
+          <label className="block text-body-quiet">
             <span className="mb-1 block font-medium text-muted-foreground">Rotting days</span>
             <Input
               type="number"
@@ -437,24 +437,24 @@ function StageDialog({
               onChange={(e) => setRotting(e.target.value)}
               placeholder="never"
             />
-            <span className="mt-1 block text-xs text-subtle">
+            <span className="mt-1 block text-caption-quiet text-subtle">
               Deals idle in this stage longer than this are flagged as rotting.
             </span>
           </label>
-          <div className="text-sm">
+          <div className="text-body-quiet">
             <div className="mb-1 flex items-center justify-between">
               <span className="font-medium text-muted-foreground">Required fields</span>
               {required.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setRequired([])}
-                  className="text-xs text-subtle hover:text-muted-foreground"
+                  className="text-caption-quiet text-subtle hover:text-muted-foreground"
                 >
                   Clear ({required.length})
                 </button>
               )}
             </div>
-            <p className="mb-2 text-xs text-subtle">
+            <p className="mb-2 text-caption-quiet text-subtle">
               A deal can't move into this stage until these are filled. Fields required by
               earlier stages stay required here automatically (shown locked).
             </p>
@@ -530,14 +530,14 @@ function WonRequiredFieldsDialog({
             here is filled.
           </DialogDescription>
         </DialogHeader>
-        <div className="text-sm">
+        <div className="text-body-quiet">
           <div className="mb-1 flex items-center justify-between">
             <span className="font-medium text-muted-foreground">Required fields</span>
             {selectedKeys.length > 0 && (
               <button
                 type="button"
                 onClick={() => setSelectedKeys([])}
-                className="text-xs text-subtle hover:text-muted-foreground"
+                className="text-caption-quiet text-subtle hover:text-muted-foreground"
               >
                 Clear ({selectedKeys.length})
               </button>
@@ -682,8 +682,8 @@ function SortablePipelineItem({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         "group flex items-center gap-1 rounded-md border bg-card px-1.5 py-1.5",
-        selected ? "border-brand-300 bg-brand-subtle/50" : "border-border hover:bg-gray-alpha-50",
-        isDragging && "z-10 shadow-md",
+        selected ? "border-gray-alpha-300 bg-gray-alpha-100" : "border-border hover:bg-gray-alpha-50",
+        isDragging && "z-10 shadow-raised",
       )}
     >
       <button
@@ -694,7 +694,7 @@ function SortablePipelineItem({
         aria-label={`Reorder ${pipeline.name}`}
         title={dragDisabled ? "Clear the search to reorder" : undefined}
         className={cn(
-          "touch-none rounded p-0.5 text-subtle",
+          "touch-none rounded-sm p-0.5 text-subtle",
           dragDisabled
             ? "cursor-default opacity-40"
             : "cursor-grab hover:text-muted-foreground active:cursor-grabbing",
@@ -704,7 +704,7 @@ function SortablePipelineItem({
       </button>
       <button type="button" className="min-w-0 flex-1 text-start" onClick={onSelect}>
         <div className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-medium text-foreground">{pipeline.name}</span>
+          <span className="truncate text-body text-foreground">{pipeline.name}</span>
           {pipeline.isDefault && (
             <Badge variant="outline" className="border-warning/30 bg-warning-subtle text-[10px] text-warning">
               Default
@@ -778,7 +778,7 @@ function SortableStageRow({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         "flex items-center gap-2 border-t border-border bg-card px-2 py-2",
-        isDragging && "z-10 shadow-md",
+        isDragging && "z-10 shadow-raised",
       )}
     >
       <button
@@ -786,17 +786,17 @@ function SortableStageRow({
         {...attributes}
         {...listeners}
         aria-label={`Reorder ${stage.name}`}
-        className="cursor-grab touch-none rounded p-0.5 text-subtle hover:text-muted-foreground active:cursor-grabbing"
+        className="cursor-grab touch-none rounded-sm p-0.5 text-subtle hover:text-muted-foreground active:cursor-grabbing"
       >
         <GripVertical className="h-3.5 w-3.5" />
       </button>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-medium text-foreground">{stage.name}</span>
+          <span className="truncate text-body text-foreground">{stage.name}</span>
           {stage.requiredFields.length + inheritedRequired.length > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="inline-flex items-center gap-0.5 rounded border border-border bg-surface-whisper px-1 py-px text-[10px] text-muted-foreground">
+                <span className="inline-flex items-center gap-0.5 rounded-sm border border-border bg-surface-whisper px-1 py-px text-[10px] text-muted-foreground">
                   <ListChecks className="h-3 w-3" />{" "}
                   {stage.requiredFields.length + inheritedRequired.length}
                 </span>
@@ -819,18 +819,18 @@ function SortableStageRow({
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
           <div className="h-full rounded-full bg-brand-500" style={{ width: `${stage.probability}%` }} />
         </div>
-        <span className="w-9 text-end text-xs tabular-nums text-muted-foreground">{stage.probability}%</span>
+        <span className="w-9 text-end text-caption-quiet tabular-nums text-muted-foreground">{stage.probability}%</span>
       </div>
       <div className="w-16 shrink-0 text-end">
         {stage.rottingDays != null ? (
-          <span className="inline-flex items-center gap-1 text-xs tabular-nums text-muted-foreground">
+          <span className="inline-flex items-center gap-1 text-caption-quiet tabular-nums text-muted-foreground">
             <Clock className="h-3 w-3 text-warning-glyph" /> {stage.rottingDays}d
           </span>
         ) : (
-          <span className="text-xs text-subtle">—</span>
+          <span className="text-caption-quiet text-subtle">—</span>
         )}
       </div>
-      <div className="w-12 shrink-0 text-end text-xs tabular-nums text-muted-foreground">
+      <div className="w-12 shrink-0 text-end text-caption-quiet tabular-nums text-muted-foreground">
         {stage.activeDealCount}
       </div>
       <div className="flex shrink-0 items-center gap-0.5">
@@ -881,7 +881,7 @@ function PipelineFlowPreview({ stages }: { stages: AdminStageRow[] }) {
               <ChevronRight className="h-4 w-4 text-subtle" />
             </div>
           )}
-          <div className="min-w-[150px] flex-1 overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
+          <div className="min-w-[150px] flex-1 overflow-hidden rounded-lg bg-card shadow-card transition-shadow hover:shadow-card-hover">
             <div className="px-3 pb-2 pt-2.5">
               <div className="flex items-center gap-1.5">
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
@@ -890,7 +890,7 @@ function PipelineFlowPreview({ stages }: { stages: AdminStageRow[] }) {
                 <span
                   dir="auto"
                   title={s.name}
-                  className="truncate text-[13px] font-semibold text-foreground"
+                  className="truncate text-label font-semibold text-foreground"
                 >
                   {s.name}
                 </span>
@@ -1119,7 +1119,7 @@ export function PipelineStageSettings() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
+      <div className="flex items-center justify-center py-16 text-body-quiet text-muted-foreground">
         <Loader2 className="me-2 h-4 w-4 animate-spin" /> Loading pipelines…
       </div>
     );
@@ -1130,15 +1130,15 @@ export function PipelineStageSettings() {
   return (
     <div className="mx-auto min-w-0 max-w-5xl p-4 md:p-6">
       <div className="mb-5">
-        <h1 className="text-lg font-bold text-foreground">Pipelines &amp; Stages</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-heading-sm text-foreground">Pipelines &amp; Stages</h1>
+        <p className="text-body-quiet text-muted-foreground">
           Manage your CRM pipelines and their stages. Drag to reorder; changes apply everywhere immediately.
         </p>
       </div>
 
       {activePipelines.length === 0 && archivedPipelines.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-16 text-center">
-          <p className="mb-3 text-sm text-muted-foreground">No pipelines yet.</p>
+          <p className="mb-3 text-body-quiet text-muted-foreground">No pipelines yet.</p>
           <Button onClick={() => { setPipelineName(""); setPipelineDialog({ editing: null }); }} className="gap-1">
             <Plus className="h-4 w-4" /> Create your first pipeline
           </Button>
@@ -1148,13 +1148,13 @@ export function PipelineStageSettings() {
           {/* Pipelines */}
           <div className="min-w-0">
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">
+              <h2 className="text-body font-semibold text-foreground">
                 Pipelines
                 <span className="ms-1.5 font-normal text-subtle">
                   {activePipelines.length.toLocaleString()}
                 </span>
               </h2>
-              <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => { setPipelineName(""); setPipelineDialog({ editing: null }); }}>
+              <Button size="sm" variant="outline" className="h-7 gap-1 text-caption-quiet" onClick={() => { setPipelineName(""); setPipelineDialog({ editing: null }); }}>
                 <Plus className="h-3 w-3" /> New
               </Button>
             </div>
@@ -1165,7 +1165,7 @@ export function PipelineStageSettings() {
                   value={pipelineQuery}
                   onChange={(e) => setPipelineQuery(e.target.value)}
                   placeholder="Search pipelines…"
-                  className="h-8 ps-7 text-sm"
+                  className="h-8 ps-7 text-body-quiet"
                 />
               </div>
             )}
@@ -1186,7 +1186,7 @@ export function PipelineStageSettings() {
                     />
                   ))}
                   {matchingPipelines.length === 0 && (
-                    <p className="py-4 text-center text-xs text-subtle">
+                    <p className="py-4 text-center text-caption-quiet text-subtle">
                       No pipelines match "{pipelineQuery.trim()}".
                     </p>
                   )}
@@ -1197,7 +1197,7 @@ export function PipelineStageSettings() {
               <button
                 type="button"
                 onClick={() => setShowAllPipelines(true)}
-                className="mt-1.5 w-full rounded-md border border-dashed border-border py-1.5 text-xs font-medium text-muted-foreground hover:border-input hover:text-foreground"
+                className="mt-1.5 w-full rounded-md border border-dashed border-border py-1.5 text-caption text-muted-foreground hover:border-input hover:text-foreground"
               >
                 Show all {matchingPipelines.length.toLocaleString()} pipelines
               </button>
@@ -1206,16 +1206,16 @@ export function PipelineStageSettings() {
               <button
                 type="button"
                 onClick={() => setShowAllPipelines(false)}
-                className="mt-1.5 w-full rounded-md py-1 text-xs text-subtle hover:text-muted-foreground"
+                className="mt-1.5 w-full rounded-md py-1 text-caption-quiet text-subtle hover:text-muted-foreground"
               >
                 Show fewer
               </button>
             )}
             {archivedPipelines.length > 0 && (
               <div className="mt-4">
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-subtle">Archived</p>
+                <p className="mb-1 text-caption text-subtle">Archived</p>
                 {archivedPipelines.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between rounded-md px-2 py-1 text-sm text-muted-foreground">
+                  <div key={p.id} className="flex items-center justify-between rounded-md px-2 py-1 text-body-quiet text-muted-foreground">
                     <span className="truncate">{p.name}</span>
                     <IconBtn title="Restore" onClick={() => run(() => updatePipeline(p.id, { archived: false }), "Couldn't restore")}>
                       <ArchiveRestore className="h-3.5 w-3.5" />
@@ -1229,7 +1229,7 @@ export function PipelineStageSettings() {
           {/* Stages */}
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">
+              <h2 className="text-body font-semibold text-foreground">
                 Stages{selectedPipeline ? ` · ${selectedPipeline.name}` : ""}
               </h2>
               {selectedPipeline != null && (
@@ -1237,30 +1237,30 @@ export function PipelineStageSettings() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-7 gap-1 text-xs"
+                    className="h-7 gap-1 text-caption-quiet"
                     onClick={() => setWonDialog(selectedPipeline)}
                   >
                     <Trophy className="h-3 w-3" /> Won requirements
                     {(selectedPipeline.wonRequiredFields?.length ?? 0) > 0 &&
                       ` (${selectedPipeline.wonRequiredFields.length})`}
                   </Button>
-                  <Button size="sm" className="h-7 gap-1 text-xs" onClick={() => setStageDialog({ editing: null })}>
+                  <Button size="sm" className="h-7 gap-1 text-caption-quiet" onClick={() => setStageDialog({ editing: null })}>
                     <Plus className="h-3 w-3" /> New stage
                   </Button>
                 </div>
               )}
             </div>
             {selected == null ? (
-              <p className="py-8 text-center text-sm text-subtle">Select a pipeline.</p>
+              <p className="py-8 text-center text-body-quiet text-subtle">Select a pipeline.</p>
             ) : (
               <>
                 {selectedPipeline != null && (
-                  <label className="mb-3 flex items-start justify-between gap-4 rounded-md border border-border px-3 py-2.5 text-sm">
+                  <label className="mb-3 flex items-start justify-between gap-4 rounded-md border border-border px-3 py-2.5 text-body-quiet">
                     <span>
                       <span className="block font-medium text-foreground">
                         {t("settings.pipelines.adminOnlyReassign")}
                       </span>
-                      <span className="block text-xs text-muted-foreground">
+                      <span className="block text-caption-quiet text-muted-foreground">
                         {t("settings.pipelines.adminOnlyReassignHint")}
                       </span>
                     </span>
@@ -1281,9 +1281,9 @@ export function PipelineStageSettings() {
                 <PipelineFlowPreview stages={activeStages} />
                 {/* Fixed metric columns never fit tiny viewports — the card
                     scrolls horizontally instead of pushing off-screen. */}
-                <div className="overflow-x-auto rounded-xl border border-border">
+                <div className="overflow-x-auto rounded-2xl bg-card shadow-card">
                   <div className="min-w-[560px]">
-                    <div className="flex items-center gap-2 bg-surface-whisper px-2 py-2 text-xs font-medium text-muted-foreground">
+                    <div className="flex items-center gap-2 bg-surface-whisper px-2 py-2 text-caption text-muted-foreground">
                       <span className="w-4 shrink-0" />
                       <span className="min-w-0 flex-1">Stage</span>
                       <span className="w-28 shrink-0 text-end">Probability</span>
@@ -1292,7 +1292,7 @@ export function PipelineStageSettings() {
                       <span className="w-[3.75rem] shrink-0" />
                     </div>
                     {activeStages.length === 0 && (
-                      <p className="border-t border-border px-3 py-8 text-center text-sm text-subtle">
+                      <p className="border-t border-border px-3 py-8 text-center text-body-quiet text-subtle">
                         No stages yet. Add the first one to start moving deals.
                       </p>
                     )}
@@ -1313,9 +1313,9 @@ export function PipelineStageSettings() {
                     </DndContext>
                     {archivedStages.length > 0 && (
                       <div className="border-t border-border bg-surface-whisper/50 px-3 py-2">
-                        <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-subtle">Archived stages</p>
+                        <p className="mb-1 text-caption text-subtle">Archived stages</p>
                         {archivedStages.map((s) => (
-                          <div key={s.id} className="flex items-center justify-between py-0.5 text-xs text-muted-foreground">
+                          <div key={s.id} className="flex items-center justify-between py-0.5 text-caption-quiet text-muted-foreground">
                             <span>{s.name}</span>
                             <IconBtn title="Restore" onClick={() => run(() => updateStage(s.id, { archived: false }), "Couldn't restore")}>
                               <ArchiveRestore className="h-3.5 w-3.5" />

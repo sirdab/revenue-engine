@@ -35,7 +35,7 @@ export function AttachmentTray({
         <div
           key={item.key}
           className={cn(
-            "flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm",
+            "flex items-center gap-2 rounded-md border px-2 py-1.5 text-body",
             item.status === "error"
               ? "border-destructive/30 bg-destructive-subtle"
               : "border-border bg-surface-whisper",

@@ -27,6 +27,9 @@ Conventions worth knowing (more in [CLAUDE.md](CLAUDE.md)):
   directories by hand.
 - **Schema changes** in `lib/db/src/schema` must ship with a generated
   migration (`pnpm --filter @workspace/db run generate`), committed together.
+- **Styling** uses [Sirdab One](https://github.com/sirdab/one) components and
+  its semantic colour tokens; raw Tailwind palette classes (`slate-500`,
+  `teal-600`) do not exist in this project.
 - **User-facing text** goes through the i18n catalogs with both English and
   Arabic strings; check layouts in RTL.
 - Add or update `*.test.ts` files next to logic you change.

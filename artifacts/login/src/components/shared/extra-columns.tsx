@@ -52,10 +52,10 @@ function renderValue(kind: ExtraKind | undefined, value: unknown): React.ReactNo
     case "bool":
       return (
         <Badge
-          variant="outline"
+          variant="secondary"
           className={
             value
-              ? "border-brand-200 bg-brand-subtle px-1.5 py-0 text-[10px] text-brand"
+              ? "border-btn-border-hover bg-muted px-1.5 py-0 text-[10px] text-foreground"
               : "border-border bg-surface-whisper px-1.5 py-0 text-[10px] text-muted-foreground"
           }
         >

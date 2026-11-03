@@ -71,9 +71,9 @@ export function ModeToggle({
           disabled={disabled}
           onClick={() => onChange(m)}
           className={cn(
-            "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+            "rounded-md px-3 py-1.5 text-body font-medium transition-colors",
             mode === m
-              ? "bg-card text-foreground shadow-sm"
+              ? "bg-card text-foreground shadow-card"
               : "text-muted-foreground hover:text-foreground",
           )}
         >
@@ -113,10 +113,10 @@ export function ReplyChoice({
         disabled={disabled}
         onClick={() => onChange(v)}
         className={cn(
-          "inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm font-medium transition-colors",
+          "inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-body font-medium transition-colors",
           selected
             ? v === "successful"
-              ? "border-brand-600 bg-brand-subtle text-brand"
+              ? "border-btn-border-hover bg-btn-ghost-surface-active text-foreground"
               : "border-gray-500 bg-muted text-foreground"
             : "border-border bg-card text-muted-foreground hover:border-input",
           invalid && !value && "border-destructive/30",
@@ -130,7 +130,7 @@ export function ReplyChoice({
   return (
     <div>
       {showLabel && (
-        <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+        <p className="mb-1.5 text-caption font-medium text-muted-foreground">
           {t("activity.outcome.completeTitle")}
         </p>
       )}
@@ -138,7 +138,7 @@ export function ReplyChoice({
         {REPLY_OUTCOMES.map(option)}
       </div>
       {invalid && !value && (
-        <p className="mt-1 text-xs text-destructive">
+        <p className="mt-1 text-caption text-destructive">
           {t("activity.log.chooseReply")}
         </p>
       )}
@@ -233,7 +233,7 @@ export function LoggedStrip({
       className="h-8 bg-card"
     >
       {t(labelKey)}
-      <span className="ms-1.5 text-xs font-normal text-subtle">
+      <span className="ms-1.5 text-caption font-normal text-subtle">
         {formatDate(`${dates[preset]}T00:00:00`)}
       </span>
     </Button>
@@ -248,17 +248,17 @@ export function LoggedStrip({
         !inDialog &&
           (noReply && !scheduledFor
             ? "border-input bg-surface-whisper"
-            : "border-brand-200 bg-brand-subtle"),
+            : "border-border bg-surface-whisper"),
       )}
     >
       <div className="flex items-start gap-2">
         {noReply ? (
           <PhoneMissed className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
         ) : (
-          <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+          <Check className="mt-0.5 h-4 w-4 shrink-0 text-success-glyph" />
         )}
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-foreground">
+          <p className="text-body font-medium text-foreground">
             {t(
               followUp
                 ? "activity.strip.closedNoReply"
@@ -267,7 +267,7 @@ export function LoggedStrip({
             )}
           </p>
           {scheduledFor ? (
-            <p className="mt-0.5 text-sm text-brand">
+            <p className="mt-0.5 text-body text-foreground">
               {t(followUp ? "activity.strip.followUpMoved" : "activity.strip.retryScheduled", {
                 date: formatDate(`${scheduledFor}T00:00:00`),
               })}
@@ -275,7 +275,7 @@ export function LoggedStrip({
           ) : (
             noReply && (
               <div className="mt-2 space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">
+                <p className="text-caption font-medium text-muted-foreground">
                   {t(
                     followUp
                       ? "activity.strip.followUpWhen"
@@ -309,7 +309,7 @@ export function LoggedStrip({
                       size="sm"
                       disabled={!pickedDate || busy}
                       onClick={() => void retry(pickedDate)}
-                      className="h-8 bg-primary text-primary-foreground hover:bg-primary-hover"
+                      className="h-8"
                     >
                       {busy && <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />}
                       {t("common.save")}
@@ -317,14 +317,14 @@ export function LoggedStrip({
                   </div>
                 )}
                 {failed && (
-                  <p className="text-xs text-destructive">{t("activity.strip.retryFailed")}</p>
+                  <p className="text-caption text-destructive">{t("activity.strip.retryFailed")}</p>
                 )}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                   {followUp && (
                     <button
                       type="button"
                       onClick={followUp.onEdit}
-                      className="text-xs font-medium text-brand underline-offset-2 hover:underline"
+                      className="text-caption font-medium text-foreground underline underline-offset-2"
                     >
                       {t("activity.strip.editFollowUp")}
                     </button>
@@ -332,7 +332,7 @@ export function LoggedStrip({
                   <button
                     type="button"
                     onClick={onDismiss}
-                    className="text-xs font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                    className="text-caption font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                   >
                     {t(followUp ? "activity.strip.keepAsIs" : "activity.strip.noThanks")}
                   </button>
@@ -346,7 +346,7 @@ export function LoggedStrip({
             type="button"
             onClick={onDismiss}
             aria-label={t("activity.strip.dismiss")}
-            className="shrink-0 rounded p-0.5 text-subtle hover:bg-background/60 hover:text-muted-foreground"
+            className="shrink-0 rounded-sm p-0.5 text-subtle hover:bg-background/60 hover:text-muted-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -368,5 +368,5 @@ export function useFlash(activeId: number | null | undefined, id: number) {
     const tid = window.setTimeout(() => setOn(false), 2500);
     return () => window.clearTimeout(tid);
   }, [activeId, id]);
-  return on ? "bg-brand-subtle/80 transition-colors duration-700" : "transition-colors duration-700";
+  return on ? "bg-gray-alpha-100 transition-colors duration-700" : "transition-colors duration-700";
 }

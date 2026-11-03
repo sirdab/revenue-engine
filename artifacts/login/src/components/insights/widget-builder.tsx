@@ -261,11 +261,11 @@ function SectionTitle({
 }) {
   return (
     <div className="flex items-center gap-2 border-b border-border pb-1.5">
-      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-subtle text-[11px] font-semibold text-brand">
+      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-caption text-foreground">
         {step}
       </span>
       <Icon className="h-3.5 w-3.5 text-subtle" />
-      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <span className="text-label text-foreground">
         {children}
       </span>
     </div>
@@ -553,7 +553,7 @@ export function WidgetBuilder({
                       className={cn(
                         "flex flex-col items-center gap-1 rounded-lg border px-1 py-2 text-[11px] font-medium transition-colors",
                         active
-                          ? "border-brand-600 bg-brand-subtle text-brand"
+                          ? "border-gray-alpha-400 bg-gray-alpha-100 text-foreground"
                           : "border-border text-muted-foreground hover:border-input hover:text-foreground",
                         unavailable && "cursor-not-allowed opacity-40 hover:border-border hover:text-muted-foreground",
                       )}
@@ -564,9 +564,12 @@ export function WidgetBuilder({
                   );
                 })}
               </div>
-              <p className="text-[11px] leading-4 text-subtle">
-                {VIZ_TILES.find((v) => v.value === vizType)?.hint}
-              </p>
+              {(() => {
+                const hint = VIZ_TILES.find((v) => v.value === vizType)?.hint;
+                return hint ? (
+                  <p className="text-caption-quiet text-subtle">{t(hint)}</p>
+                ) : null;
+              })()}
             </div>
 
             {/* 2 — data */}
@@ -583,13 +586,13 @@ export function WidgetBuilder({
                       <button
                         key={s.value}
                         type="button"
-                        title={s.hint}
+                        title={t(s.hint)}
                         data-testid={`scope-${s.value}`}
                         onClick={() => changeScope(s.value)}
                         className={cn(
-                          "rounded-lg border px-2 py-1.5 text-xs font-medium transition-colors",
+                          "rounded-lg border px-2 py-1.5 text-caption transition-colors",
                           active
-                            ? "border-brand-600 bg-brand-subtle text-brand"
+                            ? "border-gray-alpha-400 bg-gray-alpha-100 text-foreground"
                             : "border-border text-muted-foreground hover:border-input hover:text-foreground",
                         )}
                       >
@@ -613,7 +616,7 @@ export function WidgetBuilder({
                       </SelectContent>
                     </Select>
                   </div>
-                  <p className="text-xs leading-5 text-muted-foreground">
+                  <p className="text-caption-quiet leading-5 text-muted-foreground">
                     {t("insights.builder.stagesHint")}
                   </p>
                 </>
@@ -732,7 +735,7 @@ export function WidgetBuilder({
                 </SectionTitle>
                 {!isKpi && vizType !== "table" && (
                   <div className="flex flex-wrap gap-x-5 gap-y-2">
-                    <Label className="flex cursor-pointer items-center gap-2 text-sm font-normal">
+                    <Label className="flex cursor-pointer items-center gap-2 text-body-quiet font-normal">
                       <Checkbox
                         checked={
                           showValues ??
@@ -744,7 +747,7 @@ export function WidgetBuilder({
                       {t("insights.builder.numbersOnChart")}
                     </Label>
                     {hasSegment && (
-                      <Label className="flex cursor-pointer items-center gap-2 text-sm font-normal">
+                      <Label className="flex cursor-pointer items-center gap-2 text-body-quiet font-normal">
                         <Checkbox
                           checked={showLegend ?? true}
                           onCheckedChange={(c) => setShowLegend(c === true)}
@@ -753,7 +756,7 @@ export function WidgetBuilder({
                       </Label>
                     )}
                     {vizType !== "pie" && vizType !== "horizontalBar" && (
-                      <Label className="flex cursor-pointer items-center gap-2 text-sm font-normal">
+                      <Label className="flex cursor-pointer items-center gap-2 text-body-quiet font-normal">
                         <Checkbox
                           checked={showGrid ?? true}
                           onCheckedChange={(c) => setShowGrid(c === true)}
@@ -762,7 +765,7 @@ export function WidgetBuilder({
                       </Label>
                     )}
                     {canCompare && (
-                      <Label className="flex cursor-pointer items-center gap-2 text-sm font-normal">
+                      <Label className="flex cursor-pointer items-center gap-2 text-body-quiet font-normal">
                         <Checkbox
                           checked={compare}
                           onCheckedChange={(c) => setCompare(c === true)}
@@ -858,7 +861,7 @@ export function WidgetBuilder({
           {/* Live preview */}
           <div className="flex min-h-72 flex-col rounded-lg border border-border bg-surface-whisper/60 p-3">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-medium uppercase tracking-wide text-subtle">
+              <span className="text-caption text-subtle">
                 {t("common.preview")}
               </span>
               {preview.isFetching && (
@@ -867,7 +870,7 @@ export function WidgetBuilder({
             </div>
             <div className="min-h-0 flex-1 rounded-md bg-background p-2">
               {preview.isError ? (
-                <div className="flex h-full items-center justify-center px-6 text-center text-sm text-destructive">
+                <div className="flex h-full items-center justify-center px-6 text-center text-body-quiet text-destructive">
                   {preview.error?.message || t("insights.queryFailed")}
                 </div>
               ) : preview.data && previewSpec ? (
@@ -878,14 +881,14 @@ export function WidgetBuilder({
                   spec={previewSpec}
                 />
               ) : (
-                <div className="flex h-full items-center justify-center text-sm text-subtle">
+                <div className="flex h-full items-center justify-center text-body-quiet text-subtle">
                   <Loader2 className="me-2 h-4 w-4 animate-spin" /> {t("insights.builder.loadingPreview")}
                 </div>
               )}
             </div>
             {/* The sentence: what this widget means, in words. */}
             <div
-              className="mt-2.5 rounded-md border border-brand-100 bg-brand-subtle/60 px-3 py-2 text-xs leading-5 text-brand"
+              className="mt-2.5 rounded-md bg-surface-whisper px-3 py-2 text-caption-quiet leading-5 text-brand"
               data-testid="builder-summary"
             >
               {summary}

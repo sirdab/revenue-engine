@@ -127,15 +127,15 @@ export function NotificationsWidget() {
           );
           const row = (
             <div className="group flex items-start gap-2.5 py-2">
-              <Avatar className="mt-0.5 h-6 w-6 border border-border bg-muted text-muted-foreground">
-                <AvatarFallback className="bg-transparent text-[10px] font-medium">
+              <Avatar size="sm" className="mt-0.5">
+                <AvatarFallback className="bg-muted text-[10px] text-muted-foreground">
                   {initials(item.actorName ?? "Sirdab")}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
                 <p
                   className={cn(
-                    "text-sm leading-snug",
+                    "text-body leading-snug",
                     // Unread carries weight; read fades back. Without this the
                     // card is a wall of identical rows and the bell's unread
                     // count has no visual counterpart here.
@@ -144,7 +144,7 @@ export function NotificationsWidget() {
                 >
                   {item.message}
                 </p>
-                <p className="text-xs text-subtle">
+                <p className="text-caption text-subtle">
                   {formatRelativeLong(item.createdAt)}
                 </p>
               </div>
@@ -154,7 +154,7 @@ export function NotificationsWidget() {
           // A notification whose entity link cannot be resolved still has to
           // render — it is the message that matters — just not as a dead link.
           return path ? (
-            <Link key={item.id} href={path} className="block hover:bg-gray-alpha-50">
+            <Link key={item.id} href={path} className="block hover:bg-row-surface-hover">
               {row}
             </Link>
           ) : (

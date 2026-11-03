@@ -190,7 +190,7 @@ export function AssignmentRuleWizard({
         </DialogHeader>
 
         {/* Stepper */}
-        <ol className="flex items-center gap-2 text-xs">
+        <ol className="flex items-center gap-2 text-caption-quiet">
           {STEPS.map((s, i) => (
             <li key={s.id} className="flex items-center gap-2">
               <span
@@ -221,14 +221,14 @@ export function AssignmentRuleWizard({
           {step === "event" && (
             <div className="space-y-4">
               <div>
-                <Label className="text-xs text-muted-foreground">Entity</Label>
-                <p className="mt-1 text-sm font-medium text-foreground">Deal</p>
-                <p className="text-xs text-subtle">
+                <Label className="text-caption-quiet text-muted-foreground">Entity</Label>
+                <p className="mt-1 text-body text-foreground">Deal</p>
+                <p className="text-caption-quiet text-subtle">
                   Lead-entity rules aren&apos;t supported yet.
                 </p>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Trigger event</Label>
+                <Label className="text-caption-quiet text-muted-foreground">Trigger event</Label>
                 <RadioGroup
                   value={event}
                   onValueChange={(v) =>
@@ -239,10 +239,10 @@ export function AssignmentRuleWizard({
                   <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 hover:bg-gray-alpha-50">
                     <RadioGroupItem value="deal_added" className="mt-0.5" />
                     <span>
-                      <span className="block text-sm font-medium text-foreground">
+                      <span className="block text-body text-foreground">
                         Deal added
                       </span>
-                      <span className="block text-xs text-muted-foreground">
+                      <span className="block text-caption-quiet text-muted-foreground">
                         Assign when a new deal is created (including inbound
                         leads).
                       </span>
@@ -251,10 +251,10 @@ export function AssignmentRuleWizard({
                   <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 hover:bg-gray-alpha-50">
                     <RadioGroupItem value="deal_updated" className="mt-0.5" />
                     <span>
-                      <span className="block text-sm font-medium text-foreground">
+                      <span className="block text-body text-foreground">
                         Deal updated
                       </span>
-                      <span className="block text-xs text-muted-foreground">
+                      <span className="block text-caption-quiet text-muted-foreground">
                         Assign on a pipeline or stage change. Ownerless deals
                         only, unless the rule may take over owned deals (next
                         step).
@@ -269,10 +269,10 @@ export function AssignmentRuleWizard({
           {step === "conditions" && (
             <div className="space-y-4">
               <div>
-                <Label className="text-xs text-muted-foreground">
+                <Label className="text-caption-quiet text-muted-foreground">
                   Assignment conditions
                 </Label>
-                <p className="mb-2 text-xs text-subtle">
+                <p className="mb-2 text-caption-quiet text-subtle">
                   The deal must match these to be routed by this rule. Leave
                   empty to match every deal of this trigger.
                 </p>
@@ -285,7 +285,7 @@ export function AssignmentRuleWizard({
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <Label className="text-xs text-muted-foreground">Team</Label>
+                  <Label className="text-caption-quiet text-muted-foreground">Team</Label>
                   <Combobox
                     items={teams.map((t) => ({
                       value: String(t.id),
@@ -302,7 +302,7 @@ export function AssignmentRuleWizard({
                   />
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">Assignee</Label>
+                  <Label className="text-caption-quiet text-muted-foreground">Assignee</Label>
                   <Combobox
                     items={[
                       {
@@ -322,7 +322,7 @@ export function AssignmentRuleWizard({
                     triggerClassName="mt-1 h-9 w-full"
                   />
                   {teamId == null && (
-                    <p className="mt-1 text-xs text-subtle">
+                    <p className="mt-1 text-caption-quiet text-subtle">
                       Pick a team first to choose a specific person.
                     </p>
                   )}
@@ -336,10 +336,10 @@ export function AssignmentRuleWizard({
                     onCheckedChange={setTakeoverOwned}
                   />
                   <span>
-                    <span className="block text-sm font-medium text-foreground">
+                    <span className="block text-body text-foreground">
                       May take over owned deals
                     </span>
-                    <span className="block text-xs text-muted-foreground">
+                    <span className="block text-caption-quiet text-muted-foreground">
                       Off (default): this rule only routes deals that have no
                       owner. On: when the pipeline or stage changes, this rule
                       reassigns the deal even if someone already owns it, use
@@ -353,7 +353,7 @@ export function AssignmentRuleWizard({
 
           {step === "name" && (
             <div className="space-y-2">
-              <Label htmlFor="rule-name" className="text-xs text-muted-foreground">
+              <Label htmlFor="rule-name" className="text-caption-quiet text-muted-foreground">
                 Rule name
               </Label>
               <Input
@@ -365,7 +365,7 @@ export function AssignmentRuleWizard({
                 maxLength={200}
                 autoFocus
               />
-              <p className="text-xs text-subtle">
+              <p className="text-caption-quiet text-subtle">
                 A clear name helps you recognize this rule in the list.
               </p>
             </div>

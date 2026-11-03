@@ -116,12 +116,12 @@ export default function LoginPage() {
               }}
             />
             {/* Hidden fallback text in case image fails */}
-            <div className="hidden text-2xl font-heading font-bold text-primary mb-8 tracking-tight">Sirdab</div>
+            <div className="hidden text-heading-sm font-heading font-bold text-primary mb-8 tracking-tight">Sirdab</div>
 
-            <h1 className="text-3xl font-heading font-semibold text-foreground tracking-tight mb-2">
+            <h1 className="text-heading-sm text-foreground mb-2">
               {t("auth.login.title")}
             </h1>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-body">
               {t("auth.login.subtitle")}
             </p>
           </div>
@@ -141,7 +141,7 @@ export default function LoginPage() {
                         type="email" 
                         autoComplete="email"
                         autoFocus
-                        className="h-12 bg-card px-4 border-border transition-colors focus-visible:ring-primary/20 focus-visible:border-primary"
+                        size="touch"
                         {...field} 
                       />
                     </FormControl>
@@ -162,7 +162,7 @@ export default function LoginPage() {
                           placeholder="••••••••" 
                           type={showPassword ? "text" : "password"} 
                           autoComplete="current-password"
-                          className="h-12 bg-card px-4 pe-10 border-border transition-colors focus-visible:ring-primary/20 focus-visible:border-primary"
+                          size="touch" inputClassName="pe-10"
                           {...field} 
                         />
                         <button
@@ -194,11 +194,11 @@ export default function LoginPage() {
                         <Checkbox 
                           checked={field.value} 
                           onCheckedChange={field.onChange} 
-                          className="border-input data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm font-medium text-muted-foreground cursor-pointer">
+                        <FormLabel className="text-body font-medium text-muted-foreground cursor-pointer">
                           {t("auth.rememberMe")}
                         </FormLabel>
                       </div>
@@ -208,7 +208,7 @@ export default function LoginPage() {
                 
                 <Link
                   href="/forgot-password"
-                  className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                  className="text-body text-foreground underline-offset-4 hover:underline"
                 >
                   {t("auth.forgotPassword")}
                 </Link>
@@ -216,7 +216,8 @@ export default function LoginPage() {
 
               <Button 
                 type="submit" 
-                className="w-full h-12 text-base font-medium shadow-sm hover:shadow transition-all bg-primary hover:bg-primary/90 text-primary-foreground"
+                size="touch"
+                className="w-full"
                 disabled={isLoggingIn}
               >
                 {isLoggingIn ? (

@@ -135,7 +135,7 @@ export function DashboardDialogs({
           <DialogHeader>
             <DialogTitle>{t("insights.shareTitle", { name: dashboard?.name ?? "" })}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body-quiet text-muted-foreground">
             {t("insights.shareBody")}
           </p>
           <div className="max-h-64 space-y-2 overflow-y-auto">
@@ -144,7 +144,7 @@ export function DashboardDialogs({
               .map((o) => (
                 <Label
                   key={o.id}
-                  className="flex cursor-pointer items-center gap-2 text-sm font-normal"
+                  className="flex cursor-pointer items-center gap-2 text-body-quiet font-normal"
                 >
                   <Checkbox
                     checked={shareIds.includes(o.id)}
