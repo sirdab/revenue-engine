@@ -1,0 +1,66 @@
+# Local Postgres for development:
+#
+#   docker compose up -d db
+#
+# and, to run the whole app from the production image (self-hosting / a quick
+# try-out), also:
+#
+#   docker compose --profile app up -d --build
+#   open http://localhost:8080
+#
+# The database is created with an ordinary `crm_app` role (docker/postgres-init.sql);
+# the app must never connect as a superuser, see README → Tenant isolation.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d crm"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    profiles: ["app"]
+    build: .
+    # The image is linux/amd64 only (see Dockerfile). On Apple silicon Docker
+    # emulates it, which is slow and can crash esbuild mid-build; build on an
+    # amd64 machine instead.
+    platform: linux/amd64
+    depends_on:
+      db:
+        condition: service_healthy
+    # Compose reads .env in this folder for these ${...} values.
+    environment:
+      DATABASE_URL: postgres://crm_app:crm_app@db:5432/crm
+      SESSION_SECRET: ${SESSION_SECRET:-}   # required by the app; set it in .env
+      PORT: "8080"
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
+      APP_NAME: ${APP_NAME:-CRM}
+      APP_TIMEZONE: ${APP_TIMEZONE:-UTC}
+      PHONE_COUNTRY_CODE: ${PHONE_COUNTRY_CODE:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      AWS_SES_SMTP_ENDPOINT: ${AWS_SES_SMTP_ENDPOINT:-}
+      AWS_SES_SMTP_USER: ${AWS_SES_SMTP_USER:-}
+      AWS_SES_SMTP_PASSWORD: ${AWS_SES_SMTP_PASSWORD:-}
+      AWS_SMTP_PORT: ${AWS_SMTP_PORT:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_REGION: ${S3_REGION:-}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME:-}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    command: ["sh", "-c", "node dist/migrate.mjs && exec node --enable-source-maps dist/index.mjs"]
+
+volumes:
+  db-data:

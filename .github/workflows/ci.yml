@@ -1,0 +1,80 @@
+name: CI
+
+# Typecheck + build + tests on every PR and push.
+on:
+  pull_request: {}
+  # Only run push CI on main (direct pushes / merges). Feature branches are
+  # covered by the pull_request trigger, so branching this to ["**"] would
+  # double-run CI on every push to a branch that has an open PR.
+  push:
+    branches: ["main"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # A throwaway Postgres so the real migrations (including the row-level
+    # security policies) are applied on every run.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: crm_test
+        ports:
+          - 5432:5432
+        # Without this the job races the container and the first connection
+        # fails on a database that is still starting.
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          # Lockfile was written by pnpm 10; pnpm 9 fails --frozen-lockfile with
+          # ERR_PNPM_LOCKFILE_CONFIG_MISMATCH on the overrides config.
+          version: 10.34.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck & build
+        # `pnpm run build` runs typecheck first, then `vite build`, which throws
+        # at config eval without BASE_PATH and PORT — same requirement as Docker.
+        env:
+          BASE_PATH: /
+          PORT: "8080"
+        run: pnpm run build
+      - name: Create the app role
+        # Migrate as an ordinary role, the way production must run: superusers
+        # and BYPASSRLS roles skip row-level security, and the role that owns
+        # the tables is the one the FORCEd policies have to hold for.
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            -c "CREATE ROLE crm_app LOGIN PASSWORD 'crm_app' NOSUPERUSER NOBYPASSRLS;" \
+            -c "CREATE DATABASE crm_app_test OWNER crm_app;"
+      - name: Migrate the test database
+        # The schema comes from the real migrations rather than a fixture, so a
+        # migration that breaks these tables fails here rather than on deploy.
+        env:
+          DATABASE_URL: postgres://crm_app:crm_app@localhost:5432/crm_app_test
+        run: pnpm --filter @workspace/db run migrate
+
+      - name: Typecheck & run tests
+        # The main typecheck excludes *.test.ts (they import with .ts extensions
+        # for Node's test runner); typecheck them via tsconfig.test.json, then run.
+        run: |
+          pnpm --filter @workspace/api-server run typecheck:test
+          pnpm run test

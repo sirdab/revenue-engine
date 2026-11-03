@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./lib/db"
+    },
+    {
+      "path": "./lib/api-client-react"
+    },
+    {
+      "path": "./lib/api-zod"
+    },
+    {
+      "path": "./lib/deals-filter"
+    },
+    {
+      "path": "./lib/insights-spec"
+    },
+    {
+      "path": "./lib/automation-placeholders"
+    }
+  ]
+}
