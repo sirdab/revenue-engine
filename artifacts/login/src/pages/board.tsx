@@ -220,7 +220,7 @@ export function Board({
         {Array.from({ length: 5 }, (_, i) => (
           <div
             key={i}
-            className="flex-1 min-w-[200px] max-w-[420px] flex flex-col rounded-xl bg-slate-100/70 px-2 pt-3 pb-2"
+            className="flex-1 min-w-[200px] max-w-[420px] flex flex-col rounded-2xl bg-surface-sunken px-2 pt-3 pb-2"
           >
             <div className="mb-2 flex items-center justify-between px-1">
               <Skeleton className="h-4 w-24" />
@@ -406,10 +406,10 @@ export function Board({
         <ActivityPriorityLegend />
         <Select value={sort} onValueChange={(v) => setSort(v as BoardSort)}>
           <SelectTrigger
-            className="h-8 w-[180px] gap-1.5 bg-card text-sm"
+            className="w-[180px] gap-1.5"
             aria-label={t("board.sortDeals")}
           >
-            <ArrowUpDown className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+            <ArrowUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent align="end">
@@ -480,33 +480,33 @@ function BoardColumnView({
   const { setNodeRef, isOver } = useDroppable({ id: `col-${column.stageId}` });
 
   return (
-    <div className="flex-1 min-w-[200px] max-w-[420px] flex flex-col max-h-full rounded-xl bg-slate-100/70">
+    <div className="flex-1 min-w-[200px] max-w-[420px] flex flex-col max-h-full rounded-2xl bg-surface-sunken">
       <div className="flex items-center justify-between gap-2 px-3 pt-3 pb-2">
         {onStageClick ? (
           <button
             type="button"
             onClick={() => onStageClick(column.stageId, column.stageName)}
             title={t("board.viewStageInList", { stage: column.stageName })}
-            className="flex min-w-0 items-center gap-1.5 rounded hover:text-teal-700"
+            className="flex min-w-0 items-center gap-1.5 rounded-sm hover:underline underline-offset-2"
           >
-            <h3 className="text-sm font-semibold text-slate-700 truncate">
+            <h3 className="text-body font-semibold text-foreground truncate">
               {column.stageName}
             </h3>
-            <span className="flex-shrink-0 text-[11px] font-medium text-slate-500 bg-slate-200/90 px-1.5 rounded-full leading-5">
+            <span className="flex-shrink-0 text-[11px] font-medium tabular-nums text-muted-foreground bg-background px-1.5 rounded-full leading-5">
               {column.count.toLocaleString()}
             </span>
           </button>
         ) : (
           <div className="flex items-center gap-1.5 min-w-0">
-            <h3 className="text-sm font-semibold text-slate-700 truncate">
+            <h3 className="text-body font-semibold text-foreground truncate">
               {column.stageName}
             </h3>
-            <span className="flex-shrink-0 text-[11px] font-medium text-slate-500 bg-slate-200/90 px-1.5 rounded-full leading-5">
+            <span className="flex-shrink-0 text-[11px] font-medium tabular-nums text-muted-foreground bg-background px-1.5 rounded-full leading-5">
               {column.count.toLocaleString()}
             </span>
           </div>
         )}
-        <span className="flex-shrink-0 text-[11px] font-medium text-slate-500 tabular-nums">
+        <span className="flex-shrink-0 text-[11px] font-medium text-muted-foreground tabular-nums">
           <Money value={column.sum} />
         </span>
       </div>
@@ -520,14 +520,14 @@ function BoardColumnView({
           ref={setNodeRef}
           className={cn(
             "flex flex-col gap-1.5 overflow-y-auto flex-1 min-h-[80px] px-2 pb-2 rounded-lg transition-colors",
-            isOver && "bg-teal-50/60",
+            isOver && "bg-brand-subtle/60",
           )}
         >
           {column.deals.map((deal) => (
             <SortableDealCard key={deal.id} deal={deal} onOpenDeal={onOpenDeal} />
           ))}
           {column.deals.length === 0 && (
-            <div className="flex-1 min-h-[80px] flex items-center justify-center rounded-lg border border-dashed border-slate-200 text-xs text-slate-400">
+            <div className="flex-1 min-h-[80px] flex items-center justify-center rounded-lg border border-dashed border-border text-caption text-subtle">
               {t("board.dropHere")}
             </div>
           )}
@@ -576,10 +576,10 @@ function DealCardView({
   return (
     <div
       className={cn(
-        "bg-card relative rounded-md border border-slate-200 px-2.5 py-1.5 shadow-sm select-none",
+        "bg-card relative rounded-lg px-2.5 py-2 shadow-card select-none",
         overlay
-          ? "shadow-lg ring-2 ring-teal-400 rotate-1 cursor-grabbing"
-          : "cursor-grab active:cursor-grabbing hover:border-teal-300 hover:shadow transition-[border-color,box-shadow]",
+          ? "shadow-raised ring-2 ring-ring rotate-1 cursor-grabbing"
+          : "cursor-grab active:cursor-grabbing hover:shadow-raised transition-shadow",
         dragging && "opacity-40",
       )}
     >
@@ -605,13 +605,13 @@ function DealCardView({
           // tooltip keeps the stored title, phone number and all.
           dir="auto"
           title={deal.title}
-          className="flex-1 min-w-0 line-clamp-2 break-words text-start text-[13px] font-medium text-slate-900 leading-snug hover:text-teal-600"
+          className="flex-1 min-w-0 line-clamp-2 break-words text-start text-label text-foreground leading-snug hover:underline underline-offset-2"
         >
           {label.primary}
         </StretchedLink>
         {deal.ownerName && (
           <span
-            className="mt-px flex-shrink-0 w-4 h-4 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[8px] font-semibold"
+            className="mt-px flex-shrink-0 size-5 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-[9px] font-semibold"
             title={deal.ownerName}
           >
             {initials(deal.ownerName)}
@@ -619,27 +619,27 @@ function DealCardView({
         )}
       </div>
 
-      <div className="mt-0.5 flex items-center gap-2 text-[11px]">
-        <span className="flex-shrink-0 font-semibold text-teal-700 tabular-nums">
+      <div className="mt-1 flex items-center gap-2 text-caption">
+        <span className="flex-shrink-0 font-semibold text-foreground tabular-nums">
           <Money value={deal.value} currency={deal.currency} />
         </span>
         {label.secondary && (
           <span
             dir="auto"
             title={label.secondary}
-            className="min-w-0 flex-1 truncate text-start text-slate-500"
+            className="min-w-0 flex-1 truncate text-start text-muted-foreground"
           >
             {label.secondary}
           </span>
         )}
         <span
           className={cn(
-            "ms-auto flex-shrink-0 rounded px-1 text-[10px] font-medium tabular-nums",
+            "ms-auto flex-shrink-0 rounded-md px-1 text-[10px] font-medium tabular-nums",
             days > 30
-              ? "bg-red-100 text-red-700"
+              ? "bg-destructive-subtle text-destructive"
               : days > 14
-                ? "bg-orange-100 text-orange-700"
-                : "text-slate-400",
+                ? "bg-warning-subtle text-warning"
+                : "text-subtle",
           )}
         >
           {days}d

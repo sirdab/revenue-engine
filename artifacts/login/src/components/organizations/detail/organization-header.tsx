@@ -16,9 +16,9 @@ function Metric({
   value: number;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-600">
-      <span className="text-slate-400">{icon}</span>
-      <span className="font-semibold text-slate-800">{value}</span>
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-whisper px-2.5 py-1 text-caption text-muted-foreground">
+      <span className="text-subtle">{icon}</span>
+      <span className="font-semibold text-foreground">{value}</span>
       {label}
     </span>
   );
@@ -36,28 +36,28 @@ export function OrganizationHeader({
     <div className="px-4 py-3">
       <Link
         href="/contacts"
-        className="inline-flex items-center gap-1 text-xs font-medium text-slate-400 transition-colors hover:text-teal-600"
+        className="inline-flex items-center gap-1 text-caption text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-3.5 w-3.5" /> {t("contacts.backToContactsLower")}
       </Link>
 
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-600">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
           <Building2 className="h-4 w-4" />
         </span>
         <EditableText
           value={organization.name}
           onCommit={(name) => onCommit({ name })}
           placeholder={t("contacts.orgNamePlaceholder")}
-          className="-ms-1 min-w-0 font-heading text-lg font-bold text-slate-900"
+          className="-ms-1 min-w-0 text-heading-sm text-foreground"
         />
-        <span className="hidden h-4 w-px bg-slate-200 sm:block" />
+        <span className="hidden h-4 w-px bg-border sm:block" />
         <span
-          className="inline-flex items-center gap-1.5 text-xs text-slate-500"
+          className="inline-flex items-center gap-1.5 text-caption text-muted-foreground"
           title={organization.ownerName ?? t("common.unassigned")}
         >
-          <Avatar className="h-4 w-4">
-            <AvatarFallback className="bg-teal-100 text-[9px] font-semibold text-teal-700">
+          <Avatar size="sm" className="size-4">
+            <AvatarFallback className="text-badge">
               {initials(organization.ownerName)}
             </AvatarFallback>
           </Avatar>

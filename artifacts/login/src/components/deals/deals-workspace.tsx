@@ -8,7 +8,8 @@ import { useDealsUrlState, type DealsUrlState } from "./use-deals-url-state";
 import { ViewSwitcher } from "./view-switcher";
 import { StatusFilter } from "./status-filter";
 import { CreateDealMenu } from "./create-deal-menu";
-import { DealsToolbar } from "./deals-toolbar";
+import { DealsCount, DealsToolbar } from "./deals-toolbar";
+import { OpenModeToggle } from "./open-mode-toggle";
 import { DealsListView } from "./deals-list-view";
 import { DealsForecastView } from "./deals-forecast-view";
 import { DealsFunnelView } from "./deals-funnel-view";
@@ -37,7 +38,7 @@ function PipelineView({
   if (isLoading || resolved == null) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-brand" />
       </div>
     );
   }
@@ -59,7 +60,7 @@ function PipelineView({
 export function DealsWorkspace() {
   const { t } = useI18n();
   const { state, update } = useDealsUrlState();
-  const [openMode] = useDealOpenMode();
+  const [openMode, setOpenMode] = useDealOpenMode();
   const [openDealId, setOpenDealId] = useState<number | null>(null);
   const [, navigate] = useLocation();
 
@@ -86,32 +87,35 @@ export function DealsWorkspace() {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-card">
-      {/* Top row: title, count + filters/search, and the create action. */}
-      <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-4 py-2">
-        <h1 className="font-heading text-xl font-bold tracking-tight text-slate-900">
-          {t("common.deals")}
-        </h1>
-        <DealsToolbar state={state} update={update} />
-        <CreateDealMenu defaultPipelineId={state.pipelineId} />
-      </div>
-
-      {/* Second row: the view switcher (pipeline / list / forecast / …), plus
-          the status lens — list-only, since it is the one view whose rows the
-          open-only default silently hides. */}
-      <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-4 py-2">
-        <ViewSwitcher
-          value={state.view}
-          onChange={(view) => update({ view })}
-        />
-        {state.view === "list" && (
-          <div className="ms-auto">
+    <div className="flex h-full flex-col overflow-hidden bg-background">
+      {/* Header: title, live count and the create action; then the view
+          switcher, the status lens (list only, the one view whose rows the
+          open-only default silently hides) and the filters. */}
+      <div className="flex flex-col gap-3 border-b border-border px-4 pt-4 pb-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <h1 className="text-heading-sm text-foreground">
+            {t("common.deals")}
+          </h1>
+          <DealsCount state={state} />
+          <div className="ms-auto flex items-center gap-2">
+            {/* Deal-click open mode: full page vs. side drawer (deals.openMode). */}
+            <OpenModeToggle value={openMode} onChange={setOpenMode} />
+            <CreateDealMenu defaultPipelineId={state.pipelineId} />
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <ViewSwitcher
+            value={state.view}
+            onChange={(view) => update({ view })}
+          />
+          {state.view === "list" && (
             <StatusFilter
               value={state.status}
               onChange={(status) => update({ status })}
             />
-          </div>
-        )}
+          )}
+          <DealsToolbar state={state} update={update} />
+        </div>
       </div>
 
       <div className="min-h-0 flex-1 overflow-hidden">

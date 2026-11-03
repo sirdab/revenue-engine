@@ -17,11 +17,11 @@ export default function NotificationSettingsPage() {
     // Notifications used to navigate away from it and the whole nav vanished.
     <SettingsShell active="notifications">
       <div className="mx-auto w-full max-w-3xl px-4 py-4">
-      <div className="px-5 pt-5">
-        <h1 className="font-heading text-xl font-bold text-slate-900">
+      <div className="px-5 pt-5 pb-5">
+        <h1 className="text-heading-sm text-foreground">
           My notifications
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-body-quiet text-muted-foreground">
           Choose what you want to be told about. These settings are yours alone.
         </p>
       </div>

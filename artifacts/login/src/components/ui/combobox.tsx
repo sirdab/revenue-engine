@@ -1,7 +1,11 @@
 import { useMemo, useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import {
+  FIELD_HEIGHT,
+  FIELD_RADIUS,
+  FIELD_TRIGGER,
+} from "@sirdab/one/components/field-chrome";
 import {
   Command,
   CommandEmpty,
@@ -110,21 +114,20 @@ export function Combobox({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
+        <button
           type="button"
-          variant="outline"
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "justify-between font-normal",
+            FIELD_TRIGGER, FIELD_HEIGHT.md, FIELD_RADIUS.md, "px-3",
             isUnset && "text-muted-foreground",
             triggerClassName,
           )}
         >
           <span className="truncate">{label}</span>
-          <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
+          <ChevronsUpDown className="ms-2 size-4 shrink-0 text-subtle" />
+        </button>
       </PopoverTrigger>
       <PopoverContent
         className={cn("w-[240px] p-0", className)}
@@ -211,7 +214,7 @@ export function Combobox({
               </CommandGroup>
             ))}
             {filtered.total > filtered.shown.length && (
-              <div className="px-2 py-1.5 text-center text-xs text-muted-foreground">
+              <div className="px-2 py-1.5 text-center text-caption text-muted-foreground">
                 {t("common.showingOf", { shown: filtered.shown.length, total: filtered.total })}
               </div>
             )}

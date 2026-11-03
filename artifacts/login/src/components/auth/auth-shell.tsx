@@ -16,7 +16,7 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
   return (
     <div className="min-h-[100dvh] w-full flex bg-background">
       {/* Brand panel */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-slate-50 items-center justify-center overflow-hidden border-e">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-surface-whisper items-center justify-center overflow-hidden border-e">
         <div className="absolute inset-0 z-0">
           <img
             src="/side-bg.png"
@@ -26,7 +26,7 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
               (e.currentTarget as HTMLImageElement).style.display = "none";
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-teal-900/10 to-slate-900/20 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-900/10 to-gray-900/20 mix-blend-multiply" />
         </div>
       </div>
 
@@ -44,21 +44,21 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
                 if (sibling) (sibling as HTMLElement).style.display = "block";
               }}
             />
-            <div className="hidden text-2xl font-heading font-bold text-primary mb-8 tracking-tight">
+            <div className="hidden text-heading-sm font-heading font-bold text-primary mb-8 tracking-tight">
               Sirdab
             </div>
 
-            <h1 className="text-3xl font-heading font-semibold text-foreground tracking-tight mb-2">
+            <h1 className="text-heading-sm text-foreground mb-2">
               {title}
             </h1>
             {subtitle && (
-              <p className="text-muted-foreground text-sm">{subtitle}</p>
+              <p className="text-muted-foreground text-body">{subtitle}</p>
             )}
           </div>
 
           {children}
 
-          {footer && <div className="mt-8 text-sm">{footer}</div>}
+          {footer && <div className="mt-8 text-body">{footer}</div>}
         </div>
       </div>
     </div>

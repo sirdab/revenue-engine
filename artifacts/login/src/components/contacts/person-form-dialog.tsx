@@ -185,7 +185,7 @@ export function PersonFormDialog({
                 <FormItem>
                   <FormLabel>
                     {t("common.jobTitle")}{" "}
-                    <span className="font-normal text-slate-400">
+                    <span className="font-normal text-subtle">
                       ({t("common.optional")})
                     </span>
                   </FormLabel>
@@ -251,7 +251,7 @@ export function PersonFormDialog({
               )}
             />
             <div className="space-y-2">
-              <div className="text-sm font-medium text-slate-700">{t("deals.field.labels")}</div>
+              <div className="text-body font-medium text-foreground">{t("deals.field.labels")}</div>
               <LabelsEditor
                 entity="person"
                 labels={labels}
@@ -262,7 +262,7 @@ export function PersonFormDialog({
             <Button
               type="submit"
               disabled={pending}
-              className="w-full bg-teal-600 text-white hover:bg-teal-700"
+              className="w-full"
             >
               {pending ? t("contacts.savingDots") : t("common.save")}
             </Button>

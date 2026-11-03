@@ -39,14 +39,14 @@ export function DealsFunnelView({ state }: { state: DealsUrlState }) {
   if (pipelineId == null || isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (isError || !data) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-red-600">
+      <div className="flex h-full items-center justify-center text-body text-destructive">
         {t("deals.funnel.loadFailed")}
       </div>
     );
@@ -55,40 +55,40 @@ export function DealsFunnelView({ state }: { state: DealsUrlState }) {
   const maxEntered = Math.max(...data.stages.map((s) => s.enteredCount), 1);
 
   return (
-    <div className="h-full overflow-auto p-6">
+    <div className="h-full overflow-auto p-4 lg:p-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="p-4">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          <div className="text-caption text-muted-foreground">
             {t("common.pipeline")}
           </div>
-          <div className="mt-1 text-lg font-bold text-slate-900">
+          <div className="mt-1 text-heading-sm tabular-nums text-foreground">
             {data.pipelineName}
           </div>
         </Card>
         <Card className="p-4">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          <div className="text-caption text-muted-foreground">
             {t("deals.funnel.entered")}
           </div>
-          <div className="mt-1 text-2xl font-bold text-slate-900">
+          <div className="mt-1 text-heading-sm tabular-nums text-foreground">
             {data.totalEntered.toLocaleString()}
           </div>
         </Card>
         <Card className="p-4">
-          <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          <div className="text-caption text-muted-foreground">
             {t("deals.funnel.stages")}
           </div>
-          <div className="mt-1 text-2xl font-bold text-slate-900">
+          <div className="mt-1 text-heading-sm tabular-nums text-foreground">
             {data.stages.length}
           </div>
         </Card>
       </div>
 
       <Card className="mt-6 p-6">
-        <div className="mb-5 text-sm font-semibold text-slate-700">
+        <div className="mb-5 text-label font-semibold text-foreground">
           {t("deals.funnel.title")}
         </div>
         {data.stages.length === 0 ? (
-          <div className="py-16 text-center text-sm text-slate-500">
+          <div className="py-16 text-center text-body text-muted-foreground">
             {t("deals.funnel.noHistory")}
           </div>
         ) : (
@@ -98,24 +98,24 @@ export function DealsFunnelView({ state }: { state: DealsUrlState }) {
               const conversionPct = Math.round(s.conversionRate * 100);
               return (
                 <div key={s.stageId}>
-                  <div className="mb-1 flex items-center justify-between text-sm">
-                    <span className="font-medium text-slate-700">
+                  <div className="mb-1 flex items-center justify-between text-body">
+                    <span className="font-medium text-foreground">
                       {s.stageName}
                     </span>
-                    <span className="tabular-nums text-slate-500">
+                    <span className="tabular-nums text-muted-foreground">
                       {s.enteredCount.toLocaleString()} entered
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="h-7 flex-1 overflow-hidden rounded-md bg-slate-100">
+                    <div className="h-7 flex-1 overflow-hidden rounded-md bg-muted">
                       <div
-                        className="flex h-full items-center justify-end rounded-md bg-gradient-to-r from-teal-500 to-teal-400 px-2 text-xs font-semibold text-white"
+                        className="flex h-full items-center justify-end rounded-md bg-brand px-2 text-caption font-semibold text-brand-foreground"
                         style={{ width: `${width}%` }}
                       >
                         {s.wonCount > 0 && <span>{s.wonCount.toLocaleString()} won</span>}
                       </div>
                     </div>
-                    <div className="w-16 flex-shrink-0 text-end text-sm font-semibold tabular-nums text-teal-700">
+                    <div className="w-16 flex-shrink-0 text-end text-label tabular-nums text-foreground">
                       {conversionPct}%
                     </div>
                   </div>
@@ -127,8 +127,8 @@ export function DealsFunnelView({ state }: { state: DealsUrlState }) {
       </Card>
 
       <Card className="mt-6 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <table className="w-full text-body">
+          <thead className="bg-surface-whisper text-caption font-medium text-muted-foreground">
             <tr>
               <th className="px-4 py-2.5 text-start">{t("common.stage")}</th>
               <th className="px-4 py-2.5 text-end">{t("deals.funnel.enteredCol")}</th>
@@ -138,30 +138,30 @@ export function DealsFunnelView({ state }: { state: DealsUrlState }) {
               <th className="px-4 py-2.5 text-end">{t("deals.funnel.avgTime")}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-border">
             {data.stages.map((s) => (
               <tr key={s.stageId}>
-                <td className="px-4 py-2.5 text-slate-700">{s.stageName}</td>
-                <td className="px-4 py-2.5 text-end tabular-nums text-slate-700">
+                <td className="px-4 py-2.5 text-foreground">{s.stageName}</td>
+                <td className="px-4 py-2.5 text-end tabular-nums text-foreground">
                   {s.enteredCount.toLocaleString()}
                 </td>
-                <td className="px-4 py-2.5 text-end tabular-nums text-slate-600">
+                <td className="px-4 py-2.5 text-end tabular-nums text-muted-foreground">
                   {s.reachedLaterCount.toLocaleString()}
                 </td>
-                <td className="px-4 py-2.5 text-end tabular-nums text-slate-600">
+                <td className="px-4 py-2.5 text-end tabular-nums text-muted-foreground">
                   {s.wonCount.toLocaleString()}
                 </td>
-                <td className="px-4 py-2.5 text-end font-medium tabular-nums text-teal-700">
+                <td className="px-4 py-2.5 text-end font-medium tabular-nums text-foreground">
                   {Math.round(s.conversionRate * 100)}%
                 </td>
-                <td className="px-4 py-2.5 text-end tabular-nums text-slate-600">
+                <td className="px-4 py-2.5 text-end tabular-nums text-muted-foreground">
                   {formatDuration(s.avgTimeInStageSeconds)}
                 </td>
               </tr>
             ))}
             {data.stages.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                   {t("deals.funnel.noData")}
                 </td>
               </tr>

@@ -265,7 +265,7 @@ export function DashboardGrid({
             {!readOnly && (
               <button
                 type="button"
-                className="absolute bottom-1 end-1 hidden h-4 w-4 cursor-se-resize touch-none rounded-sm border-b-2 border-e-2 border-slate-300 focus-visible:block focus-visible:outline-2 group-hover:block"
+                className="absolute bottom-1 end-1 hidden h-4 w-4 cursor-se-resize touch-none rounded-sm border-b-2 border-e-2 border-input focus-visible:block focus-visible:outline-2 group-hover:block"
                 title={t("insights.widget.resizeTitle")}
                 aria-label={t("insights.widget.resizeAria", { name: widget.name })}
                 onPointerDown={(e) => startResize(e, item.i)}

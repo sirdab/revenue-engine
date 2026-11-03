@@ -22,9 +22,11 @@ export type ActivityStatus =
   | "planned";
 
 
-// Base pill styling shared with other timeline chips (e.g. the Draft chip).
+// Base pill styling shared with other timeline chips (e.g. the Draft chip):
+// One's status chip (Badge tone) — a subtle tone fill, the tone's text step,
+// always a word, never colour alone.
 export const STATUS_PILL_CLASS =
-  "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide";
+  "inline-flex w-fit shrink-0 items-center gap-1 rounded-full border border-transparent px-2 py-0.5 text-caption whitespace-nowrap [&>svg]:size-3";
 
 export const STATUS_META: Record<
   ActivityStatus,
@@ -33,27 +35,27 @@ export const STATUS_META: Record<
   done: {
     label: "activity.status.done",
     icon: <CheckCircle2 className="h-3 w-3" />,
-    className: "border-teal-200 bg-teal-50 text-teal-700",
+    className: "bg-muted text-muted-foreground",
   },
   noReply: {
     label: "activity.status.noReply",
     icon: <PhoneMissed className="h-3 w-3" />,
-    className: "border-slate-200 bg-slate-100 text-slate-500",
+    className: "bg-muted text-muted-foreground",
   },
   overdue: {
     label: "activity.status.overdue",
     icon: <AlertTriangle className="h-3 w-3" />,
-    className: "border-red-200 bg-red-50 text-red-600",
+    className: "bg-destructive-subtle text-destructive",
   },
   today: {
     label: "activity.status.today",
     icon: <CalendarClock className="h-3 w-3" />,
-    className: "border-amber-200 bg-amber-50 text-amber-700",
+    className: "bg-attention-subtle text-attention",
   },
   planned: {
     label: "activity.status.upcoming",
     icon: <Clock className="h-3 w-3" />,
-    className: "border-slate-200 bg-slate-50 text-slate-500",
+    className: "bg-muted text-foreground",
   },
 };
 
@@ -83,7 +85,7 @@ export function ActivityStatusBadge({
       type="button"
       onClick={onClick}
       title={t("activity.status.toggleDone")}
-      className={cn(className, "transition-colors hover:opacity-80")}
+      className={cn(className, "cursor-pointer transition-opacity hover:opacity-80")}
     >
       {meta.icon}
       {label}

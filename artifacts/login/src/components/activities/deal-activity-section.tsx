@@ -3,13 +3,7 @@ import { startOfDay } from "date-fns";
 import { ListChecks } from "lucide-react";
 import type { Activity } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyMedia,
-} from "@/components/ui/empty";
+import { EmptyState } from "@sirdab/one/components/empty-state";
 import { DealSectionCard } from "@/components/deals/detail/deal-section-card";
 import { ActivityItem } from "@/components/activities/shared/activity-item";
 import { dealToView } from "@/components/activities/shared/activity-source";
@@ -39,7 +33,7 @@ export function DealActivitySection({
       title={t("common.activities")}
       action={
         views.length > 0 ? (
-          <span className="text-[11px] font-medium text-slate-400">{views.length}</span>
+          <span className="text-caption font-medium text-subtle">{views.length}</span>
         ) : undefined
       }
     >
@@ -53,15 +47,12 @@ export function DealActivitySection({
           ))}
         </div>
       ) : views.length === 0 ? (
-        <Empty className="border-dashed py-8">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <ListChecks className="h-4 w-4" />
-            </EmptyMedia>
-            <EmptyTitle>{t("contacts.noActivities")}</EmptyTitle>
-            <EmptyDescription>{t(emptyHint)}</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <EmptyState
+          className="py-8"
+          icon={ListChecks}
+          title={t("contacts.noActivities")}
+          caption={t(emptyHint)}
+        />
       ) : (
         <ul className="space-y-2.5">
           {views.map((v) => (

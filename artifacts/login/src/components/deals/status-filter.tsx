@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { Segmented, SegmentedItem } from "@sirdab/one/components/segmented";
 import { useI18n } from "@/lib/i18n/i18n";
 
 // The list view defaults to open-only. This control is how that default becomes
@@ -26,31 +26,26 @@ export function StatusFilter({
   const { t } = useI18n();
   // Anything not offered here (e.g. `deleted` set via the filter builder)
   // leaves every segment unselected rather than lighting up the wrong one.
+  const OPEN = "open";
+  const selected =
+    value === undefined
+      ? OPEN
+      : OPTIONS.some((o) => o.value === value)
+        ? value
+        : "";
   return (
-    <div
-      className="inline-flex items-center gap-1 rounded-lg bg-slate-100 p-1"
-      role="group"
+    <Segmented
       aria-label={t("deals.statusFilter.aria")}
+      value={selected}
+      onValueChange={(next) => onChange(next === OPEN ? undefined : next)}
     >
-      {OPTIONS.map((option) => {
-        const active = value === option.value;
-        return (
-          <button
-            key={option.label}
-            type="button"
-            onClick={() => onChange(option.value)}
-            className={cn(
-              "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              active
-                ? "bg-card text-teal-700 shadow-sm"
-                : "text-slate-600 hover:text-slate-900",
-            )}
-            aria-pressed={active}
-          >
-            {t(option.label)}
-          </button>
-        );
-      })}
-    </div>
+      {OPTIONS.map((option) => (
+        <SegmentedItem
+          key={option.label}
+          value={option.value ?? OPEN}
+          label={t(option.label)}
+        />
+      ))}
+    </Segmented>
   );
 }

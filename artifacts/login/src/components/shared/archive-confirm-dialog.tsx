@@ -44,7 +44,7 @@ export function ArchiveConfirmDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Archive className="h-4 w-4 text-slate-500" />
+            <Archive className="h-4 w-4 text-muted-foreground" />
             {t("archive.title", { record: recordLabel })}
           </DialogTitle>
           <DialogDescription>
@@ -53,17 +53,17 @@ export function ArchiveConfirmDialog({
               : t("archive.description", { record: recordLabel })}
           </DialogDescription>
         </DialogHeader>
-        <ul className="space-y-1.5 py-1 text-sm text-slate-600">
+        <ul className="space-y-1.5 py-1 text-body text-muted-foreground">
           {CONSEQUENCES.map((c) => (
             <li key={c} className="flex gap-2">
-              <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-slate-400" />
+              <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-gray-400" />
               {t(c)}
             </li>
           ))}
         </ul>
         <DialogFooter>
           <Button
-            variant="outline"
+            variant="secondary"
             onClick={() => onOpenChange(false)}
             disabled={confirming}
           >
@@ -72,7 +72,7 @@ export function ArchiveConfirmDialog({
           <Button
             onClick={() => void onConfirm()}
             disabled={confirming}
-            className="gap-2 bg-slate-700 text-white hover:bg-slate-800"
+            className="gap-2 bg-gray-700 text-white hover:bg-primary-hover"
           >
             {confirming && <Loader2 className="h-4 w-4 animate-spin" />}
             <Archive className="h-4 w-4" />

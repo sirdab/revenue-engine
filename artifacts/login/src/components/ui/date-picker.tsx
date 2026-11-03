@@ -153,7 +153,8 @@ const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(
           <div
             data-empty={selected ? undefined : true}
             className={cn(
-              "flex h-9 w-full items-center gap-2 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm transition-colors focus-within:outline-none focus-within:ring-1 focus-within:ring-ring data-[empty=true]:text-muted-foreground",
+              // One field chrome: hairline input border, a rung darker on hover, the ring on focus.
+              "flex h-control-lg w-full items-center gap-2 rounded-lg border border-input bg-background px-3 text-body-quiet text-foreground transition-colors hover:border-input-border-hover focus-within:outline-none focus-within:border-ring focus-within:ring-input-focus data-[empty=true]:text-muted-foreground",
               disabled && "cursor-not-allowed opacity-50",
               className,
             )}
@@ -334,12 +335,12 @@ function CalendarPicker({
         : yearStart + YEARS_PER_PAGE > endYear
 
   const cellBase =
-    "rounded-md py-2 text-sm font-normal transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40"
+    "rounded-md py-2 text-body font-normal transition-colors hover:bg-btn-ghost-surface-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40"
   const cellSelected =
     "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
 
   const navButton =
-    "inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+    "inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-btn-ghost-surface-hover hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
 
   return (
     <div className="w-[19rem] p-3">
@@ -353,12 +354,12 @@ function CalendarPicker({
         >
           <ChevronLeft className="size-4" />
         </button>
-        <div className="flex items-center gap-1 text-sm font-medium">
+        <div className="flex items-center gap-1 text-body font-medium">
           {view === "day" && (
             <button
               type="button"
               onClick={() => setView("month")}
-              className="rounded-md px-2 py-1 hover:bg-accent"
+              className="rounded-md px-2 py-1 hover:bg-btn-ghost-surface-hover"
             >
               {MONTHS_LONG[displayMonth]}
             </button>
@@ -370,7 +371,7 @@ function CalendarPicker({
                 setYearStart(alignYearStart(displayYear))
                 setView("year")
               }}
-              className="rounded-md px-2 py-1 hover:bg-accent"
+              className="rounded-md px-2 py-1 hover:bg-btn-ghost-surface-hover"
             >
               {displayYear}
             </button>

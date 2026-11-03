@@ -95,10 +95,10 @@ export function ColumnPicker<T>({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="secondary" size="sm">
           <Columns3 className="me-1.5 h-4 w-4" />
           {t("common.columns")}
-          <span className="ms-1.5 rounded bg-slate-100 px-1.5 text-[11px] font-medium tabular-nums text-slate-500">
+          <span className="ms-1.5 rounded-sm bg-muted px-1.5 text-[11px] font-medium tabular-nums text-muted-foreground">
             {shownCount}
           </span>
         </Button>
@@ -132,10 +132,10 @@ export function ColumnPicker<T>({
                   >
                     <span
                       className={cn(
-                        "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
+                        "flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border",
                         c.visible
-                          ? "border-teal-500 bg-teal-500 text-white"
-                          : "border-slate-300",
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-input",
                       )}
                     >
                       {c.visible && <Check className="h-3 w-3" />}
@@ -146,12 +146,12 @@ export function ColumnPicker<T>({
               </CommandGroup>
             ))}
           </CommandList>
-          <div className="flex items-center justify-between border-t border-slate-100 p-1.5">
+          <div className="flex items-center justify-between border-t border-border p-1.5">
             <div className="flex items-center gap-0.5">
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 gap-1 px-2 text-xs text-slate-500"
+                className="h-7 gap-1 px-2 text-caption text-muted-foreground"
                 onClick={() => setAll(true)}
               >
                 <Eye className="h-3.5 w-3.5" /> {t("common.all")}
@@ -159,7 +159,7 @@ export function ColumnPicker<T>({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 gap-1 px-2 text-xs text-slate-500"
+                className="h-7 gap-1 px-2 text-caption text-muted-foreground"
                 onClick={() => setAll(false)}
               >
                 <EyeOff className="h-3.5 w-3.5" /> {t("columns.hideAll")}
@@ -168,7 +168,7 @@ export function ColumnPicker<T>({
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 gap-1 px-2 text-xs text-slate-500"
+              className="h-7 gap-1 px-2 text-caption text-muted-foreground"
               onClick={onReset}
             >
               <RotateCcw className="h-3.5 w-3.5" /> {t("common.reset")}

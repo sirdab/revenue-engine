@@ -60,10 +60,10 @@ export function DealPipelineProgress({
 
   if (loading) {
     return (
-      <div className="border-t border-slate-100 px-4 py-3">
+      <div className="border-t border-border px-4 py-3">
         <div className="flex gap-1">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-7 flex-1 rounded" />
+            <Skeleton key={i} className="h-11 flex-1 rounded-lg" />
           ))}
         </div>
       </div>
@@ -72,11 +72,9 @@ export function DealPipelineProgress({
 
   if (ordered.length === 0) return null;
 
-  const NOTCH = 13;
-
   return (
-    <div className="border-t border-slate-100 px-4 pt-2 pb-3">
-      <div className="mb-2">
+    <div className="border-t border-border px-4 pt-3 pb-4">
+      <div className="mb-3">
         <DealPipelineSelector
           deal={deal}
           pipelines={pipelines}
@@ -85,23 +83,17 @@ export function DealPipelineProgress({
         />
       </div>
 
-      {/* Chevron bar — segments interlock: each one points right and the next
-          overlaps onto its tip (negative margin) so the bar reads as a single
-          continuous arrow with no gaps. */}
-      <div className="flex items-stretch">
+      {/* Stage track. Progress is identity, not status, so it is painted in
+          the brand ramp: stages already passed in the brand tint, the
+          current stage as the one solid brand block, the rest neutral. Ink
+          stays reserved for the deal's action (Won). */}
+      <div className="flex items-stretch gap-1 rounded-xl bg-muted p-1">
         {ordered.map((stage, i) => {
           const isPast = currentIndex >= 0 && i < currentIndex;
           const isCurrent = stage.id === deal.stageId;
           const seconds = isCurrent
             ? currentStageSeconds
             : (durationByStage.get(stage.id) ?? (isPast ? 0 : null));
-
-          // First segment has a flat left edge; every later segment carries a
-          // left notch that nests onto the previous segment's arrow tip.
-          const clipPath =
-            i === 0
-              ? `polygon(0 0, calc(100% - ${NOTCH}px) 0, 100% 50%, calc(100% - ${NOTCH}px) 100%, 0 100%)`
-              : `polygon(0 0, calc(100% - ${NOTCH}px) 0, 100% 50%, calc(100% - ${NOTCH}px) 100%, 0 100%, ${NOTCH}px 50%)`;
 
           return (
             <button
@@ -110,30 +102,26 @@ export function DealPipelineProgress({
               disabled={isClosed || isCurrent}
               onClick={() => !isCurrent && !isClosed && onStageChange(stage.id)}
               title={stage.name}
-              style={{
-                clipPath,
-                marginLeft: i === 0 ? 0 : -NOTCH,
-                paddingLeft: i === 0 ? 12 : NOTCH + 10,
-              }}
+              aria-current={isCurrent ? "step" : undefined}
               className={cn(
-                "relative flex h-10 min-w-0 flex-1 flex-col items-center justify-center pe-4 leading-none transition-colors",
+                "relative flex h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-lg px-2 leading-none transition-colors",
                 isCurrent
-                  ? "bg-teal-600 font-semibold text-white"
+                  ? "bg-brand font-semibold text-brand-foreground shadow-raised"
                   : isPast
-                    ? "bg-teal-500 text-white hover:bg-teal-600"
-                    : "bg-slate-200 text-slate-500 hover:bg-slate-300",
+                    ? "bg-brand-subtle text-brand-subtle-foreground hover:bg-brand-100"
+                    : "text-muted-foreground hover:bg-gray-alpha-100 hover:text-foreground",
                 !isClosed && !isCurrent && "cursor-pointer",
                 isClosed && "cursor-default",
               )}
             >
-              <span className="w-full truncate text-center text-[11px]">
+              <span className="w-full truncate text-center text-caption">
                 {stage.name}
               </span>
               {seconds != null && (
                 <span
                   className={cn(
-                    "mt-0.5 text-[10px] font-normal tabular-nums",
-                    isCurrent || isPast ? "text-white/75" : "text-slate-400",
+                    "mt-1 text-[10px] font-normal tabular-nums",
+                    isCurrent ? "text-brand-foreground/80" : "opacity-70",
                   )}
                 >
                   {formatDuration(seconds)}

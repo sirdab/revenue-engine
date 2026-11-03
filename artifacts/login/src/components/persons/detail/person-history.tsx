@@ -1,12 +1,6 @@
 import { Sparkles, Trash2, User, Tag, Building2, PencilLine, History } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyMedia,
-} from "@/components/ui/empty";
+import { EmptyState } from "@sirdab/one/components/empty-state";
 import { DealSectionCard } from "@/components/deals/detail/deal-section-card";
 import {
   snapshotLabel,
@@ -32,13 +26,13 @@ function describePersonChange({ t, tNode }: Pick<I18n, "t" | "tNode">, e: Change
       return {
         title: t("contacts.history.personCreated"),
         icon: <Sparkles className="h-3.5 w-3.5" />,
-        accent: "bg-teal-50 text-teal-600",
+        accent: "bg-muted text-muted-foreground",
       };
     case "deleted":
       return {
         title: t("contacts.history.personDeleted"),
         icon: <Trash2 className="h-3.5 w-3.5" />,
-        accent: "bg-red-50 text-red-500",
+        accent: "bg-destructive-subtle text-destructive",
       };
     case "owner_id":
       return {
@@ -46,7 +40,7 @@ function describePersonChange({ t, tNode }: Pick<I18n, "t" | "tNode">, e: Change
           <span>{tNode("deals.timeline.ownerChange", { owner: strong(newL) })}</span>
         ),
         icon: <User className="h-3.5 w-3.5" />,
-        accent: "bg-amber-50 text-amber-600",
+        accent: "bg-warning-subtle text-warning",
       };
     case "organization_id":
       return {
@@ -54,7 +48,7 @@ function describePersonChange({ t, tNode }: Pick<I18n, "t" | "tNode">, e: Change
           <span>{tNode("contacts.history.orgChange", { organization: strong(newL) })}</span>
         ),
         icon: <Building2 className="h-3.5 w-3.5" />,
-        accent: "bg-indigo-50 text-indigo-500",
+        accent: "bg-attention-subtle text-attention-glyph",
       };
     case "labels":
       return {
@@ -62,7 +56,7 @@ function describePersonChange({ t, tNode }: Pick<I18n, "t" | "tNode">, e: Change
           <span>{tNode("contacts.history.labelsChange", { labels: strong(newL) })}</span>
         ),
         icon: <Tag className="h-3.5 w-3.5" />,
-        accent: "bg-slate-100 text-slate-500",
+        accent: "bg-muted text-muted-foreground",
       };
     default:
       return {
@@ -74,7 +68,7 @@ function describePersonChange({ t, tNode }: Pick<I18n, "t" | "tNode">, e: Change
           </span>
         ),
         icon: <PencilLine className="h-3.5 w-3.5" />,
-        accent: "bg-slate-100 text-slate-500",
+        accent: "bg-muted text-muted-foreground",
       };
   }
 }
@@ -102,22 +96,17 @@ export function PersonHistory({
           ))}
         </div>
       ) : groups.length === 0 ? (
-        <Empty className="border-dashed py-8">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <History className="h-4 w-4" />
-            </EmptyMedia>
-            <EmptyTitle>{t("history.empty")}</EmptyTitle>
-            <EmptyDescription>
-              {t("contacts.history.personHint")}
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <EmptyState
+          className="py-8"
+          icon={History}
+          title={t("history.empty")}
+          caption={t("contacts.history.personHint")}
+        />
       ) : (
         <div className="space-y-5">
           {groups.map(([key, dayEvents]) => (
             <div key={key}>
-              <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <div className="mb-2.5 text-caption text-muted-foreground">
                 {dayLabel(new Date(key))}
               </div>
               <div className="space-y-2.5">

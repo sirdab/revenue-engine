@@ -1,41 +1,68 @@
-import * as React from "react"
-import * as PopoverPrimitive from "@radix-ui/react-popover"
+// Sirdab One popover, plus one app extension: `disablePortal`.
+import * as React from "react";
+import { Popover as PopoverPrimitive } from "radix-ui";
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent as OnePopoverContent,
+  PopoverTrigger,
+} from "@sirdab/one/components/popover";
+import {
+  overlayPanelChrome,
+  overlayPanelMotion,
+} from "@sirdab/one/components/overlay";
+import { cn } from "@/lib/utils";
 
-import { cn } from "@/lib/utils"
+type PopoverContentProps = React.ComponentProps<typeof OnePopoverContent> & {
+  /**
+   * Render inline instead of in a portal. Needed when the popover opens
+   * inside a Dialog or Sheet: those scroll-lock everything outside their
+   * content, so a portalled popover could not be wheel- or touch-scrolled.
+   * Rendering inline keeps it a DOM descendant of the dialog content.
+   */
+  disablePortal?: boolean;
+};
 
-const Popover = PopoverPrimitive.Root
-
-const PopoverTrigger = PopoverPrimitive.Trigger
-
-const PopoverAnchor = PopoverPrimitive.Anchor
-
-const PopoverContent = React.forwardRef<
-  React.ElementRef<typeof PopoverPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> & {
-    /**
-     * Render the content inline (no portal to `document.body`). Set this when the
-     * popover lives inside a modal Radix `Dialog`: a portalled popover lands
-     * outside the dialog's `react-remove-scroll` allowlist, so its scroll
-     * container is scroll-locked. Rendering inline keeps it a DOM descendant of
-     * the dialog content, inside the allowed region, so wheel/touch scroll works.
-     */
-    disablePortal?: boolean
+function PopoverContent({
+  disablePortal = false,
+  className,
+  align = "start",
+  sideOffset = 4,
+  collisionPadding = 16,
+  kind = "panel",
+  scheme,
+  ...props
+}: PopoverContentProps) {
+  if (!disablePortal) {
+    return (
+      <OnePopoverContent
+        className={className}
+        align={align}
+        sideOffset={sideOffset}
+        collisionPadding={collisionPadding}
+        kind={kind}
+        scheme={scheme}
+        {...props}
+      />
+    );
   }
->(({ className, align = "center", sideOffset = 4, disablePortal = false, ...props }, ref) => {
-  const content = (
+  return (
     <PopoverPrimitive.Content
-      ref={ref}
+      data-slot="popover-content"
       align={align}
       sideOffset={sideOffset}
+      collisionPadding={collisionPadding}
       className={cn(
-        "z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 origin-[--radix-popover-content-transform-origin]",
-        className
+        overlayPanelChrome,
+        kind === "dialog" && "rounded-popover before:rounded-popover p-4",
+        scheme === "dark" && "dark text-foreground",
+        "z-popover outline-hidden",
+        overlayPanelMotion,
+        className,
       )}
       {...props}
     />
-  )
-  return disablePortal ? content : <PopoverPrimitive.Portal>{content}</PopoverPrimitive.Portal>
-})
-PopoverContent.displayName = PopoverPrimitive.Content.displayName
+  );
+}
 
-export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor }
+export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };

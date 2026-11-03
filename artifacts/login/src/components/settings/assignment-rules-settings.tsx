@@ -99,7 +99,7 @@ function RuleRow({
           disabled={busy || index === 0}
           onClick={() => onMove(-1)}
           aria-label={t("settings.assignmentRules.moveUp")}
-          className="text-slate-300 transition-colors hover:text-slate-600 disabled:opacity-30"
+          className="text-subtle transition-colors hover:text-muted-foreground disabled:opacity-30"
         >
           <ArrowUp className="h-3.5 w-3.5" />
         </button>
@@ -108,21 +108,21 @@ function RuleRow({
           disabled={busy || index === count - 1}
           onClick={() => onMove(1)}
           aria-label={t("settings.assignmentRules.moveDown")}
-          className="text-slate-300 transition-colors hover:text-slate-600 disabled:opacity-30"
+          className="text-subtle transition-colors hover:text-muted-foreground disabled:opacity-30"
         >
           <ArrowDown className="h-3.5 w-3.5" />
         </button>
       </div>
 
-      <span className="shrink-0 text-xs tabular-nums text-slate-400">
+      <span className="shrink-0 text-caption-quiet tabular-nums text-subtle">
         #{index + 1}
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-slate-800">
+        <p className="truncate text-body font-semibold text-foreground">
           {rule.name}
         </p>
-        <p className="truncate text-xs text-slate-500">
+        <p className="truncate text-caption-quiet text-muted-foreground">
           {conditionCount === 0
             ? t("settings.assignmentRules.matchesAll")
             : tPlural("settings.assignmentRules.conditionCount", conditionCount)}
@@ -145,7 +145,7 @@ function RuleRow({
         disabled={busy}
         onClick={onEdit}
         aria-label={t("settings.assignmentRules.edit", { name: rule.name })}
-        className="h-7 w-7 shrink-0 text-slate-300 opacity-0 transition-opacity hover:text-slate-700 group-hover:opacity-100"
+        className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
       >
         <Pencil className="h-3.5 w-3.5" />
       </Button>
@@ -157,7 +157,7 @@ function RuleRow({
             size="icon"
             disabled={busy}
             aria-label={t("settings.assignmentRules.delete", { name: rule.name })}
-            className="h-7 w-7 shrink-0 text-slate-300 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
+            className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
@@ -175,7 +175,7 @@ function RuleRow({
             <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={onDelete}
-              className="bg-red-600 text-white hover:bg-red-700"
+              className="bg-destructive text-white hover:bg-destructive"
             >
               {t("settings.assignmentRules.deleteConfirm")}
             </AlertDialogAction>
@@ -250,10 +250,10 @@ export function AssignmentRulesSettings() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-6">
       <header className="mb-5">
-        <h1 className="font-heading text-xl font-bold text-slate-900">
+        <h1 className="text-heading-sm text-foreground">
           {t("settings.nav.assignmentRules")}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-body-quiet text-muted-foreground">
           {t("settings.assignmentRules.subtitle")}
         </p>
       </header>
@@ -265,13 +265,13 @@ export function AssignmentRulesSettings() {
           <Button
             size="sm"
             onClick={openCreate}
-            className="h-8 bg-teal-600 text-white hover:bg-teal-700"
+            className="h-8 bg-primary text-primary-foreground hover:bg-primary-hover"
           >
             <Plus className="me-1 h-3.5 w-3.5" /> {t("settings.assignmentRules.rule")}
           </Button>
         }
       >
-        <div className="border-b border-slate-100 px-5 py-3">
+        <div className="border-b border-border px-5 py-3">
           <Tabs
             value={tab}
             onValueChange={(v) => setTab(v as AssignmentRuleTriggerEvent)}
@@ -281,7 +281,7 @@ export function AssignmentRulesSettings() {
                 <TabsTrigger key={eventTab.id} value={eventTab.id}>
                   {t(eventTab.labelKey)}
                   {byEvent[eventTab.id].length > 0 && (
-                    <span className="ms-1.5 text-xs tabular-nums text-slate-400">
+                    <span className="ms-1.5 text-caption-quiet tabular-nums text-subtle">
                       {formatNumber(byEvent[eventTab.id].length)}
                     </span>
                   )}
@@ -292,17 +292,17 @@ export function AssignmentRulesSettings() {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center gap-2 px-5 py-10 text-sm text-slate-400">
+          <div className="flex items-center justify-center gap-2 px-5 py-10 text-body-quiet text-subtle">
             <Loader2 className="h-4 w-4 animate-spin" /> {t("settings.assignmentRules.loading")}
           </div>
         ) : isError || !data ? (
-          <div className="px-5 py-10 text-center text-sm text-red-600">
+          <div className="px-5 py-10 text-center text-body-quiet text-destructive">
             {t("settings.assignmentRules.loadFailed")}
           </div>
         ) : rules.length === 0 ? (
           <div className="px-5 py-10 text-center">
-            <Workflow className="mx-auto mb-2 h-6 w-6 text-slate-300" />
-            <p className="text-sm text-slate-500">
+            <Workflow className="mx-auto mb-2 h-6 w-6 text-subtle" />
+            <p className="text-body-quiet text-muted-foreground">
               {t("settings.assignmentRules.empty", {
                 trigger: t(
                   EVENT_TABS.find((e) => e.id === tab)?.labelKey ??
@@ -310,12 +310,12 @@ export function AssignmentRulesSettings() {
                 ),
               })}
             </p>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-caption-quiet text-subtle">
               {t("settings.assignmentRules.emptyHint")}
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-border">
             {rules.map((rule, i) => (
               <RuleRow
                 key={rule.id}
@@ -337,7 +337,7 @@ export function AssignmentRulesSettings() {
           </ul>
         )}
 
-        <p className="border-t border-slate-100 px-5 py-3 text-[11px] leading-relaxed text-slate-400">
+        <p className="border-t border-border px-5 py-3 text-[11px] leading-relaxed text-subtle">
           {t("settings.assignmentRules.footnote")}
         </p>
       </SectionCard>

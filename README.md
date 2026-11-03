@@ -1,6 +1,7 @@
 # Sirdab Revenue Engine
 
-An open-source, self-hosted sales CRM in the spirit of Pipedrive: pipelines and
+An open-source, self-hosted sales CRM in the spirit of Pipedrive, built on
+Sirdab's [One](https://github.com/sirdab/one) design system: pipelines and
 a drag-and-drop board, deals, people and organizations, activities, notes with
 @mentions, file attachments, automations, assignment rules, saved views,
 insights dashboards, a full audit history, and a Pipedrive importer. English and
@@ -117,7 +118,7 @@ stateless and safe to run on several instances behind a load balancer.
 | Path | What |
 |---|---|
 | `artifacts/api-server` | Express 5 API, bundled with esbuild |
-| `artifacts/login` | React frontend (Vite, Tailwind, Radix, React Query) |
+| `artifacts/login` | React frontend (Vite, React Query, [Sirdab One](https://github.com/sirdab/one) design system) |
 | `lib/db` | Drizzle schema, migrations and the Postgres client |
 | `lib/api-spec` | OpenAPI contract; generates `lib/api-zod` and `lib/api-client-react` |
 | `lib/deals-filter` | The filter DSL shared by the server (SQL) and the client (UI) |

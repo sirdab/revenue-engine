@@ -35,7 +35,7 @@ export function changeHref(item: ChangesFeedItem): string {
 /** One human sentence for a change row, with the target emphasised. */
 function changeSentence(item: ChangesFeedItem): ReactNode {
   const target = (
-    <span className="font-medium text-slate-900">
+    <span className="font-medium text-foreground">
       {item.targetTitle ?? `#${item.targetId}`}
     </span>
   );
@@ -50,7 +50,7 @@ function changeSentence(item: ChangesFeedItem): ReactNode {
     return (
       <>
         moved {target} to{" "}
-        <span className="font-medium text-slate-900">
+        <span className="font-medium text-foreground">
           {valueLabel(item.newValue)}
         </span>
       </>
@@ -59,7 +59,7 @@ function changeSentence(item: ChangesFeedItem): ReactNode {
     return (
       <>
         assigned {target} to{" "}
-        <span className="font-medium text-slate-900">
+        <span className="font-medium text-foreground">
           {valueLabel(item.newValue)}
         </span>
       </>
@@ -73,12 +73,12 @@ function changeSentence(item: ChangesFeedItem): ReactNode {
       (isDelete ? item.oldValue?.label : item.newValue?.label) ?? "a file";
     return isDelete ? (
       <>
-        removed <span className="font-medium text-slate-900">{fileLabel}</span>{" "}
+        removed <span className="font-medium text-foreground">{fileLabel}</span>{" "}
         from {target}
       </>
     ) : (
       <>
-        uploaded <span className="font-medium text-slate-900">{fileLabel}</span>{" "}
+        uploaded <span className="font-medium text-foreground">{fileLabel}</span>{" "}
         to {target}
       </>
     );
@@ -86,7 +86,7 @@ function changeSentence(item: ChangesFeedItem): ReactNode {
   return (
     <>
       changed {prettifyKey(item.fieldKey).toLowerCase()} on {target} to{" "}
-      <span className="font-medium text-slate-900">
+      <span className="font-medium text-foreground">
         {valueLabel(item.newValue)}
       </span>
     </>
@@ -97,7 +97,7 @@ function changeSentence(item: ChangesFeedItem): ReactNode {
 export function changeFullSentence(item: ChangesFeedItem): ReactNode {
   return (
     <>
-      <span className="font-medium text-slate-900">
+      <span className="font-medium text-foreground">
         {changeActorName(item)}
       </span>{" "}
       {changeSentence(item)}

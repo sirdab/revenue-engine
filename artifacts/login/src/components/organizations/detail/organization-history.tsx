@@ -1,12 +1,6 @@
 import { Sparkles, Trash2, User, Tag, PencilLine, History } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyMedia,
-} from "@/components/ui/empty";
+import { EmptyState } from "@sirdab/one/components/empty-state";
 import { DealSectionCard } from "@/components/deals/detail/deal-section-card";
 import {
   snapshotLabel,
@@ -32,13 +26,13 @@ function describeOrgChange({ t, tNode }: Pick<I18n, "t" | "tNode">, e: ChangeEve
       return {
         title: t("contacts.history.orgCreated"),
         icon: <Sparkles className="h-3.5 w-3.5" />,
-        accent: "bg-teal-50 text-teal-600",
+        accent: "bg-muted text-muted-foreground",
       };
     case "deleted":
       return {
         title: t("contacts.history.orgDeleted"),
         icon: <Trash2 className="h-3.5 w-3.5" />,
-        accent: "bg-red-50 text-red-500",
+        accent: "bg-destructive-subtle text-destructive",
       };
     case "owner_id":
       return {
@@ -46,7 +40,7 @@ function describeOrgChange({ t, tNode }: Pick<I18n, "t" | "tNode">, e: ChangeEve
           <span>{tNode("deals.timeline.ownerChange", { owner: strong(newL) })}</span>
         ),
         icon: <User className="h-3.5 w-3.5" />,
-        accent: "bg-amber-50 text-amber-600",
+        accent: "bg-warning-subtle text-warning",
       };
     case "labels":
       return {
@@ -54,7 +48,7 @@ function describeOrgChange({ t, tNode }: Pick<I18n, "t" | "tNode">, e: ChangeEve
           <span>{tNode("contacts.history.labelsChange", { labels: strong(newL) })}</span>
         ),
         icon: <Tag className="h-3.5 w-3.5" />,
-        accent: "bg-slate-100 text-slate-500",
+        accent: "bg-muted text-muted-foreground",
       };
     default:
       return {
@@ -66,7 +60,7 @@ function describeOrgChange({ t, tNode }: Pick<I18n, "t" | "tNode">, e: ChangeEve
           </span>
         ),
         icon: <PencilLine className="h-3.5 w-3.5" />,
-        accent: "bg-slate-100 text-slate-500",
+        accent: "bg-muted text-muted-foreground",
       };
   }
 }
@@ -94,22 +88,17 @@ export function OrganizationHistory({
           ))}
         </div>
       ) : groups.length === 0 ? (
-        <Empty className="border-dashed py-8">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <History className="h-4 w-4" />
-            </EmptyMedia>
-            <EmptyTitle>{t("history.empty")}</EmptyTitle>
-            <EmptyDescription>
-              {t("contacts.history.orgHint")}
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <EmptyState
+          className="py-8"
+          icon={History}
+          title={t("history.empty")}
+          caption={t("contacts.history.orgHint")}
+        />
       ) : (
         <div className="space-y-5">
           {groups.map(([key, dayEvents]) => (
             <div key={key}>
-              <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <div className="mb-2.5 text-caption text-muted-foreground">
                 {dayLabel(new Date(key))}
               </div>
               <div className="space-y-2.5">

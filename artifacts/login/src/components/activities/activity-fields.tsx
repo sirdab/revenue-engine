@@ -27,38 +27,38 @@ export const ACTIVITY_TYPE_CONFIG: Record<ActivityType, ActivityTypeOption> = {
   call: {
     label: "dealActivity.type.call",
     Icon: Phone,
-    selected: "border-sky-500 bg-sky-50 text-sky-700",
-    iconColor: "text-sky-500",
+    selected: "border-btn-border-hover bg-btn-ghost-surface-active text-foreground",
+    iconColor: "text-foreground",
   },
   meeting: {
     label: "dealActivity.type.meeting",
     Icon: Users,
-    selected: "border-violet-500 bg-violet-50 text-violet-700",
-    iconColor: "text-violet-500",
+    selected: "border-btn-border-hover bg-btn-ghost-surface-active text-foreground",
+    iconColor: "text-foreground",
   },
   email: {
     label: "dealActivity.type.email",
     Icon: Mail,
-    selected: "border-amber-500 bg-amber-50 text-amber-700",
-    iconColor: "text-amber-500",
+    selected: "border-btn-border-hover bg-btn-ghost-surface-active text-foreground",
+    iconColor: "text-foreground",
   },
   task: {
     label: "dealActivity.type.task",
     Icon: CheckSquare,
-    selected: "border-teal-500 bg-teal-50 text-teal-700",
-    iconColor: "text-teal-500",
+    selected: "border-btn-border-hover bg-btn-ghost-surface-active text-foreground",
+    iconColor: "text-foreground",
   },
   deadline: {
     label: "dealActivity.type.deadline",
     Icon: Flag,
-    selected: "border-rose-500 bg-rose-50 text-rose-700",
-    iconColor: "text-rose-500",
+    selected: "border-btn-border-hover bg-btn-ghost-surface-active text-foreground",
+    iconColor: "text-foreground",
   },
   whatsapp: {
     label: "dealActivity.type.whatsapp",
     Icon: MessageCircle,
-    selected: "border-green-500 bg-green-50 text-green-700",
-    iconColor: "text-green-500",
+    selected: "border-btn-border-hover bg-btn-ghost-surface-active text-foreground",
+    iconColor: "text-foreground",
   },
 };
 
@@ -141,10 +141,10 @@ export function DurationPicker({
             aria-checked={isActive}
             onClick={() => onChange(v)}
             className={cn(
-              "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+              "rounded-full border px-3 py-1 text-caption font-medium transition-colors",
               isActive
-                ? "border-teal-500 bg-teal-50 text-teal-700"
-                : "border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50",
+                ? "border-btn-border-hover bg-btn-ghost-surface-active text-foreground"
+                : "border-border text-muted-foreground hover:border-input hover:bg-gray-alpha-50",
             )}
           >
             {label}

@@ -185,7 +185,7 @@ export function CreateDealDialog({
                 inputMode="numeric"
                 min={0}
                 aria-invalid={valueInvalid || undefined}
-                className={valueInvalid ? "border-red-400 focus-visible:ring-red-400" : undefined}
+                className={valueInvalid ? "border-destructive focus-visible:ring-destructive" : undefined}
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 placeholder="0"
@@ -319,7 +319,6 @@ export function CreateDealDialog({
           <Button
             onClick={handleSubmit}
             disabled={!canSubmit || createDeal.isPending}
-            className="bg-teal-600 hover:bg-teal-700"
           >
             {createDeal.isPending && (
               <Loader2 className="me-2 h-4 w-4 animate-spin" />

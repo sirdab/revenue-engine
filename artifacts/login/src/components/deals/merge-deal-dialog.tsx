@@ -121,18 +121,18 @@ export function MergeDealDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading flex items-center gap-2">
-            <GitMerge className="h-4 w-4 text-teal-600" />
+            <GitMerge className="h-4 w-4 text-brand" />
             {t("deals.merge.title")}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <p className="text-sm text-slate-500">
+          <p className="text-body text-muted-foreground">
             {tNode("deals.merge.body", {
-              title: <span className="font-medium text-slate-700">{deal.title}</span>,
+              title: <span className="font-medium text-foreground">{deal.title}</span>,
             })}
           </p>
           <div className="space-y-1.5">
-            <div className="text-xs font-medium text-slate-500">
+            <div className="text-caption font-medium text-muted-foreground">
               {t("deals.merge.targetLabel")}
             </div>
             <AsyncSelect
@@ -157,23 +157,23 @@ export function MergeDealDialog({
           </div>
 
           {merge.isPending && !preview && targetId && (
-            <div className="flex items-center gap-2 text-sm text-slate-400">
+            <div className="flex items-center gap-2 text-body text-subtle">
               <Loader2 className="h-4 w-4 animate-spin" /> {t("deals.merge.checking")}
             </div>
           )}
 
           {preview && (
-            <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-3 text-sm">
-              <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <div className="rounded-lg border border-border bg-surface-whisper/60 p-3 text-body">
+              <div className="mb-1.5 text-caption font-medium text-muted-foreground">
                 {t("deals.merge.whatHappens")}
               </div>
-              <ul className="space-y-1 text-slate-600">
+              <ul className="space-y-1 text-muted-foreground">
                 <li>
                   {tNode("deals.merge.moves", {
-                    activities: <span className="font-medium text-slate-800">{tPlural("deals.merge.activities", preview.moved.activities)}</span>,
-                    notes: <span className="font-medium text-slate-800">{tPlural("deals.merge.notes", preview.moved.notes)}</span>,
-                    files: <span className="font-medium text-slate-800">{tPlural("deals.merge.files", preview.moved.files)}</span>,
-                    events: <span className="font-medium text-slate-800">{tPlural("deals.merge.events", preview.moved.historyEvents)}</span>,
+                    activities: <span className="font-medium text-foreground">{tPlural("deals.merge.activities", preview.moved.activities)}</span>,
+                    notes: <span className="font-medium text-foreground">{tPlural("deals.merge.notes", preview.moved.notes)}</span>,
+                    files: <span className="font-medium text-foreground">{tPlural("deals.merge.files", preview.moved.files)}</span>,
+                    events: <span className="font-medium text-foreground">{tPlural("deals.merge.events", preview.moved.historyEvents)}</span>,
                   })}
                 </li>
                 <li>
@@ -181,7 +181,7 @@ export function MergeDealDialog({
                     <>
                       {tNode("deals.merge.fills", {
                         fields: (
-                          <span className="font-medium text-slate-800">
+                          <span className="font-medium text-foreground">
                             {preview.filledFields
                               .map((f) => (FIELD_LABELS[f] ? t(FIELD_LABELS[f]) : f))
                               .join(", ")}
@@ -205,7 +205,7 @@ export function MergeDealDialog({
           <Button
             onClick={() => void confirm()}
             disabled={!preview || merge.isPending}
-            className="bg-teal-600 text-white hover:bg-teal-700"
+            className="bg-primary text-primary-foreground hover:bg-primary-hover"
           >
             {merge.isPending && (
               <Loader2 className="me-1.5 h-4 w-4 animate-spin" />

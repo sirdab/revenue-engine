@@ -119,8 +119,8 @@ export function DealsSavedViews({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline">
-            <Bookmark className="me-1.5 h-4 w-4" />
+          <Button variant="outline" size="sm">
+            <Bookmark />
             {t("views.title")}
           </Button>
         </DropdownMenuTrigger>
@@ -128,7 +128,7 @@ export function DealsSavedViews({
           <DropdownMenuLabel>{t("views.saved")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {list.length === 0 ? (
-            <p className="px-2 py-3 text-xs text-slate-400">
+            <p className="px-2 py-3 text-caption text-muted-foreground">
               {t("deals.views.empty")}
             </p>
           ) : (
@@ -143,9 +143,9 @@ export function DealsSavedViews({
                 <button
                   type="button"
                   className={cn(
-                    "absolute end-7 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-teal-600",
+                    "absolute end-7 top-1/2 -translate-y-1/2 rounded-sm p-1 text-subtle hover:text-brand",
                     defaultViewId === v.id
-                      ? "block text-teal-500"
+                      ? "block text-brand"
                       : "hidden group-hover:block",
                   )}
                   onPointerDown={(e) => e.stopPropagation()}
@@ -174,7 +174,7 @@ export function DealsSavedViews({
                 </button>
                 <button
                   type="button"
-                  className="absolute end-1 top-1/2 hidden -translate-y-1/2 rounded p-1 text-slate-400 hover:text-red-600 group-hover:block"
+                  className="absolute end-1 top-1/2 hidden -translate-y-1/2 rounded-sm p-1 text-subtle hover:text-destructive group-hover:block"
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => {
                     e.preventDefault();
@@ -222,11 +222,10 @@ export function DealsSavedViews({
               {t("common.cancel")}
             </Button>
             <Button
-              className="bg-teal-600 hover:bg-teal-700"
               disabled={!name.trim() || create.isPending}
               onClick={() => void saveCurrent()}
             >
-              <Check className="me-1.5 h-4 w-4" />
+              <Check />
               {t("common.save")}
             </Button>
           </DialogFooter>

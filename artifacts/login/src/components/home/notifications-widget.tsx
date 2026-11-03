@@ -102,7 +102,7 @@ export function NotificationsWidget() {
           subscriber), so this card could otherwise run to hundreds of rows and
           push every other widget off the page. Capped by viewport height so it
           still shows a useful number of rows on a laptop. */}
-      <div className="max-h-[26rem] divide-y divide-slate-100 overflow-y-auto">
+      <div className="max-h-[26rem] divide-y divide-border overflow-y-auto">
         {items.map((item) => {
           const path = notificationPath(item.entityType, item.entityId);
           const dismissButton = (
@@ -120,31 +120,31 @@ export function NotificationsWidget() {
               }}
               // Always present, just quiet: a hover-only X is invisible on
               // touch, and this is the only way to clear a sticky notification.
-              className="mt-0.5 shrink-0 rounded-md p-1 text-slate-300 transition-colors hover:bg-slate-200 hover:text-slate-700 group-hover:text-slate-400"
+              className="mt-0.5 shrink-0 rounded-md p-1 text-subtle transition-colors hover:bg-gray-alpha-150 hover:text-foreground group-hover:text-subtle"
             >
               <X className="h-3.5 w-3.5" />
             </button>
           );
           const row = (
             <div className="group flex items-start gap-2.5 py-2">
-              <Avatar className="mt-0.5 h-6 w-6 border border-slate-200 bg-slate-100 text-slate-600">
-                <AvatarFallback className="bg-transparent text-[10px] font-medium">
+              <Avatar size="sm" className="mt-0.5">
+                <AvatarFallback className="bg-muted text-[10px] text-muted-foreground">
                   {initials(item.actorName ?? "Sirdab")}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
                 <p
                   className={cn(
-                    "text-sm leading-snug",
+                    "text-body leading-snug",
                     // Unread carries weight; read fades back. Without this the
                     // card is a wall of identical rows and the bell's unread
                     // count has no visual counterpart here.
-                    item.readAt ? "text-slate-500" : "font-medium text-slate-900",
+                    item.readAt ? "text-muted-foreground" : "font-medium text-foreground",
                   )}
                 >
                   {item.message}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-caption text-subtle">
                   {formatRelativeLong(item.createdAt)}
                 </p>
               </div>
@@ -154,7 +154,7 @@ export function NotificationsWidget() {
           // A notification whose entity link cannot be resolved still has to
           // render — it is the message that matters — just not as a dead link.
           return path ? (
-            <Link key={item.id} href={path} className="block hover:bg-slate-50">
+            <Link key={item.id} href={path} className="block hover:bg-row-surface-hover">
               {row}
             </Link>
           ) : (

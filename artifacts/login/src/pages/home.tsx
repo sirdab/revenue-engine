@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListActivitiesQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@sirdab/one/components/page-header";
 import { useAuth } from "@/hooks/use-auth";
 import { CreateDealDialog } from "@/components/deals/create-deal-dialog";
 import { AddActivityDialog } from "@/components/activities/add-activity-dialog";
@@ -48,15 +49,12 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-bold text-slate-900">
-            {t("home.greetingName", { greeting: t(greetingKeyFor(now)), name: firstName })}
-          </h1>
-          <p className="text-sm text-slate-500">{dateLabel}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setDealOpen(true)}>
+      <PageHeader
+        title={t("home.greetingName", { greeting: t(greetingKeyFor(now)), name: firstName })}
+        description={dateLabel}
+        actions={
+          <>
+          <Button variant="secondary" onClick={() => setDealOpen(true)}>
             <Plus className="me-1.5 h-4 w-4" /> {t("common.deal")}
           </Button>
           <AddActivityDialog
@@ -69,13 +67,14 @@ export default function HomePage() {
               });
             }}
             trigger={
-              <Button variant="outline">
+              <Button variant="secondary">
                 <Plus className="me-1.5 h-4 w-4" /> {t("common.activity")}
               </Button>
             }
           />
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* TWO PACKED COLUMNS, not row-wise auto-placement.
           The old layout placed widgets row by row — [wide, narrow] per row — so a

@@ -68,12 +68,12 @@ export function LostReasonSelect({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "flex h-9 w-full items-center justify-between rounded-md border border-slate-200 bg-card px-3 text-sm shadow-sm transition-colors hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500",
-            value ? "text-slate-900" : "text-slate-400",
+            "flex h-9 w-full items-center justify-between rounded-md border border-border bg-card px-3 text-body shadow-card transition-colors hover:border-input focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            value ? "text-foreground" : "text-subtle",
           )}
         >
           <span className="truncate">{value || t("reasons.select")}</span>
-          <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 text-slate-400" />
+          <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 text-subtle" />
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -117,7 +117,7 @@ export function LostReasonSelect({
                 <CommandItem
                   value={`__custom__${trimmed}`}
                   onSelect={() => pick(trimmed)}
-                  className="text-teal-700"
+                  className="text-brand"
                 >
                   <PenLine className="me-2 h-4 w-4" />
                   <span className="truncate">{t("common.useQuoted", { value: trimmed })}</span>

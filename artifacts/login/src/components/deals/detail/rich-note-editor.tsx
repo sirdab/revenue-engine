@@ -30,7 +30,7 @@ import { useI18n } from "@/lib/i18n/i18n";
 // and shared with the read-side renderer (rich-text.tsx) so chips look the same
 // in the composer and the timeline.
 export const MENTION_CLASS =
-  "rounded bg-teal-50 px-1 font-medium text-teal-700";
+  "rounded-sm bg-brand-subtle px-1 font-medium text-brand";
 
 export type RichNoteEditorHandle = {
   getHTML: () => string;
@@ -235,8 +235,8 @@ export const RichNoteEditor = forwardRef<
         role: "textbox",
         "aria-multiline": "true",
         class: cn(
-          "max-h-[60vh] min-h-[110px] w-full overflow-y-auto rounded-md border border-slate-200 bg-card px-3 py-2 text-sm text-slate-800 outline-none transition-colors focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500",
-          "[&_a]:text-teal-700 [&_a]:underline [&_ol]:list-decimal [&_ol]:ps-5 [&_ul]:list-disc [&_ul]:ps-5",
+          "max-h-[60vh] min-h-[110px] w-full overflow-y-auto rounded-md border border-border bg-card px-3 py-2 text-body text-foreground outline-none transition-colors focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-ring",
+          "[&_a]:text-brand [&_a]:underline [&_ol]:list-decimal [&_ol]:ps-5 [&_ul]:list-disc [&_ul]:ps-5",
         ),
       },
       handlePaste: (_view, event) =>
@@ -328,7 +328,7 @@ export const RichNoteEditor = forwardRef<
         >
           <Strikethrough className="h-3.5 w-3.5" />
         </ToolbarButton>
-        <span className="mx-1 h-4 w-px bg-slate-200" />
+        <span className="mx-1 h-4 w-px bg-gray-200" />
         <ToolbarButton
           onClick={() => chain()?.toggleBulletList().run()}
           active={editor?.isActive("bulletList")}
@@ -350,7 +350,7 @@ export const RichNoteEditor = forwardRef<
         >
           <Code2 className="h-3.5 w-3.5" />
         </ToolbarButton>
-        <span className="mx-1 h-4 w-px bg-slate-200" />
+        <span className="mx-1 h-4 w-px bg-gray-200" />
         <EmojiPicker
           // Inline so the picker works inside the deal drawer (Sheet) and the
           // add-activity Dialog — both scroll-lock a portalled popover.
@@ -371,7 +371,7 @@ export const RichNoteEditor = forwardRef<
           // separate disablePortal path instead; different mechanism.)
           <ul
             ref={mentionList}
-            className="fixed z-50 max-h-64 w-60 overflow-y-auto overscroll-contain rounded-md border border-slate-200 bg-card py-1 shadow-lg"
+            className="fixed z-50 max-h-64 w-60 overflow-y-auto overscroll-contain rounded-md border border-border bg-card py-1 shadow-popover-sm"
             style={{ top: mention.top, left: mention.left }}
           >
             {mention.items.map((item, i) => (
@@ -384,10 +384,10 @@ export const RichNoteEditor = forwardRef<
                     mention.command(item);
                   }}
                   className={cn(
-                    "flex w-full items-center gap-2 px-3 py-1.5 text-start text-sm",
+                    "flex w-full items-center gap-2 px-3 py-1.5 text-start text-body",
                     i === mention.index
-                      ? "bg-teal-50 text-teal-800"
-                      : "text-slate-700 hover:bg-slate-50",
+                      ? "bg-brand-subtle text-brand"
+                      : "text-foreground hover:bg-gray-alpha-50",
                   )}
                 >
                   <span className="truncate">{item.label}</span>
@@ -426,8 +426,8 @@ function ToolbarButton({
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1 rounded px-1.5 py-1 transition-colors hover:bg-slate-100 hover:text-slate-700",
-        active ? "bg-slate-100 text-teal-700" : "text-slate-500",
+        "inline-flex items-center gap-1 rounded-sm px-1.5 py-1 transition-colors hover:bg-gray-alpha-100 hover:text-foreground",
+        active ? "bg-muted text-brand" : "text-muted-foreground",
       )}
     >
       {children}

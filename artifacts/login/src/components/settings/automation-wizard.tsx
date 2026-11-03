@@ -870,13 +870,13 @@ export function AutomationWizard({
                   type="button"
                   onClick={() => applyBuiltin(tpl)}
                   dir={lang === "ar" ? "rtl" : "ltr"}
-                  className="flex flex-col gap-1 rounded-lg border border-slate-200 p-3 text-start transition-colors hover:border-teal-300 hover:bg-teal-50/40"
+                  className="flex flex-col gap-1 rounded-lg border border-border p-3 text-start transition-colors hover:border-btn-border-hover hover:bg-gray-alpha-50"
                 >
-                  <span className="text-xl">{tpl.emoji}</span>
-                  <span className="text-sm font-semibold text-slate-800">
+                  <span className="text-heading-sm">{tpl.emoji}</span>
+                  <span className="text-body font-semibold text-foreground">
                     {lang === "ar" ? tpl.nameAr : tpl.name}
                   </span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-caption-quiet text-muted-foreground">
                     {lang === "ar" ? tpl.descriptionAr : tpl.description}
                   </span>
                 </button>
@@ -885,22 +885,22 @@ export function AutomationWizard({
               {savedTemplates.map((tpl) => (
                 <div
                   key={tpl.id}
-                  className="group relative flex flex-col gap-1 rounded-lg border border-slate-200 p-3 transition-colors hover:border-teal-300 hover:bg-teal-50/40"
+                  className="group relative flex flex-col gap-1 rounded-lg border border-border p-3 transition-colors hover:border-btn-border-hover hover:bg-gray-alpha-50"
                 >
                   <button
                     type="button"
                     onClick={() => applySaved(tpl)}
                     className="flex flex-col gap-1 text-start"
                   >
-                    <span className="text-xl">{tpl.emoji || "⚙️"}</span>
-                    <span className="text-sm font-semibold text-slate-800">
+                    <span className="text-heading-sm">{tpl.emoji || "⚙️"}</span>
+                    <span className="text-body font-semibold text-foreground">
                       {tpl.name}
                     </span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-caption-quiet text-muted-foreground">
                       {tpl.description || t("Team template", "قالب الفريق")}
                     </span>
                     {tpl.createdByName && (
-                      <span className="text-[11px] text-slate-400">
+                      <span className="text-[11px] text-subtle">
                         Saved by {tpl.createdByName}
                       </span>
                     )}
@@ -913,7 +913,7 @@ export function AutomationWizard({
                       setEditingTemplate(tpl);
                       setStep("trigger");
                     }}
-                    className="absolute end-8 top-2 rounded-md p-1 text-slate-300 opacity-0 transition-opacity hover:text-slate-700 group-hover:opacity-100"
+                    className="absolute end-8 top-2 rounded-md p-1 text-subtle opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
@@ -923,7 +923,7 @@ export function AutomationWizard({
                         type="button"
                         aria-label={`Delete ${tpl.name}`}
                         disabled={deleteTemplate.isPending}
-                        className="absolute end-2 top-2 rounded-md p-1 text-slate-300 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
+                        className="absolute end-2 top-2 rounded-md p-1 text-subtle opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -954,7 +954,7 @@ export function AutomationWizard({
                               },
                             )
                           }
-                          className="bg-red-600 text-white hover:bg-red-700"
+                          className="bg-destructive text-white hover:bg-destructive"
                         >
                           Delete template
                         </AlertDialogAction>
@@ -968,7 +968,7 @@ export function AutomationWizard({
             <button
               type="button"
               onClick={() => setShowGallery(false)}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 p-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-input p-3 text-body text-muted-foreground hover:bg-gray-alpha-50"
             >
               <Plus className="h-4 w-4" /> {t("Start from scratch", "ابدأ من الصفر")}
             </button>
@@ -976,15 +976,15 @@ export function AutomationWizard({
         ) : (
           <>
             {/* Stepper */}
-            <ol className="flex items-center gap-2 text-xs">
+            <ol className="flex items-center gap-2 text-caption-quiet">
               {STEPS.map((s, i) => (
                 <li key={s.id} className="flex items-center gap-2">
                   <span
                     className={cn(
                       "flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold",
                       i <= stepIdx
-                        ? "bg-teal-600 text-white"
-                        : "bg-slate-100 text-slate-400",
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-subtle",
                     )}
                   >
                     {i + 1}
@@ -992,8 +992,8 @@ export function AutomationWizard({
                   <span
                     className={cn(
                       i === stepIdx
-                        ? "font-medium text-slate-800"
-                        : "text-slate-400",
+                        ? "font-medium text-foreground"
+                        : "text-subtle",
                     )}
                   >
                     {t(
@@ -1002,7 +1002,7 @@ export function AutomationWizard({
                     )}
                   </span>
                   {i < STEPS.length - 1 && (
-                    <span className="mx-1 h-px w-6 bg-slate-200" />
+                    <span className="mx-1 h-px w-6 bg-gray-200" />
                   )}
                 </li>
               ))}
@@ -1014,7 +1014,7 @@ export function AutomationWizard({
             >
               {step === "trigger" && (
                 <div className="space-y-4">
-                  <Label className="text-xs text-slate-500">
+                  <Label className="text-caption-quiet text-muted-foreground">
                     {t("Trigger event", "حدث التشغيل")}
                   </Label>
                   <RadioGroup
@@ -1022,13 +1022,13 @@ export function AutomationWizard({
                     onValueChange={(v) => setEvent(v as AutomationTriggerEvent)}
                     className="mt-2 space-y-2"
                   >
-                    <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50">
+                    <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 hover:bg-gray-alpha-50">
                       <RadioGroupItem value="deal_added" className="mt-0.5" />
                       <span>
-                        <span className="block text-sm font-medium text-slate-800">
+                        <span className="block text-body text-foreground">
                           {t("Deal created", "إنشاء صفقة")}
                         </span>
-                        <span className="block text-xs text-slate-500">
+                        <span className="block text-caption-quiet text-muted-foreground">
                           {t(
                             "Runs when a new deal is created in the app or from an inbound lead (not CSV imports).",
                             "يعمل عند إنشاء صفقة جديدة في التطبيق أو من عميل محتمل وارد (لا يشمل استيراد CSV).",
@@ -1036,13 +1036,13 @@ export function AutomationWizard({
                         </span>
                       </span>
                     </label>
-                    <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50">
+                    <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 hover:bg-gray-alpha-50">
                       <RadioGroupItem value="deal_updated" className="mt-0.5" />
                       <span>
-                        <span className="block text-sm font-medium text-slate-800">
+                        <span className="block text-body text-foreground">
                           {t("Deal updated", "تحديث صفقة")}
                         </span>
-                        <span className="block text-xs text-slate-500">
+                        <span className="block text-caption-quiet text-muted-foreground">
                           {t(
                             "Runs when a deal changes: stage, value, owner, status, and so on. With conditions, it runs once, on the change that makes the deal match them; later edits don’t repeat it. To act when a deal is won, add a “Status is won” condition.",
                             "يعمل عند تغيير الصفقة: المرحلة أو القيمة أو المالك أو الحالة. مع الشروط يعمل مرة واحدة عند التغيير الذي يجعل الصفقة مطابقة لها، ولا تكرره التعديلات اللاحقة. للتنفيذ عند كسب صفقة أضف شرط «الحالة مكسوبة».",
@@ -1056,10 +1056,10 @@ export function AutomationWizard({
 
               {step === "conditions" && (
                 <div>
-                  <Label className="text-xs text-slate-500">
+                  <Label className="text-caption-quiet text-muted-foreground">
                     {t("Conditions", "الشروط")}
                   </Label>
-                  <p className="mb-2 text-xs text-slate-400">
+                  <p className="mb-2 text-caption-quiet text-subtle">
                     {lang === "ar"
                       ? `يجب أن تطابق الصفقة هذه الشروط لكي تعمل الأتمتة. اتركها فارغة لتعمل مع كل صفقة ${event === "deal_added" ? "جديدة" : "محدّثة"}.`
                       : `The deal must match these for the automation to run. Leave empty to run on every ${event === "deal_added" ? "new" : "updated"} deal.`}
@@ -1076,7 +1076,7 @@ export function AutomationWizard({
               {step === "action" && (
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-xs text-slate-500">
+                    <Label className="text-caption-quiet text-muted-foreground">
                       {t("Action", "الإجراء")}
                     </Label>
                     <RadioGroup
@@ -1086,16 +1086,16 @@ export function AutomationWizard({
                       }
                       className="mt-2 grid gap-2 sm:grid-cols-2"
                     >
-                        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50">
+                        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 hover:bg-gray-alpha-50">
                           <RadioGroupItem
                             value="create_activity"
                             className="mt-0.5"
                           />
                           <span>
-                            <span className="block text-sm font-medium text-slate-800">
+                            <span className="block text-body text-foreground">
                               {t("Create activity", "إنشاء نشاط")}
                             </span>
-                            <span className="block text-xs text-slate-500">
+                            <span className="block text-caption-quiet text-muted-foreground">
                               {t(
                                 "Schedule a call, task, or meeting on the deal.",
                                 "جدولة مكالمة أو مهمة أو اجتماع على الصفقة.",
@@ -1103,16 +1103,16 @@ export function AutomationWizard({
                             </span>
                           </span>
                         </label>
-                        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50">
+                        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 hover:bg-gray-alpha-50">
                           <RadioGroupItem
                             value="create_deal"
                             className="mt-0.5"
                           />
                           <span>
-                            <span className="block text-sm font-medium text-slate-800">
+                            <span className="block text-body text-foreground">
                               {t("Create deal", "إنشاء صفقة")}
                             </span>
-                            <span className="block text-xs text-slate-500">
+                            <span className="block text-caption-quiet text-muted-foreground">
                               {t(
                                 "Start a follow-on deal in another pipeline.",
                                 "ابدأ صفقة متابعة في خط مبيعات آخر.",
@@ -1120,16 +1120,16 @@ export function AutomationWizard({
                             </span>
                           </span>
                         </label>
-                        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50">
+                        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 hover:bg-gray-alpha-50">
                           <RadioGroupItem
                             value="call_webhook"
                             className="mt-0.5"
                           />
                           <span>
-                            <span className="block text-sm font-medium text-slate-800">
+                            <span className="block text-body text-foreground">
                               {t("Call webhook", "استدعاء Webhook")}
                             </span>
-                            <span className="block text-xs text-slate-500">
+                            <span className="block text-caption-quiet text-muted-foreground">
                               {t(
                                 "Send the deal to an external URL (n8n, Zapier, your own endpoint).",
                                 "أرسل الصفقة إلى رابط خارجي (n8n أو Zapier أو خادمك).",
@@ -1137,16 +1137,16 @@ export function AutomationWizard({
                             </span>
                           </span>
                         </label>
-                      <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50">
+                      <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 hover:bg-gray-alpha-50">
                         <RadioGroupItem
                           value="send_slack_message"
                           className="mt-0.5"
                         />
                         <span>
-                          <span className="block text-sm font-medium text-slate-800">
+                          <span className="block text-body text-foreground">
                             {t("Send Slack message", "إرسال رسالة سلاك")}
                           </span>
-                          <span className="block text-xs text-slate-500">
+                          <span className="block text-caption-quiet text-muted-foreground">
                             {t(
                               "Post to a channel or DM a teammate when this fires.",
                               "انشر في قناة أو راسل زميلًا عند التشغيل.",
@@ -1154,16 +1154,16 @@ export function AutomationWizard({
                           </span>
                         </span>
                       </label>
-                      <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50">
+                      <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 hover:bg-gray-alpha-50">
                         <RadioGroupItem
                           value="post_notification"
                           className="mt-0.5"
                         />
                         <span>
-                          <span className="block text-sm font-medium text-slate-800">
+                          <span className="block text-body text-foreground">
                             {t("Post notification", "إشعار داخل التطبيق")}
                           </span>
-                          <span className="block text-xs text-slate-500">
+                          <span className="block text-caption-quiet text-muted-foreground">
                             {t(
                               "Notify people in-app. No opt-in needed — switching this automation on is what turns it on for the team. Each person hears only about records they own.",
                               "إشعار داخل التطبيق. لا حاجة لاشتراك — تشغيل الأتمتة هو التفعيل للفريق. ويصل كل شخص ما يخص سجلاته فقط.",
@@ -1179,7 +1179,7 @@ export function AutomationWizard({
                       <div className="sm:col-span-2">
                         <Label
                           htmlFor="automation-subject"
-                          className="text-xs text-slate-500"
+                          className="text-caption-quiet text-muted-foreground"
                         >
                           Subject
                         </Label>
@@ -1193,7 +1193,7 @@ export function AutomationWizard({
                         />
                       </div>
                       <div>
-                        <Label className="text-xs text-slate-500">Type</Label>
+                        <Label className="text-caption-quiet text-muted-foreground">Type</Label>
                         <Combobox
                           items={ACTIVITY_TYPES}
                           inModal
@@ -1206,7 +1206,7 @@ export function AutomationWizard({
                       <div>
                         <Label
                           htmlFor="automation-due"
-                          className="text-xs text-slate-500"
+                          className="text-caption-quiet text-muted-foreground"
                         >
                           Due in (days)
                         </Label>
@@ -1228,7 +1228,7 @@ export function AutomationWizard({
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <Label className="text-xs text-slate-500">
+                        <Label className="text-caption-quiet text-muted-foreground">
                           Assigned to
                         </Label>
                         <Combobox
@@ -1248,7 +1248,7 @@ export function AutomationWizard({
                   {actionType === "create_deal" && (
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <Label className="text-xs text-slate-500">
+                        <Label className="text-caption-quiet text-muted-foreground">
                           Pipeline
                         </Label>
                         <Combobox
@@ -1267,7 +1267,7 @@ export function AutomationWizard({
                         />
                       </div>
                       <div>
-                        <Label className="text-xs text-slate-500">Stage</Label>
+                        <Label className="text-caption-quiet text-muted-foreground">Stage</Label>
                         <Combobox
                           items={[
                             {
@@ -1289,7 +1289,7 @@ export function AutomationWizard({
                       <div className="sm:col-span-2">
                         <Label
                           htmlFor="automation-title"
-                          className="text-xs text-slate-500"
+                          className="text-caption-quiet text-muted-foreground"
                         >
                           Title template
                         </Label>
@@ -1301,13 +1301,13 @@ export function AutomationWizard({
                           maxLength={300}
                           className="mt-1"
                         />
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="mt-1 text-caption-quiet text-subtle">
                           Use {"{title}"} to insert the source deal&apos;s
                           title, e.g. “Onboarding - {"{title}"}”.
                         </p>
                       </div>
                       <div className="sm:col-span-2">
-                        <Label className="text-xs text-slate-500">Owner</Label>
+                        <Label className="text-caption-quiet text-muted-foreground">Owner</Label>
                         <Combobox
                           items={[
                             {
@@ -1334,7 +1334,7 @@ export function AutomationWizard({
                       <div className="sm:col-span-2">
                         <Label
                           htmlFor="webhook-url"
-                          className="text-xs text-slate-500"
+                          className="text-caption-quiet text-muted-foreground"
                         >
                           Webhook URL
                         </Label>
@@ -1347,7 +1347,7 @@ export function AutomationWizard({
                         />
                       </div>
                       <div>
-                        <Label className="text-xs text-slate-500">Method</Label>
+                        <Label className="text-caption-quiet text-muted-foreground">Method</Label>
                         <Combobox
                           items={[
                             { value: "POST", label: "POST" },
@@ -1368,7 +1368,7 @@ export function AutomationWizard({
                         />
                         <Label
                           htmlFor="webhook-include-deal"
-                          className="text-xs text-slate-500"
+                          className="text-caption-quiet text-muted-foreground"
                         >
                           Include deal data
                         </Label>
@@ -1376,7 +1376,7 @@ export function AutomationWizard({
                       <div className="sm:col-span-2">
                         <Label
                           htmlFor="webhook-secret-header"
-                          className="text-xs text-slate-500"
+                          className="text-caption-quiet text-muted-foreground"
                         >
                           Secret header name (optional)
                         </Label>
@@ -1389,7 +1389,7 @@ export function AutomationWizard({
                           placeholder="X-Webhook-Secret"
                           className="mt-1"
                         />
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="mt-1 text-caption-quiet text-subtle">
                           If set, the configured integration webhook secret is
                           sent under this header so your endpoint can verify the
                           call.
@@ -1411,7 +1411,7 @@ export function AutomationWizard({
                           actionType === "post_notification" && "hidden",
                         )}
                       >
-                        <Label className="text-xs text-slate-500">
+                        <Label className="text-caption-quiet text-muted-foreground">
                           {t("Send to", "أرسل إلى")}
                         </Label>
                         <Select
@@ -1442,7 +1442,7 @@ export function AutomationWizard({
                       {actionType === "send_slack_message" &&
                         slackDestType === "channel" && (
                         <div>
-                          <Label className="text-xs text-slate-500">
+                          <Label className="text-caption-quiet text-muted-foreground">
                             {t("Channel", "القناة")}
                           </Label>
                           {slackChannelsAvailable ? (
@@ -1463,7 +1463,7 @@ export function AutomationWizard({
                               className="mt-1"
                             />
                           )}
-                          <p className="mt-1 text-xs text-slate-400">
+                          <p className="mt-1 text-caption-quiet text-subtle">
                             {slackChannelsAvailable
                               ? t(
                                   "Pick from your workspace's channels. For private channels, add the Slack app to the channel first.",
@@ -1480,7 +1480,7 @@ export function AutomationWizard({
                       {actionType === "send_slack_message" &&
                         slackDestType === "user" && (
                         <div>
-                          <Label className="text-xs text-slate-500">
+                          <Label className="text-caption-quiet text-muted-foreground">
                             {t("Recipient", "المستلم")}
                           </Label>
                           <Combobox
@@ -1497,7 +1497,7 @@ export function AutomationWizard({
                       <div className="sm:col-span-2">
                         <Label
                           htmlFor="slack-message"
-                          className="text-xs text-slate-500"
+                          className="text-caption-quiet text-muted-foreground"
                         >
                           {t("Message", "الرسالة")}
                         </Label>
@@ -1510,7 +1510,7 @@ export function AutomationWizard({
                                 key={c.insert + c.label}
                                 type="button"
                                 onClick={() => insertToken(c.insert)}
-                                className="rounded-md border border-teal-200 bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700 hover:bg-teal-100"
+                                className="rounded-md border border-border bg-card px-2 py-0.5 text-caption text-foreground hover:bg-gray-alpha-50"
                               >
                                 + {lang === "ar" ? c.labelAr || c.label : c.label}
                               </button>
@@ -1521,20 +1521,20 @@ export function AutomationWizard({
                                 setChipDraft(structuredClone(chipConfig));
                                 setManageChips(true);
                               }}
-                              className="ms-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                              className="ms-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-subtle hover:bg-gray-alpha-100 hover:text-muted-foreground"
                             >
                               ⚙ {t("Customize fields", "تخصيص الحقول")}
                             </button>
                           </div>
                         ) : (
-                          <div className="mt-1 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
-                            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                          <div className="mt-1 rounded-lg border border-border bg-surface-whisper/60 p-3">
+                            <p className="text-caption text-muted-foreground">
                               {t(
                                 "Customize fields for the whole team",
                                 "تخصيص الحقول للفريق كامل",
                               )}
                             </p>
-                            <p className="mt-0.5 text-[11px] text-slate-400">
+                            <p className="mt-0.5 text-[11px] text-subtle">
                               {t(
                                 "Click a field to edit it, or × to remove it. New fields can insert data or your own text.",
                                 "اضغط على حقل لتعديله أو × لحذفه. الحقول الجديدة تُدرج بيانات أو نصًا خاصًا بك.",
@@ -1545,10 +1545,10 @@ export function AutomationWizard({
                                 <span
                                   key={c.insert + c.label + i}
                                   className={cn(
-                                    "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium",
+                                    "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-caption",
                                     chipEditIndex === i
-                                      ? "border-teal-500 bg-teal-100 text-teal-800"
-                                      : "border-teal-200 bg-teal-50 text-teal-700",
+                                      ? "border-gray-alpha-400 bg-gray-alpha-100 text-foreground"
+                                      : "border-transparent bg-brand-subtle text-brand-subtle-foreground",
                                   )}
                                 >
                                   <button
@@ -1572,7 +1572,7 @@ export function AutomationWizard({
                                       setChipDraft(next);
                                       if (chipEditIndex === i) resetChipForm();
                                     }}
-                                    className="text-teal-400 hover:text-red-600"
+                                    className="text-brand hover:text-destructive"
                                   >
                                     ×
                                   </button>
@@ -1582,7 +1582,7 @@ export function AutomationWizard({
 
                             <div className="mt-3 grid gap-2 sm:grid-cols-2">
                               <div>
-                                <Label className="text-[11px] text-slate-500">
+                                <Label className="text-[11px] text-muted-foreground">
                                   {t("Name", "الاسم")}
                                 </Label>
                                 <Input
@@ -1590,11 +1590,11 @@ export function AutomationWizard({
                                   onChange={(e) => setChipLabel(e.target.value)}
                                   placeholder={t("e.g. Deal name", "مثال: اسم الصفقة")}
                                   maxLength={40}
-                                  className="mt-1 h-8 text-xs"
+                                  className="mt-1 h-8 text-caption-quiet"
                                 />
                               </div>
                               <div>
-                                <Label className="text-[11px] text-slate-500">
+                                <Label className="text-[11px] text-muted-foreground">
                                   {t("What it inserts", "ماذا يُدرج")}
                                 </Label>
                                 <Input
@@ -1606,11 +1606,11 @@ export function AutomationWizard({
                                   )}
                                   maxLength={120}
                                   dir="auto"
-                                  className="mt-1 h-8 font-mono text-xs"
+                                  className="mt-1 h-8 font-mono text-caption-quiet"
                                 />
                               </div>
                             </div>
-                            <p className="mt-1.5 text-[10.5px] text-slate-400">
+                            <p className="mt-1.5 text-[10.5px] text-subtle">
                               {t("Fields you can use:", "الحقول المتاحة:")}{" "}
                               {DEFAULT_DEAL_CHIPS
                                 .map((f) => f.insert)
@@ -1647,7 +1647,7 @@ export function AutomationWizard({
                                   size="sm"
                                   disabled={updateChips.isPending}
                                   onClick={saveChipConfig}
-                                  className="bg-teal-600 text-white hover:bg-teal-700"
+                                  className="bg-primary text-primary-foreground hover:bg-primary-hover"
                                 >
                                   {updateChips.isPending && (
                                     <Loader2 className="me-1.5 h-3 w-3 animate-spin" />
@@ -1681,7 +1681,7 @@ export function AutomationWizard({
                                 }
                                 className={cn(
                                   "flex-1",
-                                  msgFocus === i && "border-teal-400",
+                                  msgFocus === i && "border-gray-alpha-400",
                                 )}
                               />
                               <button
@@ -1689,7 +1689,7 @@ export function AutomationWizard({
                                 aria-label={t("Delete this line", "حذف هذا السطر")}
                                 disabled={msgRows.length === 1 && !row}
                                 onClick={() => deleteMsgRow(i)}
-                                className="rounded-md p-1.5 text-slate-300 transition-colors hover:text-red-600 disabled:opacity-30"
+                                className="rounded-md p-1.5 text-subtle transition-colors hover:text-destructive disabled:opacity-30"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </button>
@@ -1698,7 +1698,7 @@ export function AutomationWizard({
                           <button
                             type="button"
                             onClick={addMsgRow}
-                            className="flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-slate-300 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50"
+                            className="flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-input py-1.5 text-caption text-muted-foreground hover:bg-gray-alpha-50"
                           >
                             <Plus className="h-3.5 w-3.5" />
                             {t("Add another line", "أضف سطرًا آخر")}
@@ -1706,13 +1706,13 @@ export function AutomationWizard({
                         </div>
 
                         {/* Live preview against sample data */}
-                        <div className="mt-2 rounded-md border-s-2 border-teal-500 bg-slate-50 px-3 py-2">
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-teal-700">
+                        <div className="mt-2 rounded-md border-s-2 border-gray-alpha-300 bg-surface-whisper px-3 py-2">
+                          <p className="text-caption text-brand">
                             {t("Preview (sample data)", "معاينة (بيانات تجريبية)")}
                           </p>
                           <p
                             dir="auto"
-                            className="mt-0.5 whitespace-pre-wrap text-sm text-slate-700"
+                            className="mt-0.5 whitespace-pre-wrap text-body-quiet text-foreground"
                           >
                             {messagePreview.trim() ||
                               t(
@@ -1737,7 +1737,7 @@ export function AutomationWizard({
                             )}
                             {t("Send test message", "إرسال رسالة تجريبية")}
                           </Button>
-                          <span className="ms-2 text-xs text-slate-400">
+                          <span className="ms-2 text-caption-quiet text-subtle">
                             {t(
                               "Sent privately to you in Slack, never to the channel.",
                               "تصلك وحدك في سلاك، لا تُرسل إلى القناة أبدًا.",
@@ -1755,7 +1755,7 @@ export function AutomationWizard({
                   <div className="space-y-2">
                     <Label
                       htmlFor="automation-name"
-                      className="text-xs text-slate-500"
+                      className="text-caption-quiet text-muted-foreground"
                     >
                       {t("Automation name", "اسم الأتمتة")}
                     </Label>
@@ -1773,11 +1773,11 @@ export function AutomationWizard({
                   </div>
 
                   {/* Plain-words confirmation */}
-                  <div className="rounded-lg bg-amber-50 px-4 py-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                  <div className="rounded-lg bg-warning-subtle px-4 py-3">
+                    <p className="text-caption text-warning">
                       {t("In plain words", "بكلمات بسيطة")}
                     </p>
-                    <p className="mt-1 text-sm text-slate-700">
+                    <p className="mt-1 text-body-quiet text-foreground">
                       {plainSentence}
                     </p>
                   </div>
@@ -1788,7 +1788,7 @@ export function AutomationWizard({
                         checked={saveAsTemplate}
                         onCheckedChange={setSaveAsTemplate}
                       />
-                      <span className="text-sm text-slate-600">
+                      <span className="text-body-quiet text-muted-foreground">
                         {t(
                           "Also save this as a reusable template for the team",
                           "احفظها أيضًا كقالب قابل لإعادة الاستخدام للفريق",
@@ -1831,7 +1831,7 @@ export function AutomationWizard({
                 <Button
                   onClick={editingTemplate ? saveTemplateEdit : save}
                   disabled={!name.trim() || busy}
-                  className="bg-teal-600 text-white hover:bg-teal-700"
+                  className="bg-primary text-primary-foreground hover:bg-primary-hover"
                 >
                   {busy && (
                     <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
@@ -1847,7 +1847,7 @@ export function AutomationWizard({
               <Button
                 onClick={() => canAdvance && setStep(STEPS[stepIdx + 1].id)}
                 disabled={!canAdvance || busy}
-                className="bg-teal-600 text-white hover:bg-teal-700"
+                className="bg-primary text-primary-foreground hover:bg-primary-hover"
               >
                 {t("Next", "التالي")}
               </Button>

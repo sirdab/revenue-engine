@@ -15,16 +15,10 @@ import type { PersonUpdate } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useRecordRecentlyViewed } from "@/hooks/use-user-preferences";
-import { ArrowLeft, Briefcase, Mail, Phone } from "lucide-react";
+import { ArrowLeft, Briefcase, Mail, Phone, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyContent,
-} from "@/components/ui/empty";
+import { EmptyState } from "@sirdab/one/components/empty-state";
 import {
   DealSectionCard,
   DealField,
@@ -126,21 +120,20 @@ export default function PersonDetailPage() {
   if (!person) {
     return (
       <div className="mx-auto max-w-md p-8">
-        <Empty className="border-dashed py-12">
-          <EmptyHeader>
-            <EmptyTitle>{t("contacts.personNotFound")}</EmptyTitle>
-            <EmptyDescription>
-              {t("contacts.personNotFoundBody")}
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
+        <EmptyState
+          className="py-12"
+          size="lg"
+          icon={SearchX}
+          title={t("contacts.personNotFound")}
+          caption={t("contacts.personNotFoundBody")}
+          action={
             <Button asChild variant="outline">
               <Link href="/contacts">
                 <ArrowLeft className="me-1.5 h-4 w-4" /> {t("contacts.backToContacts")}
               </Link>
             </Button>
-          </EmptyContent>
-        </Empty>
+          }
+        />
       </div>
     );
   }
@@ -148,7 +141,7 @@ export default function PersonDetailPage() {
   return (
     <div className="mx-auto h-full w-full max-w-7xl overflow-y-auto px-3 py-3 lg:px-4">
       <div className="flex flex-col gap-3">
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-card shadow-sm">
+        <div className="overflow-hidden rounded-xl bg-card shadow-card">
           <PersonHeader person={person} onCommit={commit} />
         </div>
 
@@ -158,7 +151,7 @@ export default function PersonDetailPage() {
             <DealSectionCard title={t("common.details")}>
               <div className="space-y-4">
                 <div>
-                  <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                  <div className="mb-1 text-caption text-muted-foreground">
                     <Briefcase className="me-1 inline h-3 w-3" /> {t("common.jobTitle")}
                   </div>
                   <EditableText
@@ -169,7 +162,7 @@ export default function PersonDetailPage() {
                   />
                 </div>
                 <div>
-                  <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                  <div className="mb-1 text-caption text-muted-foreground">
                     <Mail className="me-1 inline h-3 w-3" /> {t("common.email")}
                   </div>
                   <EditableText
@@ -181,7 +174,7 @@ export default function PersonDetailPage() {
                   />
                 </div>
                 <div>
-                  <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                  <div className="mb-1 text-caption text-muted-foreground">
                     <Phone className="me-1 inline h-3 w-3" /> {t("common.phone")}
                   </div>
                   <EditableText
@@ -192,7 +185,7 @@ export default function PersonDetailPage() {
                   />
                 </div>
                 <div>
-                  <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                  <div className="mb-1 text-caption text-muted-foreground">
                     {t("deals.field.labels")}
                   </div>
                   <LabelsEditor
@@ -201,7 +194,7 @@ export default function PersonDetailPage() {
                     onChange={(labels) => commit({ labels })}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-4 border-t border-slate-100 pt-4">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-4 border-t border-border pt-4">
                   <DealField label={t("common.owner")} value={person.ownerName} />
                   <DealField label={t("common.added")} value={formatDate(person.addTime)} />
                 </div>

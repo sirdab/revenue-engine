@@ -280,23 +280,23 @@ export default function InsightsPage() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-teal-600" />
+        <Loader2 className="h-6 w-6 animate-spin text-brand" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col bg-slate-50/80 p-4 md:p-6">
+    <div className="flex h-full flex-col bg-surface-whisper/80 p-4 md:p-6">
       {/* Header: the dashboard name IS the page title; switching lives on it */}
       <div className="mb-1 flex flex-wrap items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="group flex items-center gap-1.5 rounded-md px-1 py-0.5 text-2xl font-semibold tracking-tight text-slate-900 hover:bg-slate-100"
+              className="group flex items-center gap-1.5 rounded-md px-1 py-0.5 text-heading-sm text-foreground hover:bg-gray-alpha-100"
               data-testid="dashboard-switcher"
             >
               {dashboard?.name ?? t("insights.title")}
-              <ChevronDown className="mt-1 h-4 w-4 text-slate-400 group-hover:text-slate-600" />
+              <ChevronDown className="mt-1 h-4 w-4 text-subtle group-hover:text-muted-foreground" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
@@ -304,7 +304,7 @@ export default function InsightsPage() {
               <DropdownMenuItem key={d.id} onClick={() => setSelectedId(d.id)}>
                 <span className="flex-1">{d.name}</span>
                 {user && d.ownerId !== user.id && (
-                  <Share2 className="ms-2 h-3 w-3 text-slate-400" />
+                  <Share2 className="ms-2 h-3 w-3 text-subtle" />
                 )}
                 {d.id === dashboard?.id && <Check className="ms-2 h-4 w-4" />}
               </DropdownMenuItem>
@@ -329,7 +329,7 @@ export default function InsightsPage() {
                 title={t("insights.renameDashboard")}
                 onClick={() => setDialog("rename")}
               >
-                <Pencil className="h-4 w-4 text-slate-500" />
+                <Pencil className="h-4 w-4 text-muted-foreground" />
               </Button>
               <Button
                 variant="ghost"
@@ -341,7 +341,7 @@ export default function InsightsPage() {
                 <Share2
                   className={cn(
                     "h-4 w-4",
-                    dashboard.isShared ? "text-teal-600" : "text-slate-500",
+                    dashboard.isShared ? "text-brand" : "text-muted-foreground",
                   )}
                 />
               </Button>
@@ -354,7 +354,7 @@ export default function InsightsPage() {
               title={t("insights.duplicateDashboard")}
               onClick={() => duplicateDashboard.mutate({ id: dashboard.id, data: {} })}
             >
-              <Copy className="h-4 w-4 text-slate-500" />
+              <Copy className="h-4 w-4 text-muted-foreground" />
             </Button>
           )}
           {dashboard && !readOnly && (
@@ -364,7 +364,7 @@ export default function InsightsPage() {
               title={t("insights.deleteDashboard")}
               onClick={() => setDialog("delete")}
             >
-              <Trash2 className="h-4 w-4 text-slate-500" />
+              <Trash2 className="h-4 w-4 text-muted-foreground" />
             </Button>
           )}
           {dashboard && !readOnly && (
@@ -382,7 +382,7 @@ export default function InsightsPage() {
         </div>
       </div>
       {dashboard && (
-        <p className="mb-4 text-sm text-slate-500">
+        <p className="mb-4 text-body-quiet text-muted-foreground">
           {tPlural("insights.widgetCount", dashboard.widgets.length)}
           {" · "}
           {t("insights.liveData")}
@@ -408,10 +408,10 @@ export default function InsightsPage() {
       {/* Board */}
       {!dashboard ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-          <Sparkles className="h-10 w-10 text-teal-500" />
+          <Sparkles className="h-10 w-10 text-brand" />
           <div>
-            <h2 className="text-lg font-semibold text-slate-800">{t("insights.noDashboards")}</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <h2 className="text-heading-xs text-foreground">{t("insights.noDashboards")}</h2>
+            <p className="mt-1 text-body-quiet text-muted-foreground">
               {t("insights.noDashboardsBody")}
             </p>
           </div>
@@ -426,7 +426,7 @@ export default function InsightsPage() {
         </div>
       ) : dashboard.widgets.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-          <p className="text-sm text-slate-500">{t("insights.emptyDashboard")}</p>
+          <p className="text-body-quiet text-muted-foreground">{t("insights.emptyDashboard")}</p>
           {!readOnly && (
             <Button
               onClick={() => {

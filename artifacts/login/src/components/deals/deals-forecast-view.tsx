@@ -29,14 +29,14 @@ function SummaryCard({
 }) {
   return (
     <Card className="p-4">
-      <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <div className="text-caption text-muted-foreground">
         {label}
       </div>
       <div
         className={
           accent
-            ? "mt-1 text-2xl font-bold text-teal-600"
-            : "mt-1 text-2xl font-bold text-slate-900"
+            ? "mt-1 text-heading-sm tabular-nums text-brand"
+            : "mt-1 text-heading-sm tabular-nums text-foreground"
         }
       >
         {value}
@@ -58,14 +58,14 @@ export function DealsForecastView({ state }: { state: DealsUrlState }) {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (isError || !data) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-red-600">
+      <div className="flex h-full items-center justify-center text-body text-destructive">
         {t("deals.forecast.loadFailed")}
       </div>
     );
@@ -79,7 +79,7 @@ export function DealsForecastView({ state }: { state: DealsUrlState }) {
   }));
 
   return (
-    <div className="h-full overflow-auto p-6">
+    <div className="h-full overflow-auto p-4 lg:p-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <SummaryCard label={t("deals.forecast.openDeals")} value={data.totalCount.toLocaleString()} />
         <SummaryCard label={t("deals.forecast.totalValue")} value={<Money value={data.totalValue} />} />
@@ -91,11 +91,11 @@ export function DealsForecastView({ state }: { state: DealsUrlState }) {
       </div>
 
       <Card className="mt-6 p-4">
-        <div className="mb-4 text-sm font-semibold text-slate-700">
+        <div className="mb-4 text-label font-semibold text-foreground">
           {t("deals.forecast.byMonth")}
         </div>
         {chartData.length === 0 ? (
-          <div className="py-16 text-center text-sm text-slate-500">
+          <div className="py-16 text-center text-body text-muted-foreground">
             {t("deals.forecast.noDates")}
           </div>
         ) : (
@@ -139,8 +139,8 @@ export function DealsForecastView({ state }: { state: DealsUrlState }) {
       </Card>
 
       <Card className="mt-6 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <table className="w-full text-body">
+          <thead className="bg-surface-whisper text-caption font-medium text-muted-foreground">
             <tr>
               <th className="px-4 py-2.5 text-start">{t("common.month")}</th>
               <th className="px-4 py-2.5 text-end">{t("common.deals")}</th>
@@ -148,17 +148,17 @@ export function DealsForecastView({ state }: { state: DealsUrlState }) {
               <th className="px-4 py-2.5 text-end">{t("deals.forecast.weightedValue")}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-border">
             {data.buckets.map((b) => (
               <tr key={b.month}>
-                <td className="px-4 py-2.5 text-slate-700">{b.label}</td>
-                <td className="px-4 py-2.5 text-end tabular-nums text-slate-600">
+                <td className="px-4 py-2.5 text-foreground">{b.label}</td>
+                <td className="px-4 py-2.5 text-end tabular-nums text-muted-foreground">
                   {b.count}
                 </td>
-                <td className="px-4 py-2.5 text-end tabular-nums text-slate-700">
+                <td className="px-4 py-2.5 text-end tabular-nums text-foreground">
                   <Money value={b.totalValue} />
                 </td>
-                <td className="px-4 py-2.5 text-end font-medium tabular-nums text-teal-700">
+                <td className="px-4 py-2.5 text-end font-medium tabular-nums text-foreground">
                   <Money value={b.weightedValue} />
                 </td>
               </tr>
@@ -167,7 +167,7 @@ export function DealsForecastView({ state }: { state: DealsUrlState }) {
               <tr>
                 <td
                   colSpan={4}
-                  className="px-4 py-8 text-center text-slate-500"
+                  className="px-4 py-8 text-center text-muted-foreground"
                 >
                   {t("deals.forecast.noData")}
                 </td>

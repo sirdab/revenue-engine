@@ -46,8 +46,8 @@ export class WidgetErrorBoundary extends Component<Props, State> {
     if (this.state.error) {
       return (
         <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
-          <p className="text-sm text-slate-500">{tStatic("insights.widget.renderFailed")}</p>
-          <p className="max-w-full truncate text-xs text-slate-400" title={this.state.error.message}>
+          <p className="text-body-quiet text-muted-foreground">{tStatic("insights.widget.renderFailed")}</p>
+          <p className="max-w-full truncate text-caption-quiet text-subtle" title={this.state.error.message}>
             {this.state.error.message}
           </p>
           <Button

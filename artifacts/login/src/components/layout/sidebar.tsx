@@ -70,16 +70,16 @@ function SectionLabel({
   children: React.ReactNode;
 }) {
   return (
-    <div className={cn("relative mb-2 h-4 shrink-0", first ? "mt-0" : "mt-6")}>
+    <div className={cn("relative mb-1 flex h-7 shrink-0 items-center", first ? "mt-0" : "mt-5")}>
       <div
         className={cn(
-          "absolute inset-x-2 top-1/2 border-t border-slate-200 transition-opacity duration-300",
+          "absolute inset-x-2 top-1/2 h-px bg-gray-alpha-400 transition-opacity duration-300",
           collapsed ? "opacity-100" : "opacity-0",
         )}
       />
       <div
         className={cn(
-          "overflow-hidden whitespace-nowrap px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 transition-opacity duration-300",
+          "overflow-hidden whitespace-nowrap px-2 text-body font-medium text-muted-foreground transition-opacity duration-300",
           collapsed ? "opacity-0" : "opacity-100",
         )}
       >
@@ -112,8 +112,8 @@ function NavSection({
     const warm = () => preloadRoute(item.path);
 
     // Fixed geometry in both states: the icon never moves; only the label
-    // fades/collapses. In the 64px rail (12px nav padding + 10px link padding
-    // per side) the 20px icon sits dead-centre.
+    // fades/collapses. In the 60px icon rail (12px nav padding + 8px link
+    // padding per side) the 20px icon sits dead-centre.
     const link = (
       <Link
         href={item.path}
@@ -121,21 +121,18 @@ function NavSection({
         onClick={onNavigate}
         onMouseEnter={warm}
         onFocus={warm}
+        aria-current={active ? "page" : undefined}
+        // One's nav item: muted at rest; hover and active share the same
+        // quiet sidebar-accent fill with the text lifting to ink. No louder
+        // active state.
         className={cn(
-          "flex items-center rounded-md px-2.5 py-2.5 transition-colors",
+          "flex h-9 items-center rounded-lg px-2 text-body font-medium transition-colors",
           active
-            // Light mode: the original subtle teal pill. Dark mode: the
-            // .dark .nav-active override (index.css) turns it solid teal.
-            ? "nav-active bg-teal-50 text-teal-700 font-medium"
-            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+            : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
         )}
       >
-        <Icon
-          className={cn(
-            "w-5 h-5 flex-shrink-0",
-            active ? "text-teal-600" : "text-slate-400",
-          )}
-        />
+        <Icon className="size-5 flex-shrink-0" />
         <span
           aria-hidden={collapsed}
           className={cn(
@@ -145,7 +142,7 @@ function NavSection({
         >
           {label}
           {item.beta && (
-            <span className="ms-2 rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold lowercase tracking-wide text-violet-700">
+            <span className="ms-2 rounded-full bg-attention-subtle px-1.5 py-0.5 text-caption lowercase text-attention-foreground">
               {t("nav.beta")}
             </span>
           )}
@@ -169,7 +166,7 @@ function NavSection({
   };
 
   return (
-    <div className="flex-1 py-6 flex flex-col gap-1 px-3 overflow-y-auto overflow-x-hidden">
+    <div className="flex-1 py-4 flex flex-col gap-1 px-3 overflow-y-auto overflow-x-hidden">
       <SectionLabel collapsed={collapsed} first>
         {t("nav.section.menu")}
       </SectionLabel>
@@ -198,7 +195,7 @@ function LogoHeader({
   return (
     <div
       className={cn(
-        "h-16 flex items-center border-b border-slate-200 flex-shrink-0",
+        "h-[var(--shell-header-height)] flex items-center flex-shrink-0",
         collapsed ? "justify-center px-0" : "pe-3",
       )}
     >
@@ -210,9 +207,9 @@ function LogoHeader({
                 type="button"
                 onClick={onToggle}
                 aria-label={t("nav.expandSidebar")}
-                className="flex items-center justify-center rounded-md p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-btn-ghost-surface-hover hover:text-foreground transition-colors"
               >
-                <PanelLeft className="w-5 h-5" />
+                <PanelLeft className="size-5" />
               </button>
             </TooltipTrigger>
             <TooltipContent side={tooltipSide}>{t("nav.expandSidebarHint")}</TooltipContent>
@@ -229,7 +226,7 @@ function LogoHeader({
             <img
               src={logo}
               alt="Sirdab Revenue Engine"
-              className="h-8 w-auto dark:invert dark:hue-rotate-180"
+              className="h-7 w-auto dark:invert dark:hue-rotate-180"
             />
           </div>
           {onToggle && (
@@ -238,9 +235,9 @@ function LogoHeader({
               onClick={onToggle}
               aria-label={t("nav.collapseSidebar")}
               title={t("nav.collapseSidebarHint")}
-              className="flex items-center justify-center rounded-md p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+              className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-btn-ghost-surface-hover hover:text-foreground transition-colors"
             >
-              <PanelLeftClose className="w-5 h-5" />
+              <PanelLeftClose className="size-5" />
             </button>
           )}
         </>
@@ -260,8 +257,9 @@ export function Sidebar({
   return (
     <div
       className={cn(
-        "bg-card border-e border-slate-200 hidden md:flex flex-col h-full flex-shrink-0 transition-[width] duration-300 ease-in-out",
-        collapsed ? "w-16" : "w-64",
+        // The rail: One's one tinted plane, between the page and a card.
+        "bg-sidebar text-sidebar-foreground border-e border-sidebar-border hidden md:flex flex-col h-full flex-shrink-0 transition-[width] duration-300 ease-in-out",
+        collapsed ? "w-[var(--shell-rail-icon-width)]" : "w-[var(--shell-rail-width)]",
       )}
     >
       <LogoHeader collapsed={collapsed} onToggle={onToggle} />
@@ -280,14 +278,10 @@ export function MobileSidebar({
 }) {
   const { t } = useI18n();
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        // The start edge, whichever side of the screen that is: it must
-        // match the rail it stands in for, and the Sheet resolves the
-        // direction itself.
-        side="start"
-        className="w-72 max-w-[85vw] p-0 flex flex-col bg-card [&>button]:hidden"
-      >
+    // The start edge, whichever side of the screen that is: it must match
+    // the rail it stands in for, and the Sheet resolves the direction itself.
+    <Sheet side="start" open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-72 max-w-[85vw] p-0 flex flex-col">
         <SheetTitle className="sr-only">{t("nav.menuTitle")}</SheetTitle>
         <SheetDescription className="sr-only">
           {t("nav.menuDescription")}

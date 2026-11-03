@@ -73,7 +73,10 @@ DB columns are `snake_case`; the API/app uses `camelCase`.
 
 - `src/App.tsx` is the router: `wouter` `<Switch>`, wrapped in `QueryClientProvider` + `AuthProvider`. Most routes are gated by `<AuthGuard>` (some `adminOnly`) and wrapped in `<AppLayout>`.
 - Data fetching goes through the **generated** `@workspace/api-client-react` hooks; auth is cookie-based, so the browser attaches the session automatically.
-- UI is Tailwind v4 + Radix primitives (shadcn-style components under `src/components/ui`). Path alias: `@` → `src`.
+- UI is built on **Sirdab One** (`@sirdab/one`, github.com/sirdab/one), Sirdab's MIT design system on shadcn/Radix: components, semantic tokens (light/dark), fonts, Arabic/RTL. It is installed from a GitHub Release tarball URL in `artifacts/login/package.json` (to upgrade, change the URL; check the sha256 in the release notes). `src/components/ui/*` mostly re-export One's components (`export * from "@sirdab/one/components/<name>"`), so call sites import from `@/components/ui/...`; the few app-specific primitives (date/time pickers, async/multi comboboxes, emoji picker) stay local and are styled with One's tokens. Read One's `TOKENS.md` and `COLORS.md` before painting anything.
+- **Colours are semantic tokens only.** `index.css` loads One's precompiled stylesheet, then this app's Tailwind build, then One's Tailwind bridge, which REPLACES Tailwind's default palette: `text-slate-500` or `bg-teal-600` silently produce nothing. Use `text-foreground` / `text-muted-foreground` / `text-subtle`, `border-border`, `bg-card` / `bg-surface-whisper` / `bg-muted`, alpha washes (`bg-gray-alpha-50`) for hovers, `bg-primary` (ink) for THE action, `text-brand` / `bg-brand-subtle` for brand accents, and the status tones (`destructive`, `warning`, `success`, `attention`, each with `-subtle` and `-glyph`). The import order in `index.css` matters (see its comment).
+- React is pinned to 19.2.4 because One requires `^19.2.4`.
+- Path alias: `@` → `src`.
 - i18n: English and Arabic message catalogs under `src/lib/i18n`; Arabic renders RTL. See `scripts/i18n/README.md`.
 - The frontend reads `PORT` and `BASE_PATH` from env at config time and **throws if either is missing**.
 

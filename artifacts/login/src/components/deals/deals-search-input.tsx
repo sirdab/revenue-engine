@@ -45,12 +45,12 @@ export function DealsSearchInput({
 
   return (
     <div className="relative">
-      <Search className="pointer-events-none absolute start-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+      <Search className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-subtle" />
       <Input
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={t("deals.searchPlaceholder")}
-        className="h-8 w-[200px] ps-7 text-xs"
+        className="w-[200px] ps-7"
       />
     </div>
   );
