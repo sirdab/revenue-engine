@@ -9,8 +9,8 @@ import { useI18n } from "@/lib/i18n/i18n";
 
 const ICON_BUTTON =
   "flex h-9 w-9 shrink-0 items-center justify-center rounded-md border " +
-  "border-slate-200 bg-card text-slate-500 transition-colors " +
-  "hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 " +
+  "border-border bg-card text-muted-foreground transition-colors " +
+  "hover:border-input hover:bg-gray-alpha-50 hover:text-foreground " +
   "disabled:pointer-events-none disabled:opacity-60";
 
 /** The collapse/expand-filters chevron — leftmost control in the cluster.
@@ -50,7 +50,7 @@ export function FiltersToggle({
         <ChevronDown className="h-4 w-4" />
       )}
       {!open && activeCount > 0 && (
-        <span className="absolute -end-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-teal-600 px-1 text-[10px] font-semibold tabular-nums text-white">
+        <span className="absolute -end-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold tabular-nums text-primary-foreground">
           {activeCount}
         </span>
       )}

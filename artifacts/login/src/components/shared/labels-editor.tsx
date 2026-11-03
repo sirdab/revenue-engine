@@ -49,7 +49,7 @@ export function LabelChips({
   );
   const colorOf = useMemo(() => buildLabelColorMap(options), [options]);
   if (!labels || labels.length === 0) {
-    return <span className="text-slate-400">—</span>;
+    return <span className="text-subtle">—</span>;
   }
   const shown = labels.slice(0, max);
   const extra = labels.length - shown.length;
@@ -70,7 +70,7 @@ export function LabelChips({
         </span>
       ))}
       {extra > 0 && (
-        <span className="rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-medium text-slate-500">
+        <span className="rounded-full border border-border bg-surface-whisper px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
           +{extra}
         </span>
       )}
@@ -188,7 +188,7 @@ export function LabelsEditor({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded-full border border-dashed border-slate-300 px-2.5 py-0.5 text-xs font-medium text-slate-500 transition-colors hover:border-teal-300 hover:text-teal-700"
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-input px-2.5 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:border-brand-300 hover:text-brand"
           >
             <Plus className="h-3 w-3" />
             {labels.length === 0 && t("labels.add")}
@@ -229,7 +229,7 @@ export function LabelsEditor({
                   <CommandItem
                     value={`__create__${trimmed}`}
                     onSelect={create}
-                    className="text-teal-700"
+                    className="text-brand"
                   >
                     <Plus className="me-2 h-4 w-4" />
                     <span className="truncate">{t("common.createQuoted", { query: trimmed })}</span>

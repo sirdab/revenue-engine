@@ -177,7 +177,7 @@ export function AsyncSelect({
           <CommandList>
             {loading ? (
               <div className="flex items-center justify-center py-6">
-                <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                <Loader2 className="h-4 w-4 animate-spin text-subtle" />
               </div>
             ) : belowMinChars ? (
               <div className="py-6 text-center text-sm text-muted-foreground">
@@ -200,7 +200,7 @@ export function AsyncSelect({
                       setQ("");
                       setOpen(false);
                     }}
-                    className="text-teal-700"
+                    className="text-brand"
                   >
                     {creating ? (
                       <Loader2 className="me-2 h-4 w-4 animate-spin" />

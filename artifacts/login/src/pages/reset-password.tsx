@@ -168,14 +168,14 @@ export default function ResetPasswordPage() {
                       type={showPassword ? "text" : "password"}
                       autoComplete="new-password"
                       autoFocus
-                      className="h-12 bg-card px-4 pe-10 border-slate-200 transition-colors focus-visible:ring-primary/20 focus-visible:border-primary"
+                      className="h-12 bg-card px-4 pe-10 border-border transition-colors focus-visible:ring-primary/20 focus-visible:border-primary"
                       {...field}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
-                      className="absolute end-3 top-1/2 -translate-y-1/2 rounded-md text-slate-400 hover:text-slate-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                      className="absolute end-3 top-1/2 -translate-y-1/2 rounded-md text-subtle hover:text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                       {showPassword ? (
                         <EyeOff className="h-5 w-5" />
@@ -203,7 +203,7 @@ export default function ResetPasswordPage() {
                     placeholder="••••••••"
                     type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
-                    className="h-12 bg-card px-4 border-slate-200 transition-colors focus-visible:ring-primary/20 focus-visible:border-primary"
+                    className="h-12 bg-card px-4 border-border transition-colors focus-visible:ring-primary/20 focus-visible:border-primary"
                     {...field}
                   />
                 </FormControl>

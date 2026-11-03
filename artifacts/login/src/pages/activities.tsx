@@ -85,8 +85,8 @@ function ReschedulePicker({
       className={cn(
         "h-auto min-h-0 w-auto gap-1.5 px-2 py-1 text-xs",
         overdue
-          ? "border-red-300 text-red-600"
-          : "border-slate-200 text-slate-600",
+          ? "border-destructive/30 text-destructive"
+          : "border-border text-muted-foreground",
       )}
     />
   );
@@ -121,27 +121,27 @@ const BUCKET_META: Record<
 > = {
   overdue: {
     label: "activity.status.overdue",
-    dot: "bg-red-500",
-    headerText: "text-red-600",
-    headerBg: "bg-red-50",
+    dot: "bg-destructive",
+    headerText: "text-destructive",
+    headerBg: "bg-destructive-subtle",
   },
   today: {
     label: "activity.status.today",
-    dot: "bg-amber-500",
-    headerText: "text-amber-600",
-    headerBg: "bg-amber-50",
+    dot: "bg-warning",
+    headerText: "text-warning",
+    headerBg: "bg-warning-subtle",
   },
   upcoming: {
     label: "activity.status.upcoming",
-    dot: "bg-sky-500",
-    headerText: "text-sky-600",
-    headerBg: "bg-sky-50",
+    dot: "bg-attention",
+    headerText: "text-attention",
+    headerBg: "bg-attention-subtle",
   },
   done: {
     label: "activity.status.done",
-    dot: "bg-teal-500",
-    headerText: "text-teal-600",
-    headerBg: "bg-teal-50",
+    dot: "bg-brand-500",
+    headerText: "text-brand",
+    headerBg: "bg-brand-subtle",
   },
 };
 
@@ -154,7 +154,7 @@ function ViewSwitcher({
 }) {
   const { t } = useI18n();
   return (
-    <div className="flex items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+    <div className="flex items-center gap-0.5 rounded-lg border border-border bg-surface-whisper p-0.5">
       {(
         [
           { key: "table", label: t("views.table"), icon: TableIcon },
@@ -172,8 +172,8 @@ function ViewSwitcher({
           className={cn(
             "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
             view === key
-              ? "bg-card text-teal-700 shadow-sm"
-              : "text-slate-500 hover:text-slate-700",
+              ? "bg-card text-brand shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           <Icon className="h-4 w-4" />
@@ -356,10 +356,10 @@ export default function ActivitiesPage() {
       ? buckets.overdue + buckets.today + buckets.upcoming + buckets.done
       : total;
     return [
-      { label: t("common.total"), value: overall, dot: "bg-slate-400" },
-      { label: t("activity.status.overdue"), value: buckets?.overdue ?? 0, dot: "bg-red-500" },
-      { label: t("activity.status.today"), value: buckets?.today ?? 0, dot: "bg-amber-500" },
-      { label: t("activity.status.done"), value: buckets?.done ?? 0, dot: "bg-teal-500" },
+      { label: t("common.total"), value: overall, dot: "bg-gray-400" },
+      { label: t("activity.status.overdue"), value: buckets?.overdue ?? 0, dot: "bg-destructive" },
+      { label: t("activity.status.today"), value: buckets?.today ?? 0, dot: "bg-warning" },
+      { label: t("activity.status.done"), value: buckets?.done ?? 0, dot: "bg-brand-500" },
     ];
   }, [buckets, total, t]);
 
@@ -412,13 +412,13 @@ export default function ActivitiesPage() {
             <div
               className={cn(
                 "truncate font-medium",
-                row.original.done ? "text-slate-500" : "text-slate-800",
+                row.original.done ? "text-muted-foreground" : "text-foreground",
               )}
             >
               {row.original.subject}
             </div>
             {row.original.note && (
-              <div className="truncate text-xs text-slate-400">
+              <div className="truncate text-xs text-subtle">
                 {noteToPlainText(row.original.note)}
               </div>
             )}
@@ -440,7 +440,7 @@ export default function ActivitiesPage() {
         header: t("common.type"),
         size: 120,
         cell: ({ row }) => (
-          <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+          <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
             {source.typeLabel(dealToView(row.original), t)}
           </span>
         ),
@@ -455,12 +455,12 @@ export default function ActivitiesPage() {
           const isOverdue = bucketOf(dealToView(a), today) === "overdue";
           if (a.done) {
             return a.dueDate ? (
-              <span className="flex items-center gap-1 text-xs text-slate-500">
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <CalendarDays className="h-3 w-3" />
                 {formatShortDate(parseISO(a.dueDate))}
               </span>
             ) : (
-              <span className="text-slate-400">—</span>
+              <span className="text-subtle">—</span>
             );
           }
           return (
@@ -481,12 +481,12 @@ export default function ActivitiesPage() {
           row.original.dealId ? (
             <Link
               href={`/deal/${row.original.dealId}`}
-              className="truncate text-teal-700 hover:underline"
+              className="truncate text-brand hover:underline"
             >
               {row.original.dealTitle || t("activities.dealFallback", { id: row.original.dealId })}
             </Link>
           ) : (
-            <span className="text-slate-400">—</span>
+            <span className="text-subtle">—</span>
           ),
       },
       {
@@ -499,11 +499,11 @@ export default function ActivitiesPage() {
         cell: ({ row }) => {
           const { dealOrganizationId, dealOrganizationName } = row.original;
           if (dealOrganizationId == null)
-            return <span className="text-slate-400">—</span>;
+            return <span className="text-subtle">—</span>;
           return (
             <Link
               href={`/organization/${dealOrganizationId}`}
-              className="truncate text-teal-700 hover:underline"
+              className="truncate text-brand hover:underline"
               dir="auto"
             >
               {dealOrganizationName || t("activities.orgFallback", { id: dealOrganizationId })}
@@ -517,7 +517,7 @@ export default function ActivitiesPage() {
         header: t("common.person"),
         size: 170,
         cell: ({ row }) => (
-          <span dir="auto" className="truncate text-slate-600">
+          <span dir="auto" className="truncate text-muted-foreground">
             {row.original.personName || "—"}
           </span>
         ),
@@ -545,7 +545,7 @@ export default function ActivitiesPage() {
   if (isLoading)
     return (
       <div className="flex h-full flex-col" aria-busy="true">
-        <div className="flex items-center gap-2 border-b border-slate-200 bg-card px-4 py-3">
+        <div className="flex items-center gap-2 border-b border-border bg-card px-4 py-3">
           <Skeleton className="h-8 w-56" />
           <Skeleton className="h-8 w-28" />
           <Skeleton className="ms-auto h-8 w-24" />
@@ -560,7 +560,7 @@ export default function ActivitiesPage() {
 
   if (isError)
     return (
-      <div className="m-auto mt-10 text-sm text-red-600">
+      <div className="m-auto mt-10 text-sm text-destructive">
         {t("activities.loadFailedRefresh")}
       </div>
     );
@@ -584,10 +584,10 @@ export default function ActivitiesPage() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 pb-1 pt-3">
         <div>
-          <h1 className="font-heading text-xl font-bold tracking-tight text-slate-900">
+          <h1 className="font-heading text-xl font-bold tracking-tight text-foreground">
             {t("common.activities")}
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted-foreground">
             {t("activities.subtitle")}
           </p>
         </div>
@@ -616,13 +616,13 @@ export default function ActivitiesPage() {
         {summary.map((card) => (
           <div
             key={card.label}
-            className="rounded-lg border border-slate-200 bg-card px-4 py-3"
+            className="rounded-lg border border-border bg-card px-4 py-3"
           >
-            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
               <span className={cn("h-2 w-2 rounded-full", card.dot)} />
               {card.label}
             </div>
-            <div className="mt-1 text-2xl font-bold tabular-nums text-slate-900">
+            <div className="mt-1 text-2xl font-bold tabular-nums text-foreground">
               {card.value.toLocaleString()}
             </div>
           </div>
@@ -630,9 +630,9 @@ export default function ActivitiesPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-4 py-2.5">
+      <div className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-2.5">
         <div className="relative w-full sm:w-auto">
-          <Search className="pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
           <Input
             value={query}
             onChange={(e) => {
@@ -697,7 +697,7 @@ export default function ActivitiesPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="text-slate-500"
+            className="text-muted-foreground"
             onClick={() => {
               setFilters({
                 query: "",
@@ -820,7 +820,7 @@ function BoardView({ groups, source, controller, today, onReschedule }: ViewProp
           return (
             <div
               key={bucket}
-              className="flex w-[85vw] max-w-80 shrink-0 snap-start flex-col rounded-xl border border-slate-200 bg-slate-50/60 sm:w-80"
+              className="flex w-[85vw] max-w-80 shrink-0 snap-start flex-col rounded-xl border border-border bg-surface-whisper/60 sm:w-80"
             >
               <div
                 className={cn(
@@ -837,13 +837,13 @@ function BoardView({ groups, source, controller, today, onReschedule }: ViewProp
                   <span className={cn("h-2 w-2 rounded-full", meta.dot)} />
                   {t(meta.label)}
                 </span>
-                <span className="rounded-full bg-card/70 px-2 py-0.5 text-xs font-medium text-slate-600">
+                <span className="rounded-full bg-card/70 px-2 py-0.5 text-xs font-medium text-muted-foreground">
                   {items.length.toLocaleString()}
                 </span>
               </div>
               <div className="min-h-0 flex-1 space-y-2 overflow-auto p-2">
                 {items.length === 0 ? (
-                  <div className="px-2 py-6 text-center text-xs text-slate-400">
+                  <div className="px-2 py-6 text-center text-xs text-subtle">
                     {t("activities.nothingHere")}
                   </div>
                 ) : (
@@ -889,7 +889,7 @@ function ActivityCard({
   return (
     <div
       className={cn(
-        "rounded-lg border border-slate-200 bg-card p-3 shadow-sm",
+        "rounded-lg border border-border bg-card p-3 shadow-sm",
         activity.done && "opacity-70",
       )}
     >
@@ -901,14 +901,14 @@ function ActivityCard({
               dir="auto"
               className={cn(
                 "min-w-0 text-sm font-medium",
-                activity.done ? "text-slate-500" : "text-slate-800",
+                activity.done ? "text-muted-foreground" : "text-foreground",
               )}
             >
               {activity.subject}
             </div>
             <ActivityActions view={view} source={source} controller={controller} />
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             <span className="font-medium">{source.typeLabel(view, t)}</span>
             {activity.dueTime && <span>{activity.dueTime.slice(0, 5)}</span>}
             {/* The column already says open work's status; a finished card
@@ -918,20 +918,20 @@ function ActivityCard({
           {activity.dealId && (
             <Link
               href={`/deal/${activity.dealId}`}
-              className="mt-1 block truncate text-xs text-teal-700 hover:underline"
+              className="mt-1 block truncate text-xs text-brand hover:underline"
             >
               {activity.dealTitle || t("activities.dealFallback", { id: activity.dealId })}
             </Link>
           )}
           {activity.personName && (
-            <div dir="auto" className="truncate text-xs text-slate-500">
+            <div dir="auto" className="truncate text-xs text-muted-foreground">
               {activity.personName}
             </div>
           )}
           {!activity.done && (
             <div className="mt-2 flex items-center gap-1.5">
               {overdue && (
-                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-500" />
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" />
               )}
               <ReschedulePicker
                 value={activity.dueDate}
@@ -957,7 +957,7 @@ function AgendaView({ groups, source, controller, today, onReschedule }: ViewPro
 
   if (total === 0) {
     return (
-      <div className="flex h-40 items-center justify-center text-sm text-slate-500">
+      <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
         {t("activities.empty")}
       </div>
     );
@@ -976,7 +976,7 @@ function AgendaView({ groups, source, controller, today, onReschedule }: ViewPro
                 <h2
                   className={cn(
                     "text-sm font-semibold uppercase tracking-wider",
-                    key === "overdue" ? "text-red-600" : "text-slate-500",
+                    key === "overdue" ? "text-destructive" : "text-muted-foreground",
                   )}
                 >
                   {t(meta.label)}
@@ -985,8 +985,8 @@ function AgendaView({ groups, source, controller, today, onReschedule }: ViewPro
                   className={cn(
                     "rounded-full px-2 py-0.5 text-xs font-medium",
                     key === "overdue"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-slate-100 text-slate-600",
+                      ? "bg-destructive-subtle text-destructive"
+                      : "bg-muted text-muted-foreground",
                   )}
                 >
                   {items.length.toLocaleString()}

@@ -95,8 +95,8 @@ export function ReactionBar({
           className={cn(
             "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs transition-colors",
             r.reactedByMe
-              ? "border-teal-300 bg-teal-50 text-teal-700"
-              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
+              ? "border-brand-300 bg-brand-subtle text-brand"
+              : "border-border bg-background text-muted-foreground hover:bg-gray-alpha-50",
           )}
         >
           <span className="leading-none">{r.emoji}</span>
@@ -113,7 +113,7 @@ export function ReactionBar({
         <button
           type="button"
           title={t("deals.reactions.add")}
-          className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
+          className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background text-subtle transition-colors hover:bg-gray-alpha-50 hover:text-muted-foreground"
         >
           <SmilePlus className="h-3.5 w-3.5" />
         </button>

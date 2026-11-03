@@ -37,17 +37,17 @@ function TotalsRow({ total }: { total: DealCurrencyTotal }) {
   const { t } = useI18n();
   return (
     <div className="flex items-center justify-between gap-3 tabular-nums">
-      <span className="font-medium text-slate-800">
+      <span className="font-medium text-foreground">
         <Money value={total.value} currency={total.currency} />
       </span>
       <span
-        className="flex items-center gap-1 text-slate-600"
+        className="flex items-center gap-1 text-muted-foreground"
         title={t("deals.toolbar.weightedTitle")}
       >
-        <Scale className="h-3.5 w-3.5 text-slate-400" />
+        <Scale className="h-3.5 w-3.5 text-subtle" />
         <Money value={total.weightedValue} currency={total.currency} />
       </span>
-      <span className="text-slate-400">
+      <span className="text-subtle">
         {total.count.toLocaleString()} {total.count === 1 ? "deal" : "deals"}
       </span>
     </div>
@@ -71,11 +71,11 @@ function DealsCount({ state }: { state: DealsUrlState }) {
   const totals = data?.totals ?? [];
 
   return (
-    <div className="flex items-center gap-1.5 text-sm text-slate-500">
+    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
       {isFetching && data == null ? (
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
       ) : (
-        <span className="font-semibold text-slate-700">{count ?? 0}</span>
+        <span className="font-semibold text-foreground">{count ?? 0}</span>
       )}
       <span>{count === 1 ? "deal" : "deals"}</span>
       <Popover>
@@ -83,18 +83,18 @@ function DealsCount({ state }: { state: DealsUrlState }) {
           <button
             type="button"
             aria-label={t("deals.toolbar.totalsAria")}
-            className="rounded-full text-slate-400 transition-colors hover:text-slate-600"
+            className="rounded-full text-subtle transition-colors hover:text-muted-foreground"
           >
             <Info className="h-4 w-4" />
           </button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-[340px] p-3 text-sm">
           {totals.length === 0 ? (
-            <p className="text-slate-400">{t("deals.toolbar.noneInView")}</p>
+            <p className="text-subtle">{t("deals.toolbar.noneInView")}</p>
           ) : (
             <div className="space-y-2">
               <div>
-                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-subtle">
                   {t("common.total")}
                 </div>
                 {totals.length === 1 ? (
@@ -102,13 +102,13 @@ function DealsCount({ state }: { state: DealsUrlState }) {
                 ) : (
                   // Mixed currencies never sum into one number — the honest
                   // total is the deal count; the money lives per currency.
-                  <div className="tabular-nums text-slate-600">
+                  <div className="tabular-nums text-muted-foreground">
                     {t("deals.toolbar.acrossCurrencies", { count: formatNumber(count ?? 0), currencies: totals.length })}
                   </div>
                 )}
               </div>
-              <div className="border-t border-slate-100 pt-2">
-                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <div className="border-t border-border pt-2">
+                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-subtle">
                   {t("deals.toolbar.byCurrency")}
                 </div>
                 <div className="space-y-1">
@@ -117,7 +117,7 @@ function DealsCount({ state }: { state: DealsUrlState }) {
                   ))}
                 </div>
               </div>
-              <p className="border-t border-slate-100 pt-2 text-xs text-slate-400">
+              <p className="border-t border-border pt-2 text-xs text-subtle">
                 <Scale className="me-1 inline h-3 w-3" />
                 {t("deals.toolbar.weightedNote")}
               </p>
@@ -187,7 +187,7 @@ export function DealsToolbar({
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-slate-500"
+            className="h-9 w-9 text-muted-foreground"
             onClick={() => update({ ownerId: undefined })}
             aria-label={t("deals.toolbar.clearOwner")}
           >
@@ -216,8 +216,8 @@ export function DealsToolbar({
         }
         className={
           state.archived
-            ? "h-8 gap-1.5 bg-amber-600 px-2.5 text-xs text-white hover:bg-amber-700"
-            : "h-8 gap-1.5 px-2.5 text-xs text-slate-500"
+            ? "h-8 gap-1.5 bg-warning px-2.5 text-xs text-white hover:bg-warning"
+            : "h-8 gap-1.5 px-2.5 text-xs text-muted-foreground"
         }
       >
         <ArchiveIcon className="h-3.5 w-3.5" />

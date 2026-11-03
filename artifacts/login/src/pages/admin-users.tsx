@@ -173,7 +173,7 @@ function AddUserDialog() {
       }}
     >
       <Button
-        className="bg-teal-600 hover:bg-teal-700 text-white"
+        className="bg-primary hover:bg-primary-hover text-primary-foreground"
         onClick={() => setOpen(true)}
       >
         <Plus className="me-2 h-4 w-4" /> Add User
@@ -251,7 +251,7 @@ function AddUserDialog() {
               control={form.control}
               name="isAdmin"
               render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5">
+                <FormItem className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
                   <div>
                     <FormLabel className="text-sm">Administrator</FormLabel>
                     <FormDescription>
@@ -271,7 +271,7 @@ function AddUserDialog() {
               control={form.control}
               name="sendInvite"
               render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5">
+                <FormItem className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
                   <div>
                     <FormLabel className="text-sm">
                       Email login details
@@ -293,7 +293,7 @@ function AddUserDialog() {
               <Button
                 type="submit"
                 disabled={createUser.isPending}
-                className="bg-teal-600 hover:bg-teal-700 text-white"
+                className="bg-primary hover:bg-primary-hover text-primary-foreground"
               >
                 {createUser.isPending && (
                   <Loader2 className="me-2 h-4 w-4 animate-spin" />
@@ -371,7 +371,7 @@ function EditUserDialog({ user, isSelf }: { user: User; isSelf: boolean }) {
         variant="outline"
         size="sm"
         onClick={() => setOpen(true)}
-        className="h-8 border-slate-200 text-slate-600 hover:bg-slate-50"
+        className="h-8 border-border text-muted-foreground hover:bg-gray-alpha-50"
       >
         <Pencil className="me-1.5 h-3.5 w-3.5" />
         Edit
@@ -441,7 +441,7 @@ function EditUserDialog({ user, isSelf }: { user: User; isSelf: boolean }) {
               <Button
                 type="submit"
                 disabled={updateUser.isPending}
-                className="bg-teal-600 hover:bg-teal-700 text-white"
+                className="bg-primary hover:bg-primary-hover text-primary-foreground"
               >
                 {updateUser.isPending && (
                   <Loader2 className="me-2 h-4 w-4 animate-spin" />
@@ -511,7 +511,7 @@ function StatusActions({ user, isSelf }: { user: User; isSelf: boolean }) {
               variant="outline"
               size="sm"
               disabled={isSelf || updateUser.isPending}
-              className="h-8 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 disabled:opacity-40"
+              className="h-8 border-destructive/30 text-destructive hover:bg-destructive-subtle hover:text-destructive disabled:opacity-40"
               title={
                 isSelf ? "You cannot deactivate your own account" : undefined
               }
@@ -535,7 +535,7 @@ function StatusActions({ user, isSelf }: { user: User; isSelf: boolean }) {
                   e.preventDefault();
                   setActive(false);
                 }}
-                className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                className="bg-destructive hover:bg-destructive focus:ring-destructive"
               >
                 {updateUser.isPending && (
                   <Loader2 className="me-2 h-4 w-4 animate-spin" />
@@ -564,7 +564,7 @@ function StatusActions({ user, isSelf }: { user: User; isSelf: boolean }) {
       size="sm"
       disabled={updateUser.isPending}
       onClick={() => setActive(true)}
-      className="h-8 border-teal-200 text-teal-700 hover:bg-teal-50"
+      className="h-8 border-brand-200 text-brand hover:bg-brand-subtle"
     >
       {updateUser.isPending ? (
         <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
@@ -602,7 +602,7 @@ function ResendCredentialsButton({ user }: { user: User }) {
           variant="outline"
           size="sm"
           disabled={resend.isPending}
-          className="h-8 border-slate-200 text-slate-600 hover:bg-slate-50"
+          className="h-8 border-border text-muted-foreground hover:bg-gray-alpha-50"
         >
           {resend.isPending ? (
             <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
@@ -630,7 +630,7 @@ function ResendCredentialsButton({ user }: { user: User }) {
               e.preventDefault();
               onConfirm();
             }}
-            className="bg-teal-600 hover:bg-teal-700 focus:ring-teal-600"
+            className="bg-primary text-primary-foreground hover:bg-primary-hover focus:ring-ring"
           >
             {resend.isPending && (
               <Loader2 className="me-2 h-4 w-4 animate-spin" />
@@ -703,30 +703,30 @@ export default function AdminUsersPage() {
           const isSelf = currentUser?.id === u.id;
           return (
             <div className="flex min-w-0 items-center gap-2.5">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-semibold text-teal-700">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-subtle text-xs font-semibold text-brand">
                 {initials(u.name)}
               </span>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span
                     dir="auto"
-                    className="truncate font-medium text-slate-800"
+                    className="truncate font-medium text-foreground"
                   >
                     {u.name}
                   </span>
                   {u.isAdmin && (
                     <Shield
-                      className="h-3.5 w-3.5 shrink-0 text-teal-600"
+                      className="h-3.5 w-3.5 shrink-0 text-brand"
                       aria-label="Admin"
                     />
                   )}
                   {isSelf && (
-                    <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                    <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                       You
                     </span>
                   )}
                 </div>
-                <div className="truncate text-xs text-slate-400">#{u.id}</div>
+                <div className="truncate text-xs text-subtle">#{u.id}</div>
               </div>
             </div>
           );
@@ -740,7 +740,7 @@ export default function AdminUsersPage() {
         cell: ({ row }) => (
           <a
             href={`mailto:${row.original.email}`}
-            className="truncate text-teal-700 hover:underline"
+            className="truncate text-brand hover:underline"
           >
             {row.original.email}
           </a>
@@ -752,7 +752,7 @@ export default function AdminUsersPage() {
         header: "Phone",
         size: 150,
         cell: ({ row }) => (
-          <span dir="auto" className="truncate text-slate-600">
+          <span dir="auto" className="truncate text-muted-foreground">
             {dash(row.original.phone)}
           </span>
         ),
@@ -767,8 +767,8 @@ export default function AdminUsersPage() {
             className={cn(
               "rounded px-2 py-0.5 text-xs font-medium",
               row.original.isAdmin
-                ? "bg-teal-100 text-teal-700"
-                : "bg-slate-100 text-slate-600",
+                ? "bg-brand-subtle text-brand"
+                : "bg-muted text-muted-foreground",
             )}
           >
             {row.original.isAdmin ? "Admin" : "User"}
@@ -782,11 +782,11 @@ export default function AdminUsersPage() {
         size: 150,
         cell: ({ row }) =>
           row.original.teamName ? (
-            <span dir="auto" className="truncate text-slate-600">
+            <span dir="auto" className="truncate text-muted-foreground">
               {row.original.teamName}
             </span>
           ) : (
-            <span className="text-slate-300">—</span>
+            <span className="text-subtle">—</span>
           ),
       },
       {
@@ -795,7 +795,7 @@ export default function AdminUsersPage() {
         header: "Joined",
         size: 130,
         cell: ({ row }) => (
-          <span className="text-slate-500">
+          <span className="text-muted-foreground">
             {format(new Date(row.original.created), "MMM d, yyyy")}
           </span>
         ),
@@ -806,7 +806,7 @@ export default function AdminUsersPage() {
         header: "Last login",
         size: 140,
         cell: ({ row }) => (
-          <span className="text-slate-500">
+          <span className="text-muted-foreground">
             {row.original.lastLogin
               ? format(new Date(row.original.lastLogin), "MMM d, yyyy")
               : "Never"}
@@ -823,8 +823,8 @@ export default function AdminUsersPage() {
             className={cn(
               "rounded-full px-2 py-0.5 text-xs font-medium",
               row.original.activeFlag
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700",
+                ? "bg-success-subtle text-success"
+                : "bg-destructive-subtle text-destructive",
             )}
           >
             {row.original.activeFlag ? "Active" : "Inactive"}
@@ -859,10 +859,10 @@ export default function AdminUsersPage() {
   );
 
   const cards = [
-    { label: "Total", value: summary.total, dot: "bg-slate-400" },
-    { label: "Active", value: summary.active, dot: "bg-green-500" },
-    { label: "Admins", value: summary.admins, dot: "bg-teal-500" },
-    { label: "Inactive", value: summary.inactive, dot: "bg-red-500" },
+    { label: "Total", value: summary.total, dot: "bg-gray-400" },
+    { label: "Active", value: summary.active, dot: "bg-success" },
+    { label: "Admins", value: summary.admins, dot: "bg-brand-500" },
+    { label: "Inactive", value: summary.inactive, dot: "bg-destructive" },
   ];
 
   const hasFilters =
@@ -872,10 +872,10 @@ export default function AdminUsersPage() {
     <div className="flex h-full flex-col overflow-hidden bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 pb-1 pt-3">
         <div>
-          <h1 className="font-heading text-xl font-bold tracking-tight text-slate-900">
+          <h1 className="font-heading text-xl font-bold tracking-tight text-foreground">
             User Management
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted-foreground">
             Create teammates and control who can access the CRM.
           </p>
         </div>
@@ -886,22 +886,22 @@ export default function AdminUsersPage() {
         {cards.map((card) => (
           <div
             key={card.label}
-            className="rounded-lg border border-slate-200 bg-card px-4 py-3"
+            className="rounded-lg border border-border bg-card px-4 py-3"
           >
-            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
               <span className={cn("h-2 w-2 rounded-full", card.dot)} />
               {card.label}
             </div>
-            <div className="mt-1 text-2xl font-bold tabular-nums text-slate-900">
+            <div className="mt-1 text-2xl font-bold tabular-nums text-foreground">
               {card.value.toLocaleString()}
             </div>
           </div>
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-4 py-2.5">
+      <div className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-2.5">
         <div className="relative w-full sm:w-auto">
-          <Search className="pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -936,7 +936,7 @@ export default function AdminUsersPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="text-slate-500"
+            className="text-muted-foreground"
             onClick={() => {
               setQuery("");
               setStatusFilter(ALL);

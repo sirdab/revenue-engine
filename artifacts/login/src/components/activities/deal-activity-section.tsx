@@ -39,7 +39,7 @@ export function DealActivitySection({
       title={t("common.activities")}
       action={
         views.length > 0 ? (
-          <span className="text-[11px] font-medium text-slate-400">{views.length}</span>
+          <span className="text-[11px] font-medium text-subtle">{views.length}</span>
         ) : undefined
       }
     >

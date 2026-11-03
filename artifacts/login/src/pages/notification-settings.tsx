@@ -18,10 +18,10 @@ export default function NotificationSettingsPage() {
     <SettingsShell active="notifications">
       <div className="mx-auto w-full max-w-3xl px-4 py-4">
       <div className="px-5 pt-5">
-        <h1 className="font-heading text-xl font-bold text-slate-900">
+        <h1 className="font-heading text-xl font-bold text-foreground">
           My notifications
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Choose what you want to be told about. These settings are yours alone.
         </p>
       </div>

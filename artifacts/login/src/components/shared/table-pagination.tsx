@@ -112,7 +112,7 @@ export function TablePagination({
     // Wraps rather than squeezes: at 360px the row used to force the "1-2 of
     // 2" count into one character per line and still spill 12px past the
     // screen. The controls drop under the count instead.
-    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-slate-200 px-4 py-2.5 text-sm text-slate-600">
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border px-4 py-2.5 text-sm text-muted-foreground">
       <span className="whitespace-nowrap tabular-nums">
         {t("pagination.range", {
           start: formatNumber(start),
@@ -122,7 +122,7 @@ export function TablePagination({
       </span>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">{t("pagination.rows")}</span>
+          <span className="text-xs text-muted-foreground">{t("pagination.rows")}</span>
           <Select
             value={String(pageSize)}
             onValueChange={(v) => onPageSizeChange(Number(v))}
@@ -149,7 +149,7 @@ export function TablePagination({
             <ChevronLeft className="me-1 h-4 w-4" />
             {t("pagination.prev")}
           </Button>
-          <span className="px-1 text-xs text-slate-500">
+          <span className="px-1 text-xs text-muted-foreground">
             {t("common.pageOf", { page, total: pageCount })}
           </span>
           <Button

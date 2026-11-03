@@ -90,9 +90,9 @@ export function UploadFileDialog({
               type="file"
               accept={ACCEPTED_FILE_ACCEPT_ATTR}
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="block w-full text-sm text-slate-600 file:me-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
+              className="block w-full text-sm text-muted-foreground file:me-3 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-foreground hover:file:bg-gray-alpha-150"
             />
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-subtle">
               {t("files.acceptedTypes", { types: ACCEPTED_EXTENSIONS_LABEL })}
             </p>
           </div>
@@ -124,7 +124,7 @@ export function UploadFileDialog({
           <Button
             onClick={handleSubmit}
             disabled={!file || upload.isPending}
-            className="bg-teal-600 hover:bg-teal-700"
+            className="bg-primary text-primary-foreground hover:bg-primary-hover"
           >
             {upload.isPending ? (
               <Loader2 className="me-2 h-4 w-4 animate-spin" />

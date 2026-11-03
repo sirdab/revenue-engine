@@ -155,8 +155,8 @@ export function MultiCombobox({
               className={cn(
                 "inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs",
                 orphans.includes(v)
-                  ? "border-amber-300 bg-amber-50 text-amber-700"
-                  : "border-teal-300 bg-teal-50 text-teal-700",
+                  ? "border-warning/30 bg-warning-subtle text-warning"
+                  : "border-brand-300 bg-brand-subtle text-brand",
               )}
               title={orphans.includes(v) ? t("common.notInOptionList") : undefined}
             >

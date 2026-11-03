@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { DirectionProvider } from "@sirdab/one/provider";
 import { AuthProvider } from "@/hooks/use-auth";
 import { I18nProvider, useI18n } from "@/lib/i18n/i18n";
 import { AuthGuard } from "@/components/auth-guard";
@@ -80,7 +81,7 @@ function RouteFallback() {
   if (!show) return null;
   return (
     <div className="flex h-full items-center justify-center">
-      <Loader2 className="h-6 w-6 animate-spin text-teal-600" />
+      <Loader2 className="h-6 w-6 animate-spin text-brand" />
     </div>
   );
 }
@@ -177,8 +178,14 @@ function Router() {
  * the query cache.
  */
 function LocaleKeyedRouter() {
-  const { locale } = useI18n();
-  return <Router key={locale} />;
+  const { locale, dir } = useI18n();
+  // One's components read direction from Radix context (menus, popovers,
+  // sheets); the document's own dir is set by the i18n provider.
+  return (
+    <DirectionProvider dir={dir}>
+      <Router key={locale} />
+    </DirectionProvider>
+  );
 }
 
 function App() {

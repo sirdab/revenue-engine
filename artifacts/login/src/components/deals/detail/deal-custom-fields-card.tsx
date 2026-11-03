@@ -67,7 +67,7 @@ function SetEditor({
   const { t } = useI18n();
   const set = new Set(values);
   if (options.length === 0)
-    return <span className="text-sm text-slate-400">{values.join(", ") || "—"}</span>;
+    return <span className="text-sm text-subtle">{values.join(", ") || "—"}</span>;
   if (options.length > CHIP_ROW_MAX_OPTIONS)
     return (
       <MultiCombobox
@@ -93,8 +93,8 @@ function SetEditor({
             className={cn(
               "rounded border px-2 py-0.5 text-xs transition-colors",
               on
-                ? "border-teal-300 bg-teal-50 text-teal-700"
-                : "border-slate-200 text-slate-500 hover:border-slate-300",
+                ? "border-brand-300 bg-brand-subtle text-brand"
+                : "border-border text-muted-foreground hover:border-input",
             )}
           >
             {o.label}
@@ -113,7 +113,7 @@ export function FieldControl({
   onCommit: (value: unknown) => void;
 }) {
   if (!field.editable) {
-    return <span className="text-sm text-slate-400">{displayValue(field)}</span>;
+    return <span className="text-sm text-subtle">{displayValue(field)}</span>;
   }
   const v = field.value;
   switch (field.fieldType) {
@@ -149,7 +149,7 @@ export function FieldControl({
             value={asStr(r.from)}
             onCommit={(s) => onCommit({ from: s, to: r.to ?? null })}
           />
-          <span className="text-slate-300">→</span>
+          <span className="text-subtle">→</span>
           <EditableDate
             value={asStr(r.to)}
             onCommit={(s) => onCommit({ from: r.from ?? null, to: s })}
@@ -304,7 +304,7 @@ export function DealCustomFieldsCard({
           <button
             type="button"
             onClick={() => setShowEmpty((v) => !v)}
-            className="text-xs font-medium text-slate-400 hover:text-slate-600"
+            className="text-xs font-medium text-subtle hover:text-muted-foreground"
           >
             {showEmpty ? t("deals.customFields.hideEmpty") : t("deals.customFields.showEmpty", { count: emptyCount })}
           </button>
@@ -313,12 +313,12 @@ export function DealCustomFieldsCard({
     >
       <div className="space-y-4">
         {visible.length === 0 && emptyCount > 0 && (
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-subtle">
             {t("deals.customFields.noneFilled")}{" "}
             <button
               type="button"
               onClick={() => setShowEmpty(true)}
-              className="font-medium text-teal-600 hover:text-teal-700"
+              className="font-medium text-brand hover:text-brand"
             >
               {t("deals.customFields.showAllFields", { count: emptyCount })}
             </button>{" "}
@@ -328,7 +328,7 @@ export function DealCustomFieldsCard({
         {groups.map((g) => (
           <div key={g.group ?? "__ungrouped__"}>
             {g.group && (
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-subtle">
                 {g.group}
               </p>
             )}
@@ -345,25 +345,25 @@ export function DealCustomFieldsCard({
         {/* Imported values whose field an admin hasn't activated: still shown
             (nothing with data is hidden), but read-only until activated. */}
         {inactiveFilled.length > 0 && (
-          <div className="border-t border-slate-100 pt-3">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          <div className="border-t border-border pt-3">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-subtle">
               {t("deals.customFields.moreImported")}
             </p>
             <div className="grid grid-cols-2 gap-x-4 gap-y-4">
               {inactiveGroups.flatMap((g) => g.fields).map((f) => (
                 <DealField key={f.key} label={f.label}>
-                  <span className="text-sm text-slate-500">
+                  <span className="text-sm text-muted-foreground">
                     {displayValue(f)}
                   </span>
                 </DealField>
               ))}
             </div>
-            <p className="mt-2 text-[11px] text-slate-400">
+            <p className="mt-2 text-[11px] text-subtle">
               {tNode("deals.customFields.readOnlyNote", {
                 link: (
                   <Link
                     href="/admin/settings/custom-fields"
-                    className="text-teal-600 hover:text-teal-700"
+                    className="text-brand hover:text-brand"
                   >
                     {t("deals.customFields.settingsLink")}
                   </Link>

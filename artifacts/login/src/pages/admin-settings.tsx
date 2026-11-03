@@ -19,8 +19,8 @@ function Stub({ label }: { label: string }) {
   return (
     <div className="flex h-full items-center justify-center">
       <div className="text-center">
-        <p className="text-sm font-medium text-slate-600">{label}</p>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="mt-1 text-xs text-subtle">
           This settings section isn&apos;t available yet.
         </p>
       </div>

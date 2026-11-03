@@ -31,13 +31,13 @@ export function WidgetCard({
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 py-3">
-        <CardTitle className="text-sm font-semibold text-slate-700">
+        <CardTitle className="text-sm font-semibold text-foreground">
           {title}
         </CardTitle>
         {action && (
           <Link
             href={action.href}
-            className="text-xs font-medium text-teal-600 hover:text-teal-700"
+            className="text-xs font-medium text-brand hover:text-brand"
           >
             {action.label}
           </Link>
@@ -51,7 +51,7 @@ export function WidgetCard({
             <Skeleton className="h-5 w-3/5" />
           </div>
         ) : isError ? (
-          <div className="flex items-center justify-between gap-2 rounded-md border border-dashed border-slate-200 px-3 py-4 text-sm text-slate-500">
+          <div className="flex items-center justify-between gap-2 rounded-md border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
             <span>{t("home.widget.loadFailed")}</span>
             {onRetry && (
               <Button variant="outline" size="sm" onClick={onRetry}>
@@ -61,7 +61,7 @@ export function WidgetCard({
             )}
           </div>
         ) : isEmpty ? (
-          <p className="rounded-md border border-dashed border-slate-200 px-3 py-6 text-center text-sm text-slate-500">
+          <p className="rounded-md border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
             {emptyText ?? t("common.nothingYet")}
           </p>
         ) : (

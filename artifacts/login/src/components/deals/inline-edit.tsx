@@ -77,7 +77,7 @@ export function EditableText({
         }
       }}
       className={cn(
-        "w-full truncate rounded bg-transparent px-1 py-0.5 font-medium text-slate-800 outline-none focus:bg-card focus:ring-1 focus:ring-teal-500",
+        "w-full truncate rounded bg-transparent px-1 py-0.5 font-medium text-foreground outline-none focus:bg-card focus:ring-1 focus:ring-ring",
         className,
       )}
     />
@@ -112,7 +112,7 @@ export function EditableMoney({
           setEditing(true);
         }}
         className={cn(
-          "rounded px-1 py-0.5 font-medium tabular-nums text-slate-800 hover:bg-slate-100",
+          "rounded px-1 py-0.5 font-medium tabular-nums text-foreground hover:bg-gray-alpha-100",
           className,
         )}
       >
@@ -147,7 +147,7 @@ export function EditableMoney({
         }
       }}
       className={cn(
-        "w-full rounded bg-card px-1 py-0.5 tabular-nums outline-none ring-1 ring-teal-500",
+        "w-full rounded bg-card px-1 py-0.5 tabular-nums outline-none ring-1 ring-ring",
         className,
       )}
     />
@@ -182,7 +182,7 @@ export function EditableDate({
           if (next !== norm(value)) onCommit(next || null);
         }}
         className={cn(
-          "h-auto min-h-0 gap-1.5 border-transparent bg-transparent px-1 py-0.5 text-sm text-slate-800 shadow-none hover:bg-slate-100 focus-visible:ring-1 focus-visible:ring-teal-500",
+          "h-auto min-h-0 gap-1.5 border-transparent bg-transparent px-1 py-0.5 text-sm text-foreground shadow-none hover:bg-gray-alpha-100 focus-visible:ring-1 focus-visible:ring-ring",
           className,
         )}
       />
@@ -216,7 +216,7 @@ export function EditableStage({
           if (next !== deal.stageId) onCommit(next);
         }}
       >
-        <SelectTrigger className="h-7 border-transparent bg-transparent px-1 text-sm shadow-none hover:bg-slate-100 focus:ring-1 focus:ring-teal-500">
+        <SelectTrigger className="h-7 border-transparent bg-transparent px-1 text-sm shadow-none hover:bg-gray-alpha-100 focus:ring-1 focus:ring-ring">
           <SelectValue>{deal.stageName ?? "—"}</SelectValue>
         </SelectTrigger>
         <SelectContent>
@@ -240,7 +240,7 @@ export function EditableStage({
 // below); clicking anywhere else switches to the live textarea, matching the
 // other editors' click-to-edit behavior.
 const EDITABLE_TEXTAREA_CLASSNAME =
-  "w-full resize-none rounded-md border border-transparent bg-transparent px-2 py-1.5 text-sm text-slate-800 outline-none hover:border-slate-200 focus:border-teal-500 focus:bg-card focus:ring-1 focus:ring-teal-500";
+  "w-full resize-none rounded-md border border-transparent bg-transparent px-2 py-1.5 text-sm text-foreground outline-none hover:border-border focus:border-brand-500 focus:bg-card focus:ring-1 focus:ring-ring";
 
 export function EditableTextarea({
   value,
@@ -276,7 +276,7 @@ export function EditableTextarea({
         className={cn(
           EDITABLE_TEXTAREA_CLASSNAME,
           "cursor-text whitespace-pre-wrap break-words",
-          !draft && "text-slate-400",
+          !draft && "text-subtle",
         )}
       >
         {draft ? linkifyText(draft) : placeholder}
@@ -372,10 +372,10 @@ export function EditableNumber({
             e.currentTarget.blur();
           }
         }}
-        className="w-full rounded bg-transparent px-1 py-0.5 font-medium tabular-nums text-slate-800 outline-none hover:bg-slate-100 focus:bg-card focus:ring-1 focus:ring-teal-500"
+        className="w-full rounded bg-transparent px-1 py-0.5 font-medium tabular-nums text-foreground outline-none hover:bg-gray-alpha-100 focus:bg-card focus:ring-1 focus:ring-ring"
       />
       {suffix && draft !== "" && (
-        <span className="shrink-0 text-xs text-slate-400">{suffix}</span>
+        <span className="shrink-0 text-xs text-subtle">{suffix}</span>
       )}
     </div>
   );
@@ -418,7 +418,7 @@ export function EditableSelect({
       onValueChange={(v) => onCommit(v === NONE ? null : v)}
       onOpenChange={onOpenChange}
     >
-      <SelectTrigger className="h-8 border-transparent bg-transparent px-1 text-sm shadow-none hover:bg-slate-100 focus:ring-1 focus:ring-teal-500">
+      <SelectTrigger className="h-8 border-transparent bg-transparent px-1 text-sm shadow-none hover:bg-gray-alpha-100 focus:ring-1 focus:ring-ring">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

@@ -136,7 +136,7 @@ function MarkDoneBody({
         <Button
           onClick={submit}
           disabled={saving}
-          className="bg-teal-600 text-white hover:bg-teal-700"
+          className="bg-primary text-primary-foreground hover:bg-primary-hover"
         >
           {saving ? t("common.saving") : t("activity.row.markDone")}
         </Button>
@@ -193,7 +193,7 @@ function FollowUpBody({
       </DialogHeader>
       <div className="space-y-4 py-1">
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-500">{t("common.type")}</label>
+          <label className="text-xs font-medium text-muted-foreground">{t("common.type")}</label>
           <TypeField
             options={DEAL_PICKER_TYPES.flatMap((v) => DEAL_TYPE_OPTIONS.filter((o) => o.value === v))}
             value={type}
@@ -201,7 +201,7 @@ function FollowUpBody({
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-slate-500">{t("common.subject")}</label>
+          <label className="text-xs font-medium text-muted-foreground">{t("common.subject")}</label>
           <Input
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
@@ -209,7 +209,7 @@ function FollowUpBody({
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-slate-500">{t("common.dueDate")}</label>
+          <label className="text-xs font-medium text-muted-foreground">{t("common.dueDate")}</label>
           <DueDateChips value={dueDate} onChange={setDueDate} />
           {/* disablePortal: the calendar lives inside this modal Dialog, so it
               must render in-place to stay within the dialog's scroll-allowlist. */}
@@ -228,7 +228,7 @@ function FollowUpBody({
         <Button
           onClick={submit}
           disabled={!canSubmit}
-          className="bg-teal-600 text-white hover:bg-teal-700"
+          className="bg-primary text-primary-foreground hover:bg-primary-hover"
         >
           {saving ? t("activity.followUp.scheduling") : t("activity.followUp.schedule")}
         </Button>

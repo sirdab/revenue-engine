@@ -63,7 +63,7 @@ export function EmojiPicker({
             title={t("common.emoji")}
             // preventDefault keeps the editor selection alive through the click.
             onMouseDown={(e) => e.preventDefault()}
-            className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-muted-foreground transition-colors hover:bg-gray-alpha-100 hover:text-foreground"
           >
             <Smile className="h-3.5 w-3.5" />
           </button>
@@ -88,7 +88,7 @@ export function EmojiPicker({
               }}
               className={cn(
                 "flex h-8 w-8 items-center justify-center rounded text-lg",
-                "hover:bg-slate-100",
+                "hover:bg-gray-alpha-100",
               )}
             >
               {emoji}

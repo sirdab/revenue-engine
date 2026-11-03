@@ -73,9 +73,9 @@ const hasOptions = (t: string) => t === "enum" || t === "set";
 
 function SourceBadge({ storage }: { storage: string }) {
   const map: Record<string, string> = {
-    custom: "border-teal-200 bg-teal-50 text-teal-700",
-    data: "border-violet-200 bg-violet-50 text-violet-700",
-    column: "border-slate-200 bg-slate-50 text-slate-600",
+    custom: "border-brand-200 bg-brand-subtle text-brand",
+    data: "border-attention/30 bg-attention-subtle text-attention",
+    column: "border-border bg-surface-whisper text-muted-foreground",
   };
   const label =
     storage === "custom" ? "Custom" : storage === "column" ? "Column" : "Dataset";
@@ -211,12 +211,12 @@ function FieldDialog({
 
         <div className="space-y-3">
           <label className="block text-sm">
-            <span className="mb-1 block font-medium text-slate-600">Name</span>
+            <span className="mb-1 block font-medium text-muted-foreground">Name</span>
             <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. Contract value" />
           </label>
 
           <label className="block text-sm">
-            <span className="mb-1 block font-medium text-slate-600">Type</span>
+            <span className="mb-1 block font-medium text-muted-foreground">Type</span>
             <Select
               value={editing?.fieldType ?? fieldType}
               onValueChange={setFieldType}
@@ -237,7 +237,7 @@ function FieldDialog({
 
           {showOptions && (
             <div className="text-sm">
-              <span className="mb-1 block font-medium text-slate-600">Options</span>
+              <span className="mb-1 block font-medium text-muted-foreground">Options</span>
               <div className="space-y-1.5">
                 {options.map((o, i) => (
                   <div key={i} className="flex items-center gap-1.5">
@@ -259,7 +259,7 @@ function FieldDialog({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 shrink-0 text-slate-400 hover:text-red-600"
+                      className="h-8 w-8 shrink-0 text-subtle hover:text-destructive"
                       onClick={() => setOptions((prev) => prev.filter((_, idx) => idx !== i))}
                     >
                       <X className="h-3.5 w-3.5" />
@@ -276,7 +276,7 @@ function FieldDialog({
                   <Plus className="h-3 w-3" /> Add option
                 </Button>
                 {editing && hasOptions(editing.fieldType) && (
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-subtle">
                     Adding options here upserts them. Existing options not listed are archived.
                   </p>
                 )}
@@ -284,7 +284,7 @@ function FieldDialog({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-100 bg-slate-50/50 p-3">
+          <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-surface-whisper/50 p-3">
             <FlagToggle label="Required" checked={flag("required")} onChange={(v) => setFlag("required", v)} />
             <FlagToggle label="Filterable" checked={flag("filterable")} onChange={(v) => setFlag("filterable", v)} />
             <FlagToggle label="Sortable" checked={flag("sortable")} onChange={(v) => setFlag("sortable", v)} />
@@ -292,7 +292,7 @@ function FieldDialog({
           </div>
 
           <label className="block text-sm">
-            <span className="mb-1 block font-medium text-slate-600">Group (optional)</span>
+            <span className="mb-1 block font-medium text-muted-foreground">Group (optional)</span>
             <Input
               value={config.group ?? ""}
               onChange={(e) => setConfig((c) => ({ ...c, group: e.target.value }))}
@@ -302,14 +302,14 @@ function FieldDialog({
 
           {pipelines.length > 0 && (
             <div className="text-sm">
-              <span className="mb-1 block font-medium text-slate-600">Pipelines</span>
-              <p className="mb-2 text-xs text-slate-400">
+              <span className="mb-1 block font-medium text-muted-foreground">Pipelines</span>
+              <p className="mb-2 text-xs text-subtle">
                 Show this field only on deals in the pipelines you tick. Leave all unticked
                 to show it everywhere. A deal that already has a value keeps showing it.
               </p>
-              <div className="space-y-1.5 rounded-lg border border-slate-100 bg-slate-50/50 p-3">
+              <div className="space-y-1.5 rounded-lg border border-border bg-surface-whisper/50 p-3">
                 {pipelines.map((p) => (
-                  <label key={p.id} className="flex items-center gap-2 text-slate-600">
+                  <label key={p.id} className="flex items-center gap-2 text-muted-foreground">
                     <Checkbox
                       checked={pipelineIds.includes(p.id)}
                       onCheckedChange={(v) => togglePipeline(p.id, v === true)}
@@ -319,7 +319,7 @@ function FieldDialog({
                 ))}
               </div>
               {groupSiblings.length > 0 && (
-                <label className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                   <Checkbox
                     checked={applyToGroup}
                     onCheckedChange={(v) => setApplyToGroup(v === true)}
@@ -358,7 +358,7 @@ function FlagToggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex items-center justify-between gap-2 text-sm text-slate-600">
+    <label className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
       <span>{label}</span>
       <Switch checked={checked} onCheckedChange={onChange} />
     </label>
@@ -448,8 +448,8 @@ export function CustomFieldsSettings() {
     <div className="mx-auto max-w-5xl p-6">
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-lg font-bold text-slate-900">Custom Fields</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-lg font-bold text-foreground">Custom Fields</h1>
+          <p className="text-sm text-muted-foreground">
             Fields shown on deals, decoded from your dataset or created here. Limit a field to certain pipelines from its edit dialog.
           </p>
         </div>
@@ -465,15 +465,15 @@ export function CustomFieldsSettings() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-16 text-sm text-slate-500">
+        <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
           <Loader2 className="me-2 h-4 w-4 animate-spin" /> Loading fields…
         </div>
       ) : (
         <>
           {/* Active fields */}
-          <section className="mb-6 overflow-hidden rounded-xl border border-slate-200">
+          <section className="mb-6 overflow-hidden rounded-xl border border-border">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-xs text-slate-500">
+              <thead className="bg-surface-whisper text-xs text-muted-foreground">
                 <tr>
                   <th className="px-3 py-2 text-start font-medium">Name</th>
                   <th className="px-3 py-2 text-start font-medium">Type</th>
@@ -489,20 +489,20 @@ export function CustomFieldsSettings() {
               <tbody>
                 {active.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-3 py-8 text-center text-sm text-slate-400">
+                    <td colSpan={9} className="px-3 py-8 text-center text-sm text-subtle">
                       No active fields yet. Discover from your dataset or create one.
                     </td>
                   </tr>
                 )}
                 {active.map((f, i) => (
-                  <tr key={f.id} className="border-t border-slate-100">
+                  <tr key={f.id} className="border-t border-border">
                     <td className="px-3 py-2">
-                      <div className="font-medium text-slate-800">{f.label}</div>
-                      <div className="font-mono text-[10px] text-slate-400">{f.key}</div>
+                      <div className="font-medium text-foreground">{f.label}</div>
+                      <div className="font-mono text-[10px] text-subtle">{f.key}</div>
                     </td>
-                    <td className="px-3 py-2 text-slate-600">{TYPE_LABEL[f.fieldType] ?? f.fieldType}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{TYPE_LABEL[f.fieldType] ?? f.fieldType}</td>
                     <td className="px-3 py-2"><SourceBadge storage={f.storage} /></td>
-                    <td className="px-3 py-2 text-xs text-slate-500">
+                    <td className="px-3 py-2 text-xs text-muted-foreground">
                       {f.config?.pipelineIds?.length
                         ? f.config.pipelineIds
                             .map((id) => pipelineName.get(id) ?? `#${id}`)
@@ -512,7 +512,7 @@ export function CustomFieldsSettings() {
                     <td className="px-3 py-2 text-center">{f.config?.detailVisible ? "✓" : "—"}</td>
                     <td className="px-3 py-2 text-center">{f.config?.required ? "✓" : "—"}</td>
                     <td className="px-3 py-2 text-center">{f.config?.filterable ? "✓" : "—"}</td>
-                    <td className="px-3 py-2 text-end tabular-nums text-slate-500">{f.usage ?? "—"}</td>
+                    <td className="px-3 py-2 text-end tabular-nums text-muted-foreground">{f.usage ?? "—"}</td>
                     <td className="px-3 py-2">
                       <div className="flex items-center justify-end gap-0.5">
                         <IconBtn title="Move up" disabled={i === 0} onClick={() => move(i, -1)}>
@@ -541,17 +541,17 @@ export function CustomFieldsSettings() {
           {/* Discovered from dataset */}
           {discovered.length > 0 && (
             <section>
-              <h2 className="mb-2 text-sm font-semibold text-slate-700">
+              <h2 className="mb-2 text-sm font-semibold text-foreground">
                 Discovered from dataset{" "}
-                <span className="ms-1 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700">
+                <span className="ms-1 rounded-full bg-attention-subtle px-2 py-0.5 text-xs font-medium text-attention">
                   {discovered.length}
                 </span>
               </h2>
-              <p className="mb-3 text-xs text-slate-500">
+              <p className="mb-3 text-xs text-muted-foreground">
                 Keys found in your data. Activate the ones you want on the deal; computed
                 metrics as read-only.
               </p>
-              <div className="divide-y divide-slate-100 rounded-xl border border-slate-200">
+              <div className="divide-y divide-border rounded-xl border border-border">
                 {discovered.map((f) => (
                   <DiscoveredRow
                     key={f.id}
@@ -572,18 +572,18 @@ export function CustomFieldsSettings() {
           {/* Archived */}
           {archived.length > 0 && (
             <section className="mt-6">
-              <h2 className="mb-2 text-sm font-semibold text-slate-700">
+              <h2 className="mb-2 text-sm font-semibold text-foreground">
                 Archived{" "}
-                <span className="ms-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+                <span className="ms-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                   {archived.length}
                 </span>
               </h2>
-              <div className="divide-y divide-slate-100 rounded-xl border border-slate-200">
+              <div className="divide-y divide-border rounded-xl border border-border">
                 {archived.map((f) => (
                   <div key={f.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
                     <div className="min-w-0">
-                      <div className="truncate font-medium text-slate-600">{f.label}</div>
-                      <div className="font-mono text-[10px] text-slate-400">{f.key}</div>
+                      <div className="truncate font-medium text-muted-foreground">{f.label}</div>
+                      <div className="font-mono text-[10px] text-subtle">{f.key}</div>
                     </div>
                     <Button
                       size="sm"
@@ -634,7 +634,7 @@ function IconBtn({
       title={title}
       disabled={disabled}
       onClick={onClick}
-      className="h-7 w-7 text-slate-400 hover:text-slate-700 disabled:opacity-30"
+      className="h-7 w-7 text-subtle hover:text-foreground disabled:opacity-30"
     >
       {children}
     </Button>
@@ -655,18 +655,18 @@ function DiscoveredRow({
     <div className="flex items-center justify-between gap-3 px-3 py-2.5">
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <span className="truncate font-medium text-slate-800">{field.label}</span>
-          <Badge variant="outline" className="text-[11px] text-slate-500">
+          <span className="truncate font-medium text-foreground">{field.label}</span>
+          <Badge variant="outline" className="text-[11px] text-muted-foreground">
             {TYPE_LABEL[field.fieldType] ?? field.fieldType}
           </Badge>
           {optionCount > 0 && (
-            <span className="text-[11px] text-slate-400">{optionCount} options</span>
+            <span className="text-[11px] text-subtle">{optionCount} options</span>
           )}
         </div>
-        <div className="font-mono text-[10px] text-slate-400">{field.sourceKey}</div>
+        <div className="font-mono text-[10px] text-subtle">{field.sourceKey}</div>
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        <label className="flex items-center gap-1.5 text-xs text-slate-500">
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
           Editable
           <Switch checked={editable} onCheckedChange={setEditable} />
         </label>

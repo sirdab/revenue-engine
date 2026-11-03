@@ -100,8 +100,8 @@ export function ReassignDealsDialog({
           triggerClassName="w-full"
         />
         {selectedUser && (
-          <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-            <span className="font-medium text-slate-800">{selectedUser.name}</span>
+          <div className="rounded-md border border-border bg-surface-whisper px-3 py-2 text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">{selectedUser.name}</span>
             {selectedAfterCount == null ? (
               <span> is loading current deal count.</span>
             ) : (
@@ -121,7 +121,7 @@ export function ReassignDealsDialog({
           <Button
             disabled={!target || confirming}
             onClick={() => onConfirm(Number(target))}
-            className="bg-red-600 hover:bg-red-700"
+            className="bg-destructive hover:bg-destructive"
           >
             {confirming && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
             Reassign &amp; deactivate

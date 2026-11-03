@@ -83,17 +83,17 @@ export function MultiSelectFilter({
         <Button
           variant="outline"
           size="sm"
-          className={cn("gap-1.5", selected.length > 0 && "border-teal-500 text-teal-700")}
+          className={cn("gap-1.5", selected.length > 0 && "border-brand-500 text-brand")}
           data-testid={testId}
         >
           {icon}
           {label}
           {selected.length > 0 && (
-            <span className="rounded-full bg-teal-100 px-1.5 text-xs font-semibold text-teal-700">
+            <span className="rounded-full bg-brand-subtle px-1.5 text-xs font-semibold text-brand">
               {selected.length}
             </span>
           )}
-          <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+          <ChevronDown className="h-3.5 w-3.5 text-subtle" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align={align} className="w-64 max-w-[92vw] p-0">
@@ -128,8 +128,8 @@ export function MultiSelectFilter({
                         className={cn(
                           "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
                           on
-                            ? "border-teal-500 bg-teal-500 text-white"
-                            : "border-slate-300",
+                            ? "border-brand-500 bg-primary text-primary-foreground"
+                            : "border-input",
                         )}
                       >
                         {on && <Check className="h-3 w-3" />}
@@ -144,11 +144,11 @@ export function MultiSelectFilter({
             ))}
           </CommandList>
           {selected.length > 0 && (
-            <div className="border-t border-slate-100 p-1.5">
+            <div className="border-t border-border p-1.5">
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-full text-xs text-slate-500"
+                className="h-7 w-full text-xs text-muted-foreground"
                 onClick={() => onChange([])}
               >
                 {t("filter.clearCount", { count: selected.length })}

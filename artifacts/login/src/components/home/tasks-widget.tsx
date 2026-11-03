@@ -16,9 +16,9 @@ import { useI18n, type MessageKey } from "@/lib/i18n/i18n";
 type Bucket = "overdue" | "today" | "upcoming";
 
 const TABS: { key: Bucket; label: MessageKey; dot: string }[] = [
-  { key: "overdue", label: "activity.status.overdue", dot: "bg-red-500" },
-  { key: "today", label: "activity.status.today", dot: "bg-amber-500" },
-  { key: "upcoming", label: "activity.status.upcoming", dot: "bg-sky-500" },
+  { key: "overdue", label: "activity.status.overdue", dot: "bg-destructive" },
+  { key: "today", label: "activity.status.today", dot: "bg-warning" },
+  { key: "upcoming", label: "activity.status.upcoming", dot: "bg-attention" },
 ];
 
 export function TasksWidget({ userId }: { userId: number }) {
@@ -83,8 +83,8 @@ export function TasksWidget({ userId }: { userId: number }) {
                 className={cn(
                   "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium",
                   tab === t.key
-                    ? "bg-slate-100 text-slate-900"
-                    : "text-slate-500 hover:bg-slate-50",
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:bg-gray-alpha-50",
                 )}
               >
                 <span className={cn("h-1.5 w-1.5 rounded-full", t.dot)} />
@@ -94,11 +94,11 @@ export function TasksWidget({ userId }: { userId: number }) {
             ))}
           </div>
           {data.items.length === 0 ? (
-            <p className="rounded-md border border-dashed border-slate-200 px-3 py-6 text-center text-sm text-slate-500">
+            <p className="rounded-md border border-dashed border-border px-3 py-6 text-center text-sm text-muted-foreground">
               {emptyText}
             </p>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-border">
               {data.items.map((a) => {
                 const meta = ACTIVITY_TYPE_CONFIG[a.type];
                 return (
@@ -112,11 +112,11 @@ export function TasksWidget({ userId }: { userId: number }) {
                       className={cn("h-4 w-4 shrink-0", meta.iconColor)}
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-slate-900">
+                      <p className="truncate text-sm font-medium text-foreground">
                         {a.subject}
                       </p>
                       {(a.dealTitle || a.personName) && (
-                        <p className="truncate text-xs text-slate-500">
+                        <p className="truncate text-xs text-muted-foreground">
                           {a.dealTitle ?? a.personName}
                         </p>
                       )}
@@ -124,7 +124,7 @@ export function TasksWidget({ userId }: { userId: number }) {
                     <span
                       className={cn(
                         "shrink-0 text-xs tabular-nums",
-                        tab === "overdue" ? "text-red-600" : "text-slate-500",
+                        tab === "overdue" ? "text-destructive" : "text-muted-foreground",
                       )}
                     >
                       {a.dueDate ? formatMonthDay(parseISO(a.dueDate)) : "—"}
@@ -134,7 +134,7 @@ export function TasksWidget({ userId }: { userId: number }) {
                       onClick={() => removeActivity(a)}
                       aria-label={tr("activities.deleteSubject", { subject: a.subject })}
                       title={tr("activity.row.delete")}
-                      className="rounded p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
+                      className="rounded p-1 text-subtle transition-colors hover:bg-destructive-subtle hover:text-destructive"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

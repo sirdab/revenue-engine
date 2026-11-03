@@ -28,7 +28,7 @@ export function StatusFilter({
   // leaves every segment unselected rather than lighting up the wrong one.
   return (
     <div
-      className="inline-flex items-center gap-1 rounded-lg bg-slate-100 p-1"
+      className="inline-flex items-center gap-1 rounded-lg bg-muted p-1"
       role="group"
       aria-label={t("deals.statusFilter.aria")}
     >
@@ -42,8 +42,8 @@ export function StatusFilter({
             className={cn(
               "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
               active
-                ? "bg-card text-teal-700 shadow-sm"
-                : "text-slate-600 hover:text-slate-900",
+                ? "bg-card text-brand shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
             aria-pressed={active}
           >

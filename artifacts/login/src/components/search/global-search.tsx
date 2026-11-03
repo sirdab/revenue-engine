@@ -68,23 +68,23 @@ function ResultRow({
       onSelect={() => onSelect(item.href)}
       className="flex items-start gap-3 !py-2.5"
     >
-      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500">
+      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
         <Icon className="h-4 w-4" />
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span dir="auto" className="truncate font-medium text-slate-900">
+          <span dir="auto" className="truncate font-medium text-foreground">
             {item.title}
           </span>
-          <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+          <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             {item.module}
           </span>
         </div>
-        <div className="mt-0.5 truncate text-xs text-slate-500">
-          <span className="font-medium text-slate-400">{item.field}: </span>
+        <div className="mt-0.5 truncate text-xs text-muted-foreground">
+          <span className="font-medium text-subtle">{item.field}: </span>
           <Highlight text={item.matchValue} term={term} />
         </div>
-        <div className="mt-0.5 flex items-center gap-1.5 truncate text-[11px] text-slate-400">
+        <div className="mt-0.5 flex items-center gap-1.5 truncate text-[11px] text-subtle">
           {item.relatedName && (
             <span className="truncate">{item.relatedName}</span>
           )}
@@ -177,7 +177,7 @@ export function GlobalSearch({
           shouldFilter={false}
           value={selected}
           onValueChange={setSelected}
-          className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-slate-400"
+          className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-subtle"
           onKeyDown={(e) => {
             // Enter with no selectable results still lets you jump to the full
             // results page rather than doing nothing.
@@ -187,7 +187,7 @@ export function GlobalSearch({
             }
           }}
         >
-          <div className="border-b border-slate-100 p-3">
+          <div className="border-b border-border p-3">
             <div className="flex items-center gap-2">
               <Select
                 value={scope}
@@ -217,7 +217,7 @@ export function GlobalSearch({
           </div>
           <CommandList className="max-h-[60vh]">
             {!enabled && !preferencesLoading && recentlyViewed.length === 0 && (
-              <div className="px-4 py-10 text-center text-sm text-slate-400">
+              <div className="px-4 py-10 text-center text-sm text-subtle">
                 {t("search.hint")}
               </div>
             )}
@@ -234,23 +234,23 @@ export function GlobalSearch({
                       onSelect={() => go(item.href)}
                       className="flex items-start gap-3 !py-2.5"
                     >
-                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500">
+                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
                         <Icon className="h-4 w-4" />
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span
                             dir="auto"
-                            className="truncate font-medium text-slate-900"
+                            className="truncate font-medium text-foreground"
                           >
                             {item.title}
                           </span>
-                          <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+                          <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                             {RECENTLY_VIEWED_MODULE_LABEL[item.type] ? t(RECENTLY_VIEWED_MODULE_LABEL[item.type]) : item.type}
                           </span>
                         </div>
                         {time && (
-                          <div className="mt-0.5 truncate text-[11px] text-slate-400">
+                          <div className="mt-0.5 truncate text-[11px] text-subtle">
                             {time}
                           </div>
                         )}
@@ -263,18 +263,18 @@ export function GlobalSearch({
 
             {showError && (
               <div className="px-4 py-10 text-center">
-                <TriangleAlert className="mx-auto mb-2 h-6 w-6 text-amber-400" />
-                <div className="text-sm font-medium text-slate-600">
+                <TriangleAlert className="mx-auto mb-2 h-6 w-6 text-warning-glyph" />
+                <div className="text-sm font-medium text-muted-foreground">
                   {t("search.unavailable")}
                 </div>
-                <div className="mt-1 text-xs text-slate-400">
+                <div className="mt-1 text-xs text-subtle">
                   {t("search.keepTyping")}
                 </div>
               </div>
             )}
 
             {enabled && !isError && isFetching && total === 0 && (
-              <div className="flex items-center justify-center gap-2 px-4 py-10 text-sm text-slate-400">
+              <div className="flex items-center justify-center gap-2 px-4 py-10 text-sm text-subtle">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 {t("search.searching")}
               </div>
@@ -282,11 +282,11 @@ export function GlobalSearch({
 
             {showEmpty && (
               <CommandEmpty className="px-4 py-10 text-center">
-                <SearchX className="mx-auto mb-2 h-6 w-6 text-slate-300" />
-                <div className="text-sm font-medium text-slate-600">
+                <SearchX className="mx-auto mb-2 h-6 w-6 text-subtle" />
+                <div className="text-sm font-medium text-muted-foreground">
                   {t("search.noResultsQuoted", { query: debounced })}
                 </div>
-                <div className="mt-1 text-xs text-slate-400">
+                <div className="mt-1 text-xs text-subtle">
                   {t("search.tryDifferent")}
                 </div>
               </CommandEmpty>
@@ -310,10 +310,10 @@ export function GlobalSearch({
               ))}
           </CommandList>
 
-          <div className="flex items-center justify-between border-t border-slate-100 px-3 py-2 text-[11px] text-slate-400">
+          <div className="flex items-center justify-between border-t border-border px-3 py-2 text-[11px] text-subtle">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1">
-                <kbd className="rounded border border-slate-200 bg-slate-50 px-1">
+                <kbd className="rounded border border-border bg-surface-whisper px-1">
                   ↑↓
                 </kbd>
                 navigate
@@ -323,7 +323,7 @@ export function GlobalSearch({
                 open
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="rounded border border-slate-200 bg-slate-50 px-1">
+                <kbd className="rounded border border-border bg-surface-whisper px-1">
                   esc
                 </kbd>
                 close
@@ -333,7 +333,7 @@ export function GlobalSearch({
               <button
                 type="button"
                 onClick={seeAll}
-                className="font-medium text-teal-600 hover:text-teal-700"
+                className="font-medium text-brand hover:text-brand"
               >
                 {t("search.viewAll")}
               </button>

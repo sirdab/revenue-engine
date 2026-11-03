@@ -35,7 +35,7 @@ function CustomFieldCell({
   value: unknown;
 }) {
   const { t } = useI18n();
-  const empty = <span className="text-slate-400">—</span>;
+  const empty = <span className="text-subtle">—</span>;
   if (value == null || value === "" || (Array.isArray(value) && value.length === 0)) {
     return empty;
   }
@@ -45,24 +45,24 @@ function CustomFieldCell({
       const m = value as { value?: number | null; currency?: string | null };
       if (m.value == null || m.value === undefined) return empty;
       return (
-        <span className="tabular-nums text-slate-700">
+        <span className="tabular-nums text-foreground">
           {formatCurrency(Number(m.value), m.currency ?? "SAR")}
         </span>
       );
     }
     case "double":
       return (
-        <span className="tabular-nums text-slate-700">
+        <span className="tabular-nums text-foreground">
           {formatNumber(Number(value))}
         </span>
       );
     case "date":
-      return <span className="text-slate-600">{formatDate(String(value))}</span>;
+      return <span className="text-muted-foreground">{formatDate(String(value))}</span>;
     case "daterange": {
       const r = value as { from?: string | null; to?: string | null };
       if (!r.from && !r.to) return empty;
       return (
-        <span className="whitespace-nowrap text-slate-600">
+        <span className="whitespace-nowrap text-muted-foreground">
           {r.from ? formatDate(r.from) : "…"} → {r.to ? formatDate(r.to) : "…"}
         </span>
       );
@@ -74,8 +74,8 @@ function CustomFieldCell({
           className={cn(
             "px-1.5 py-0 text-[10px]",
             value
-              ? "border-teal-200 bg-teal-50 text-teal-700"
-              : "border-slate-200 bg-slate-50 text-slate-500",
+              ? "border-brand-200 bg-brand-subtle text-brand"
+              : "border-border bg-surface-whisper text-muted-foreground",
           )}
         >
           {value ? t("common.yes") : t("common.no")}
@@ -107,7 +107,7 @@ function CustomFieldCell({
               <Badge
                 key={String(v)}
                 variant="outline"
-                className="border-slate-200 bg-slate-50 px-1.5 py-0 text-[10px] text-slate-600"
+                className="border-border bg-surface-whisper px-1.5 py-0 text-[10px] text-muted-foreground"
               >
                 {label}
               </Badge>
@@ -118,7 +118,7 @@ function CustomFieldCell({
     }
     default:
       return (
-        <span dir="auto" className="truncate text-slate-700">
+        <span dir="auto" className="truncate text-foreground">
           {String(value)}
         </span>
       );

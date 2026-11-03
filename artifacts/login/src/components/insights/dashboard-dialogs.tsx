@@ -135,7 +135,7 @@ export function DashboardDialogs({
           <DialogHeader>
             <DialogTitle>{t("insights.shareTitle", { name: dashboard?.name ?? "" })}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted-foreground">
             {t("insights.shareBody")}
           </p>
           <div className="max-h-64 space-y-2 overflow-y-auto">
@@ -183,7 +183,7 @@ export function DashboardDialogs({
           <AlertDialogFooter>
             <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-destructive hover:bg-destructive"
               onClick={() => {
                 onDelete();
                 onClose();

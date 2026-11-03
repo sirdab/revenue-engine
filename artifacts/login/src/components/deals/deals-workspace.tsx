@@ -37,7 +37,7 @@ function PipelineView({
   if (isLoading || resolved == null) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-brand" />
       </div>
     );
   }
@@ -88,8 +88,8 @@ export function DealsWorkspace() {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-card">
       {/* Top row: title, count + filters/search, and the create action. */}
-      <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-4 py-2">
-        <h1 className="font-heading text-xl font-bold tracking-tight text-slate-900">
+      <div className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-2">
+        <h1 className="font-heading text-xl font-bold tracking-tight text-foreground">
           {t("common.deals")}
         </h1>
         <DealsToolbar state={state} update={update} />
@@ -99,7 +99,7 @@ export function DealsWorkspace() {
       {/* Second row: the view switcher (pipeline / list / forecast / …), plus
           the status lens — list-only, since it is the one view whose rows the
           open-only default silently hides. */}
-      <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-4 py-2">
+      <div className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-2">
         <ViewSwitcher
           value={state.view}
           onChange={(view) => update({ view })}

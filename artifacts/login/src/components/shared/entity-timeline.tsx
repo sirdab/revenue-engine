@@ -57,13 +57,13 @@ export function ChangeEventRow({
         {icon}
       </div>
       <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-        <div className="truncate text-sm text-slate-600">
+        <div className="truncate text-sm text-muted-foreground">
           {title}
           {event.changedByName && (
-            <span className="text-slate-400"> · {event.changedByName}</span>
+            <span className="text-subtle"> · {event.changedByName}</span>
           )}
         </div>
-        <time className="shrink-0 text-[11px] text-slate-400">
+        <time className="shrink-0 text-[11px] text-subtle">
           {formatTimestamp(event.changedAt)}
         </time>
       </div>

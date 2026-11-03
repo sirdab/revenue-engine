@@ -77,7 +77,7 @@ export function ActivityActions({
 }) {
   const { t } = useI18n();
   const iconButton =
-    "h-7 w-7 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600";
+    "h-7 w-7 text-subtle transition-colors hover:bg-gray-alpha-100 hover:text-muted-foreground";
   return (
     <div className="flex shrink-0 items-center gap-0.5">
       {!view.draft && (
@@ -103,7 +103,7 @@ export function ActivityActions({
             size="icon"
             onClick={() => controller.edit(view)}
             aria-label={t("activity.row.edit")}
-            className={cn(iconButton, "hover:text-teal-700")}
+            className={cn(iconButton, "hover:text-brand")}
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
@@ -112,7 +112,7 @@ export function ActivityActions({
             size="icon"
             onClick={() => controller.remove(view)}
             aria-label={t("activity.row.delete")}
-            className={cn(iconButton, "hover:text-red-600")}
+            className={cn(iconButton, "hover:text-destructive")}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
@@ -149,7 +149,7 @@ export function ActivityMeta({
       <Link
         key="deal"
         href={`/deal/${view.links.deal.id}`}
-        className="truncate text-teal-700 hover:underline"
+        className="truncate text-brand hover:underline"
       >
         {view.links.deal.label}
       </Link>,
@@ -162,13 +162,13 @@ export function ActivityMeta({
         {closedUnsuccessful(view) ? (
           <PhoneMissed className="h-3 w-3" />
         ) : (
-          <CheckCircle2 className="h-3 w-3 text-teal-500" />
+          <CheckCircle2 className="h-3 w-3 text-brand" />
         )}
         {completed}
       </span>,
     );
   return (
-    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-400">
+    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-subtle">
       {parts.flatMap((p, i) => (i === 0 ? [p] : [<span key={`sep${i}`}>·</span>, p]))}
     </div>
   );
@@ -198,7 +198,7 @@ export function ActivityNote({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="inline-flex items-center gap-1 text-xs text-slate-400 transition-colors hover:text-slate-600"
+        className="inline-flex items-center gap-1 text-xs text-subtle transition-colors hover:text-muted-foreground"
       >
         <ChevronRight
           className={cn(
@@ -267,10 +267,10 @@ export function ActivityItem({
         className={cn(
           "mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
           view.done
-            ? "bg-slate-100 text-slate-400"
+            ? "bg-muted text-subtle"
             : status === "overdue"
-              ? "bg-red-50 text-red-600"
-              : "bg-teal-50 text-teal-600",
+              ? "bg-destructive-subtle text-destructive"
+              : "bg-brand-subtle text-brand",
         )}
       >
         <Icon className="h-3.5 w-3.5" />
@@ -279,8 +279,8 @@ export function ActivityItem({
         className={cn(
           "min-w-0 flex-1 rounded-lg border px-3 py-2",
           view.draft
-            ? "border-dashed border-amber-300 bg-amber-50/40"
-            : "border-slate-100 bg-slate-50",
+            ? "border-dashed border-warning/30 bg-warning-subtle/40"
+            : "border-border bg-surface-whisper",
           flash,
         )}
       >
@@ -298,14 +298,14 @@ export function ActivityItem({
                 dir="auto"
                 className={cn(
                   "min-w-0 text-sm font-medium",
-                  view.done ? "text-slate-500" : "text-slate-900",
+                  view.done ? "text-muted-foreground" : "text-foreground",
                 )}
               >
                 {view.subject}
               </span>
             </span>
             {view.draft && (
-              <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+              <span className="inline-flex items-center rounded-full border border-warning/30 bg-warning-subtle px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-warning">
                 {t("common.draft")}
               </span>
             )}

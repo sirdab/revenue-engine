@@ -40,12 +40,12 @@ export function FileListSkeleton() {
 
 function FileTypeIcon({ mimeType }: { mimeType: string }) {
   if (mimeType === "application/pdf") {
-    return <FileText className="h-4 w-4 text-red-500" />;
+    return <FileText className="h-4 w-4 text-destructive" />;
   }
   if (mimeType.startsWith("image/")) {
-    return <ImageIcon className="h-4 w-4 text-teal-500" />;
+    return <ImageIcon className="h-4 w-4 text-brand" />;
   }
-  return <FileIcon className="h-4 w-4 text-slate-400" />;
+  return <FileIcon className="h-4 w-4 text-subtle" />;
 }
 
 /**
@@ -85,7 +85,7 @@ function FileNameButton({
     <button
       ref={boxRef}
       type="button"
-      className="block w-full overflow-hidden whitespace-nowrap text-start text-sm font-medium text-slate-800 hover:text-teal-700"
+      className="block w-full overflow-hidden whitespace-nowrap text-start text-sm font-medium text-foreground hover:text-brand"
       style={{ textOverflow: sliding ? "clip" : "ellipsis" }}
       title={fileName}
       aria-label={`${actionLabel} ${fileName}`}
@@ -136,7 +136,7 @@ function FileRow({
             previewable ? openFile(file.id) : downloadFile(file.id, file.fileName)
           }
         />
-        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400">
+        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-subtle">
           <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
             {fileCategoryLabel(file.category)}
           </Badge>
@@ -151,7 +151,7 @@ function FileRow({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 text-slate-400 hover:text-slate-700"
+          className="h-7 w-7 text-subtle hover:text-foreground"
           title={t("common.download")}
           onClick={() => downloadFile(file.id, file.fileName)}
         >
@@ -162,7 +162,7 @@ function FileRow({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-slate-400 hover:text-red-600"
+                className="h-7 w-7 text-subtle hover:text-destructive"
                 title={t("common.delete")}
                 disabled={deleting}
               >
@@ -177,7 +177,7 @@ function FileRow({
               <AlertDialogFooter>
                 <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                 <AlertDialogAction
-                  className="bg-red-600 hover:bg-red-700"
+                  className="bg-destructive hover:bg-destructive"
                   onClick={() => onDelete(file.id)}
                 >
                   {t("common.delete")}
@@ -214,11 +214,11 @@ export function FileList({
   }, [users]);
 
   if (files.length === 0) {
-    return <p className="text-sm text-slate-400">{emptyMessage ?? t("files.empty")}</p>;
+    return <p className="text-sm text-subtle">{emptyMessage ?? t("files.empty")}</p>;
   }
 
   return (
-    <div className="divide-y divide-slate-100">
+    <div className="divide-y divide-border">
       {files.map((file) => (
         <FileRow
           key={file.id}

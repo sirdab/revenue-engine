@@ -19,7 +19,7 @@ export function OrganizationPeopleCard({
       title={t("deals.related.people")}
       action={
         people.length > 0 ? (
-          <span className="text-[11px] font-medium text-slate-400">
+          <span className="text-[11px] font-medium text-subtle">
             {people.length}
           </span>
         ) : undefined
@@ -32,7 +32,7 @@ export function OrganizationPeopleCard({
           ))}
         </div>
       ) : people.length === 0 ? (
-        <div className="flex items-center gap-2 rounded-lg border border-dashed border-slate-200 py-6 text-center text-sm text-slate-400">
+        <div className="flex items-center gap-2 rounded-lg border border-dashed border-border py-6 text-center text-sm text-subtle">
           <Users className="mx-auto h-4 w-4" />
           <span>{t("contacts.noPeopleLinked")}</span>
         </div>
@@ -41,19 +41,19 @@ export function OrganizationPeopleCard({
           {people.map((p) => (
             <li
               key={p.id}
-              className="flex items-start gap-2.5 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-slate-50"
+              className="flex items-start gap-2.5 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-gray-alpha-50"
             >
               <Avatar className="mt-0.5 h-7 w-7 shrink-0">
-                <AvatarFallback className="bg-slate-100 text-[10px] font-semibold text-slate-600">
+                <AvatarFallback className="bg-muted text-[10px] font-semibold text-muted-foreground">
                   {initials(p.name)}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium text-slate-800">
+                <div className="truncate text-sm font-medium text-foreground">
                   {p.name}
                 </div>
                 {p.jobTitle && (
-                  <div dir="auto" className="truncate text-xs text-slate-500">
+                  <div dir="auto" className="truncate text-xs text-muted-foreground">
                     {p.jobTitle}
                   </div>
                 )}
@@ -62,7 +62,7 @@ export function OrganizationPeopleCard({
                     <a
                       href={`mailto:${p.email}`}
                       title={p.email}
-                      className="flex min-w-0 items-center gap-1.5 text-xs text-teal-700 hover:underline"
+                      className="flex min-w-0 items-center gap-1.5 text-xs text-brand hover:underline"
                     >
                       <Mail className="h-3 w-3 shrink-0" />
                       <span className="truncate">{p.email}</span>
@@ -71,7 +71,7 @@ export function OrganizationPeopleCard({
                   {p.phone && (
                     <a
                       href={`tel:${p.phone}`}
-                      className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-teal-700"
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-brand"
                     >
                       <Phone className="h-3 w-3 shrink-0" />
                       <span className="truncate">{p.phone}</span>

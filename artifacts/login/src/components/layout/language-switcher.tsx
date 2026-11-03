@@ -62,7 +62,7 @@ export function LanguageToggle() {
       title={t("language.switchTo", { language: info.nativeName })}
       className={cn(
         "flex h-9 min-w-9 flex-shrink-0 items-center justify-center gap-1 rounded-md px-2",
-        "text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900",
+        "text-muted-foreground transition-colors hover:bg-gray-alpha-100 hover:text-foreground",
       )}
     >
       <Languages className="h-5 w-5 shrink-0" />
@@ -84,7 +84,7 @@ export function LanguageMenuSection() {
 
   return (
     <>
-      <DropdownMenuLabel className="flex items-center gap-2 text-xs font-normal text-slate-500">
+      <DropdownMenuLabel className="flex items-center gap-2 text-xs font-normal text-muted-foreground">
         <Languages className="h-3.5 w-3.5" />
         {t("language.label")}
       </DropdownMenuLabel>
@@ -109,7 +109,7 @@ export function LanguageMenuSection() {
                 {info.nativeName}
               </span>
               {info.nativeName !== info.englishName && (
-                <span className="ms-2 text-xs text-slate-400">
+                <span className="ms-2 text-xs text-subtle">
                   {info.englishName}
                 </span>
               )}

@@ -149,7 +149,7 @@ function ValueEditor({
             value={typeof arr[0] === "string" ? arr[0] : ""}
             onChange={(next) => onChange([next === "" ? null : next, arr[1] ?? null])}
           />
-          <span className="text-xs text-slate-400">and</span>
+          <span className="text-xs text-subtle">and</span>
           <DatePicker
             className="h-8 w-40"
             value={typeof arr[1] === "string" ? arr[1] : ""}
@@ -167,7 +167,7 @@ function ValueEditor({
           value={arr[0] == null ? "" : String(arr[0])}
           onChange={(e) => onChange([parse(e.target.value), arr[1] ?? null])}
         />
-        <span className="text-xs text-slate-400">and</span>
+        <span className="text-xs text-subtle">and</span>
         <Input
           type="number"
           className="h-8 w-28"
@@ -378,7 +378,7 @@ function ConditionRow({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-slate-400 hover:text-red-600"
+        className="h-8 w-8 text-subtle hover:text-destructive"
         onClick={onRemove}
         aria-label={t("filter.removeCondition")}
       >
@@ -422,7 +422,7 @@ export function InsightsFilterEditor({
     <div
       className={cn(
         "space-y-2 rounded-lg border p-3",
-        depth === 1 ? "border-slate-200 bg-card" : "border-slate-200 bg-slate-50",
+        depth === 1 ? "border-border bg-card" : "border-border bg-surface-whisper",
       )}
     >
       <div className="flex items-center gap-2">
@@ -438,14 +438,14 @@ export function InsightsFilterEditor({
             <SelectItem value="or">OR</SelectItem>
           </SelectContent>
         </Select>
-        <span className="text-xs text-slate-400">
+        <span className="text-xs text-subtle">
           match {group.combinator === "and" ? "all" : "any"} of
         </span>
         {onRemove && (
           <Button
             variant="ghost"
             size="icon"
-            className="ms-auto h-7 w-7 text-slate-400 hover:text-red-600"
+            className="ms-auto h-7 w-7 text-subtle hover:text-destructive"
             onClick={onRemove}
             aria-label={t("filter.removeGroup")}
           >
@@ -456,7 +456,7 @@ export function InsightsFilterEditor({
 
       <div className="space-y-2 ps-2">
         {nodes.length === 0 && (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-subtle">
             {t("insights.noConditions")}
           </p>
         )}

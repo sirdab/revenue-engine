@@ -134,13 +134,13 @@ export function OpenModeToggle({
         ref={knobRef}
         aria-hidden
         style={{ width: SEG }}
-        className="pointer-events-none absolute inset-y-0.5 start-0.5 rounded-[5px] bg-teal-600 shadow-sm"
+        className="pointer-events-none absolute inset-y-0.5 start-0.5 rounded-[5px] bg-primary shadow-sm"
       />
       <span
         role="radio"
         aria-checked={!activeIsDrawer}
         style={{ width: SEG }}
-        className={cn(segClass, !activeIsDrawer ? "font-medium text-white" : "text-slate-500")}
+        className={cn(segClass, !activeIsDrawer ? "font-medium text-white" : "text-muted-foreground")}
       >
         <Maximize2 className="h-3.5 w-3.5" /> {t("deals.openMode.fullPage")}
       </span>
@@ -148,7 +148,7 @@ export function OpenModeToggle({
         role="radio"
         aria-checked={activeIsDrawer}
         style={{ width: SEG }}
-        className={cn(segClass, activeIsDrawer ? "font-medium text-white" : "text-slate-500")}
+        className={cn(segClass, activeIsDrawer ? "font-medium text-white" : "text-muted-foreground")}
       >
         <PanelRight className="h-3.5 w-3.5" /> {t("deals.openMode.drawer")}
       </span>

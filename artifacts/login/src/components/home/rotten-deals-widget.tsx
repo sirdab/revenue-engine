@@ -39,7 +39,7 @@ export function RottenDealsWidget({ userId }: { userId: number }) {
         <span className="flex items-center gap-2">
           {t("home.rotten.title")}
           {data && data.total > 0 && (
-            <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-red-700">
+            <span className="rounded-full bg-destructive-subtle px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-destructive">
               {data.total}
             </span>
           )}
@@ -52,24 +52,24 @@ export function RottenDealsWidget({ userId }: { userId: number }) {
       isEmpty={!!data && data.items.length === 0}
       emptyText={t("home.rotten.empty")}
     >
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-border">
         {(data?.items ?? []).map((d) => (
           <Link
             key={d.id}
             href={`/deal/${d.id}`}
-            className="flex items-center gap-3 py-2 hover:bg-slate-50"
+            className="flex items-center gap-3 py-2 hover:bg-gray-alpha-50"
           >
-            <Flame className="h-4 w-4 shrink-0 text-red-500" />
+            <Flame className="h-4 w-4 shrink-0 text-destructive" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-slate-900">
+              <p className="truncate text-sm font-medium text-foreground">
                 {d.title}
               </p>
-              <p className="truncate text-xs text-slate-500">
+              <p className="truncate text-xs text-muted-foreground">
                 {formatCurrency(d.value, d.currency)}
                 {d.stageName ? ` · ${d.stageName}` : ""}
               </p>
             </div>
-            <span className="shrink-0 text-xs font-medium tabular-nums text-red-600">
+            <span className="shrink-0 text-xs font-medium tabular-nums text-destructive">
               {t("home.rotten.idle", { count: daysIdle(d) })}
             </span>
           </Link>

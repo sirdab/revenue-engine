@@ -114,7 +114,7 @@ export function TimePicker({
         <div dir="ltr" className="relative flex gap-1">
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 rounded-md bg-slate-100"
+            className="pointer-events-none absolute inset-x-0 rounded-md bg-muted"
             style={{ top: PAD, height: ITEM_H }}
           />
           <Wheel
@@ -146,7 +146,7 @@ export function TimePicker({
               onChange(formatHm(draft))
               setOpen(false)
             }}
-            className="rounded-md bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-700"
+            className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-hover"
           >
             {t("common.done")}
           </button>
@@ -232,7 +232,7 @@ function Wheel<T extends string | number>({
             onClick={() => go(i)}
             className={cn(
               "flex cursor-pointer snap-center items-center justify-center text-base tabular-nums transition-opacity select-none",
-              distance === 0 ? "font-semibold text-foreground" : "text-slate-500",
+              distance === 0 ? "font-semibold text-foreground" : "text-muted-foreground",
             )}
             style={{ height: ITEM_H, opacity: distance === 0 ? 1 : distance === 1 ? 0.6 : 0.3 }}
           >

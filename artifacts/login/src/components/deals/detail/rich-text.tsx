@@ -75,7 +75,7 @@ function renderNode(node: Node, key: number): ReactNode {
         href={href}
         target="_blank"
         rel="noreferrer noopener"
-        className="text-teal-700 underline underline-offset-2"
+        className="text-brand underline underline-offset-2"
       >
         {children}
       </a>
@@ -105,7 +105,7 @@ function renderNode(node: Node, key: number): ReactNode {
           src={src}
           alt={el.getAttribute("alt") ?? ""}
           loading="lazy"
-          className="max-h-96 max-w-full rounded-md border border-slate-200"
+          className="max-h-96 max-w-full rounded-md border border-border"
         />
       </a>
     );
@@ -117,7 +117,7 @@ function renderNode(node: Node, key: number): ReactNode {
     return (
       <pre
         key={key}
-        className="my-1 overflow-x-auto rounded-md bg-slate-100 px-3 py-2 text-[13px]"
+        className="my-1 overflow-x-auto rounded-md bg-muted px-3 py-2 text-[13px]"
       >
         {children}
       </pre>
@@ -127,7 +127,7 @@ function renderNode(node: Node, key: number): ReactNode {
     // Inline code outside a <pre> gets a subtle chip; inside <pre> the parent
     // styles it, so keep this element unstyled-but-monospace either way.
     return (
-      <code key={key} className="rounded bg-slate-100 px-1 py-0.5 text-[13px]">
+      <code key={key} className="rounded bg-muted px-1 py-0.5 text-[13px]">
         {children}
       </code>
     );

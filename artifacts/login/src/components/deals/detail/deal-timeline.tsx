@@ -138,7 +138,7 @@ function describeChange(
       return {
         title: t("deals.timeline.created"),
         icon: <Sparkles className="h-3.5 w-3.5" />,
-        accent: "bg-teal-50 text-teal-600",
+        accent: "bg-brand-subtle text-brand",
       };
     // Both sides of a merge. Without these they fell through to the generic
     // "<Prettified Key> → <value>" branch and rendered as "Merged From →".
@@ -148,12 +148,12 @@ function describeChange(
           <span>
             {tNode("deals.timeline.mergedIn", { deal: strong(newL) })}
             {e.newValue?.id != null && (
-              <span className="text-slate-400"> · #{e.newValue.id}</span>
+              <span className="text-subtle"> · #{e.newValue.id}</span>
             )}
           </span>
         ),
         icon: <GitMerge className="h-3.5 w-3.5" />,
-        accent: "bg-teal-50 text-teal-600",
+        accent: "bg-brand-subtle text-brand",
       };
     // On the deal that was merged AWAY: the one thing on its timeline that
     // explains why it has nothing else on it.
@@ -163,12 +163,12 @@ function describeChange(
           <span>
             {tNode("deals.timeline.mergedInto", { deal: strong(newL) })}
             {e.newValue?.id != null && (
-              <span className="text-slate-400"> · #{e.newValue.id}</span>
+              <span className="text-subtle"> · #{e.newValue.id}</span>
             )}
           </span>
         ),
         icon: <GitMerge className="h-3.5 w-3.5" />,
-        accent: "bg-indigo-50 text-indigo-500",
+        accent: "bg-attention-subtle text-attention-glyph",
       };
     case "archived": {
       const nowArchived = e.newValue?.label === "true";
@@ -180,8 +180,8 @@ function describeChange(
           <ArchiveRestore className="h-3.5 w-3.5" />
         ),
         accent: nowArchived
-          ? "bg-amber-50 text-amber-600"
-          : "bg-slate-100 text-slate-500",
+          ? "bg-warning-subtle text-warning"
+          : "bg-muted text-muted-foreground",
       };
     }
     case "stage_id":
@@ -192,7 +192,7 @@ function describeChange(
           <span>{tNode("deals.timeline.entered", { stage: strong(newL) })}</span>
         ),
         icon: <ArrowRight className="h-3.5 w-3.5" />,
-        accent: "bg-indigo-50 text-indigo-500",
+        accent: "bg-attention-subtle text-attention-glyph",
       };
     case "owner_id":
       return {
@@ -200,7 +200,7 @@ function describeChange(
           <span>{tNode("deals.timeline.ownerChange", { owner: strong(newL) })}</span>
         ),
         icon: <User className="h-3.5 w-3.5" />,
-        accent: "bg-amber-50 text-amber-600",
+        accent: "bg-warning-subtle text-warning",
       };
     case "value":
       return {
@@ -208,7 +208,7 @@ function describeChange(
           <span>{tNode("deals.timeline.valueChange", { from: strong(oldL), to: strong(newL) })}</span>
         ),
         icon: <PencilLine className="h-3.5 w-3.5" />,
-        accent: "bg-slate-100 text-slate-500",
+        accent: "bg-muted text-muted-foreground",
       };
     case "status":
       return {
@@ -216,7 +216,7 @@ function describeChange(
           <span>{tNode("deals.timeline.statusChange", { status: strong(newL) })}</span>
         ),
         icon: <PencilLine className="h-3.5 w-3.5" />,
-        accent: "bg-slate-100 text-slate-500",
+        accent: "bg-muted text-muted-foreground",
       };
     case "title":
       return {
@@ -224,7 +224,7 @@ function describeChange(
           <span>{tNode("deals.timeline.titleChange", { title: strong(newL) })}</span>
         ),
         icon: <PencilLine className="h-3.5 w-3.5" />,
-        accent: "bg-slate-100 text-slate-500",
+        accent: "bg-muted text-muted-foreground",
       };
     case "expected_close_date":
       return {
@@ -232,7 +232,7 @@ function describeChange(
           <span>{tNode("deals.timeline.closeDateChange", { date: strong(newL) })}</span>
         ),
         icon: <CalendarDays className="h-3.5 w-3.5" />,
-        accent: "bg-slate-100 text-slate-500",
+        accent: "bg-muted text-muted-foreground",
       };
     case "lost_reason":
       return {
@@ -240,7 +240,7 @@ function describeChange(
           <span>{tNode("deals.timeline.lost", { reason: strong(newL) })}</span>
         ),
         icon: <XCircle className="h-3.5 w-3.5" />,
-        accent: "bg-red-50 text-red-500",
+        accent: "bg-destructive-subtle text-destructive",
       };
     default: {
       // File uploads/removals are logged as "file:<id>"; render a proper
@@ -258,8 +258,8 @@ function describeChange(
           ),
           icon: <FileText className="h-3.5 w-3.5" />,
           accent: isDelete
-            ? "bg-red-50 text-red-500"
-            : "bg-teal-50 text-teal-600",
+            ? "bg-destructive-subtle text-destructive"
+            : "bg-brand-subtle text-brand",
         };
       }
       // Custom-field edits are logged as "cf:<key>"; show the field name.
@@ -277,7 +277,7 @@ function describeChange(
           </span>
         ),
         icon: <PencilLine className="h-3.5 w-3.5" />,
-        accent: "bg-slate-100 text-slate-500",
+        accent: "bg-muted text-muted-foreground",
       };
     }
   }
@@ -340,7 +340,7 @@ function InlineNoteEditor({
           size="sm"
           onClick={submit}
           disabled={saving || empty}
-          className="bg-teal-600 text-white hover:bg-teal-700"
+          className="bg-primary text-primary-foreground hover:bg-primary-hover"
         >
           {saving ? t("common.saving") : t("common.save")}
         </Button>
@@ -407,7 +407,7 @@ function TimelineRow({
         size="sm"
         onClick={onDiscard}
         disabled={mutating}
-        className="text-slate-500 hover:text-red-600"
+        className="text-muted-foreground hover:text-destructive"
       >
         {t("common.discard")}
       </Button>
@@ -416,7 +416,7 @@ function TimelineRow({
         size="sm"
         onClick={onPost}
         disabled={mutating}
-        className="bg-teal-600 text-white hover:bg-teal-700"
+        className="bg-primary text-primary-foreground hover:bg-primary-hover"
       >
         {mutating ? t("activity.drafts.posting") : t("activity.drafts.post")}
       </Button>
@@ -446,34 +446,34 @@ function TimelineRow({
 
   return (
     <div className="flex gap-2.5">
-      <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+      <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
         <MessageSquare className="h-3.5 w-3.5" />
       </div>
       <div
         className={cn(
           "min-w-0 flex-1 rounded-lg border px-3 py-2",
           draft
-            ? "border-dashed border-amber-300 bg-amber-50/40"
-            : "border-slate-100 bg-slate-50",
+            ? "border-dashed border-warning/30 bg-warning-subtle/40"
+            : "border-border bg-surface-whisper",
         )}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
-            <span className="truncate text-sm font-medium text-slate-900">
+            <span className="truncate text-sm font-medium text-foreground">
               {t("activity.type.note")}
             </span>
             {draft && (
               <span
                 className={cn(
                   STATUS_PILL_CLASS,
-                  "border-amber-200 bg-amber-50 text-amber-700",
+                  "border-warning/30 bg-warning-subtle text-warning",
                 )}
               >
                 {t("common.draft")}
               </span>
             )}
             {note.userName && (
-              <span className="text-[11px] text-slate-400">· {note.userName}</span>
+              <span className="text-[11px] text-subtle">· {note.userName}</span>
             )}
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -487,7 +487,7 @@ function TimelineRow({
                       <button
                         type="button"
                         title={t("activity.row.viewHistory")}
-                        className="text-slate-300 transition-colors hover:text-slate-600"
+                        className="text-subtle transition-colors hover:text-muted-foreground"
                       >
                         <History className="h-3.5 w-3.5" />
                       </button>
@@ -500,7 +500,7 @@ function TimelineRow({
                     type="button"
                     onClick={onStartEdit}
                     title={t("deals.timeline.editNote")}
-                    className="text-slate-300 transition-colors hover:text-slate-600"
+                    className="text-subtle transition-colors hover:text-muted-foreground"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
@@ -514,14 +514,14 @@ function TimelineRow({
                     onClick={onDeleteNote}
                     disabled={mutating}
                     title={t("deals.timeline.deleteNote")}
-                    className="text-slate-300 transition-colors hover:text-red-600 disabled:opacity-50"
+                    className="text-subtle transition-colors hover:text-destructive disabled:opacity-50"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 )}
               </>
             )}
-            <time className="text-[11px] text-slate-400">
+            <time className="text-[11px] text-subtle">
               {formatTimestamp(entry.date)}
             </time>
           </div>
@@ -538,7 +538,7 @@ function TimelineRow({
           body && (
             <RichText
               html={body}
-              className="mt-1 break-words text-sm text-slate-600"
+              className="mt-1 break-words text-sm text-muted-foreground"
             />
           )
         )}
@@ -578,7 +578,7 @@ function AttachmentChips({ attachments }: { attachments: CrmFile[] }) {
         return (
           <div
             key={f.id}
-            className="inline-flex max-w-[18rem] items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600"
+            className="inline-flex max-w-[18rem] items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-xs text-muted-foreground"
           >
             <button
               type="button"
@@ -586,11 +586,11 @@ function AttachmentChips({ attachments }: { attachments: CrmFile[] }) {
                 previewable ? openFile(f.id) : void downloadFile(f.id, f.fileName)
               }
               title={t(previewable ? "deals.timeline.previewFile" : "deals.timeline.downloadFile", { file: f.fileName })}
-              className="inline-flex min-w-0 items-center gap-1.5 transition-colors hover:text-teal-700"
+              className="inline-flex min-w-0 items-center gap-1.5 transition-colors hover:text-brand"
             >
-              <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+              <FileText className="h-3.5 w-3.5 shrink-0 text-subtle" />
               <span className="truncate">{f.fileName}</span>
-              <span className="shrink-0 text-[10px] text-slate-400">
+              <span className="shrink-0 text-[10px] text-subtle">
                 {formatFileSize(f.sizeBytes)}
               </span>
             </button>
@@ -598,7 +598,7 @@ function AttachmentChips({ attachments }: { attachments: CrmFile[] }) {
               type="button"
               onClick={() => void downloadFile(f.id, f.fileName)}
               title={t("common.download")}
-              className="shrink-0 text-slate-400 transition-colors hover:text-slate-700"
+              className="shrink-0 text-subtle transition-colors hover:text-foreground"
             >
               <Download className="h-3 w-3" />
             </button>
@@ -921,7 +921,7 @@ export function DealTimeline({
     <DealSectionCard
       title={t("deals.timeline.title")}
       action={
-        <div className="flex items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+        <div className="flex items-center gap-0.5 rounded-lg border border-border bg-surface-whisper p-0.5">
           {TABS.map(({ key, label: labelKey }) => (
             <button
               key={key}
@@ -930,8 +930,8 @@ export function DealTimeline({
               className={cn(
                 "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
                 tab === key
-                  ? "bg-card text-teal-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700",
+                  ? "bg-card text-brand shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {t(labelKey)}
@@ -967,7 +967,7 @@ export function DealTimeline({
         <div className="space-y-5">
           {groups.map(([key, entries]) => (
             <div key={key}>
-              <div className="sticky top-0 z-[1] -mx-1 mb-2.5 bg-card/95 px-1 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 backdrop-blur">
+              <div className="sticky top-0 z-[1] -mx-1 mb-2.5 bg-card/95 px-1 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-subtle backdrop-blur">
                 {dayLabel(new Date(key))}
               </div>
               <div className="space-y-2.5">
@@ -980,7 +980,7 @@ export function DealTimeline({
                       className={cn(
                         "rounded-lg transition-shadow",
                         highlightedKey === k &&
-                          "ring-2 ring-teal-400 ring-offset-1",
+                          "ring-2 ring-ring ring-offset-1",
                       )}
                     >
                       <TimelineRow
@@ -1019,13 +1019,13 @@ export function DealTimeline({
           {hasMore && (
             <div
               ref={sentinelRef}
-              className="py-2 text-center text-[11px] text-slate-400"
+              className="py-2 text-center text-[11px] text-subtle"
             >
               {t("deals.timeline.loadingEarlier")}
             </div>
           )}
           {!hasMore && notesCapped && (
-            <div className="py-2 text-center text-[11px] text-slate-400">
+            <div className="py-2 text-center text-[11px] text-subtle">
               {t("deals.timeline.notesCapped", { count: NOTES_FETCH_CAP })}
             </div>
           )}

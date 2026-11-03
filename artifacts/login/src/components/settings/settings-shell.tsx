@@ -65,23 +65,23 @@ export function SettingsShell({
   return (
     <div className="flex h-full min-h-0 flex-col md:flex-row">
       {/* Section nav: horizontal scrollable bar on phones, sidebar on md+. */}
-      <nav className="shrink-0 border-b border-slate-200 bg-slate-50/50 p-2 md:w-56 md:overflow-y-auto md:border-b-0 md:border-e md:p-3">
-        <p className="mb-2 hidden px-2 text-xs font-semibold uppercase tracking-wider text-slate-400 md:block">
+      <nav className="shrink-0 border-b border-border bg-surface-whisper/50 p-2 md:w-56 md:overflow-y-auto md:border-b-0 md:border-e md:p-3">
+        <p className="mb-2 hidden px-2 text-xs font-semibold uppercase tracking-wider text-subtle md:block">
           {t("common.settings")}
         </p>
         <div className="flex gap-1 overflow-x-auto md:flex-col md:gap-0.5 md:overflow-visible">
           {sections.map((s) => (
             <div key={s.slug} className="shrink-0 md:shrink">
               {s.belowDivider && (
-                <div className="my-2 hidden border-t border-slate-200 md:block" />
+                <div className="my-2 hidden border-t border-border md:block" />
               )}
               <Link
                 href={s.href ?? `/admin/settings/${s.slug}`}
                 className={cn(
                   "block whitespace-nowrap rounded-md px-3 py-2 text-sm transition-colors",
                   active === s.slug
-                    ? "bg-card font-medium text-teal-700 shadow-sm"
-                    : "text-slate-600 hover:bg-card hover:text-slate-900",
+                    ? "bg-card font-medium text-brand shadow-sm"
+                    : "text-muted-foreground hover:bg-card hover:text-foreground",
                 )}
               >
                 {t(s.labelKey)}

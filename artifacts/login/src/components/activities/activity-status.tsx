@@ -33,27 +33,27 @@ export const STATUS_META: Record<
   done: {
     label: "activity.status.done",
     icon: <CheckCircle2 className="h-3 w-3" />,
-    className: "border-teal-200 bg-teal-50 text-teal-700",
+    className: "border-brand-200 bg-brand-subtle text-brand",
   },
   noReply: {
     label: "activity.status.noReply",
     icon: <PhoneMissed className="h-3 w-3" />,
-    className: "border-slate-200 bg-slate-100 text-slate-500",
+    className: "border-border bg-muted text-muted-foreground",
   },
   overdue: {
     label: "activity.status.overdue",
     icon: <AlertTriangle className="h-3 w-3" />,
-    className: "border-red-200 bg-red-50 text-red-600",
+    className: "border-destructive/30 bg-destructive-subtle text-destructive",
   },
   today: {
     label: "activity.status.today",
     icon: <CalendarClock className="h-3 w-3" />,
-    className: "border-amber-200 bg-amber-50 text-amber-700",
+    className: "border-warning/30 bg-warning-subtle text-warning",
   },
   planned: {
     label: "activity.status.upcoming",
     icon: <Clock className="h-3 w-3" />,
-    className: "border-slate-200 bg-slate-50 text-slate-500",
+    className: "border-border bg-surface-whisper text-muted-foreground",
   },
 };
 

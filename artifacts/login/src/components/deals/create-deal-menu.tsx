@@ -26,7 +26,7 @@ export function CreateDealMenu({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button className="bg-teal-600 hover:bg-teal-700">
+          <Button className="bg-primary text-primary-foreground hover:bg-primary-hover">
             <Plus className="me-1.5 h-4 w-4" />
             {t("common.deal")}
             <ChevronDown className="ms-1.5 h-4 w-4" />

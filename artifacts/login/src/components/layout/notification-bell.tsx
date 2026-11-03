@@ -65,25 +65,25 @@ export function NotificationBell() {
             ? t("notifications.titleUnread", { count: unreadCount })
             : t("notifications.title")
         }
-        className="relative flex-shrink-0 rounded-md p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none"
+        className="relative flex-shrink-0 rounded-md p-2 text-muted-foreground transition-colors hover:bg-gray-alpha-100 hover:text-foreground focus:outline-none"
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white">
+          <span className="absolute -top-0.5 -end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-white">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
-        <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
-          <span className="text-sm font-semibold text-slate-700">
+        <div className="flex items-center justify-between border-b border-border px-3 py-2">
+          <span className="text-sm font-semibold text-foreground">
             {t("notifications.title")}
           </span>
           {unreadCount > 0 && (
             <button
               type="button"
               onClick={() => markAllRead.mutate(undefined, { onSettled: refresh })}
-              className="flex items-center gap-1 text-xs font-medium text-teal-600 hover:text-teal-700"
+              className="flex items-center gap-1 text-xs font-medium text-brand hover:text-brand"
             >
               <CheckCheck className="h-3.5 w-3.5" />
               {t("notifications.markAllRead")}
@@ -91,7 +91,7 @@ export function NotificationBell() {
           )}
         </div>
         {items.length === 0 ? (
-          <div className="px-3 py-8 text-center text-sm text-slate-400">
+          <div className="px-3 py-8 text-center text-sm text-subtle">
             {t("notifications.caughtUp")}
           </div>
         ) : (
@@ -102,21 +102,21 @@ export function NotificationBell() {
                   type="button"
                   onClick={() => open(n)}
                   className={cn(
-                    "flex w-full items-start gap-2 px-3 py-2.5 text-start transition-colors hover:bg-slate-50",
-                    !n.readAt && "bg-teal-50/50",
+                    "flex w-full items-start gap-2 px-3 py-2.5 text-start transition-colors hover:bg-gray-alpha-50",
+                    !n.readAt && "bg-brand-subtle/50",
                   )}
                 >
                   <span
                     className={cn(
                       "mt-1.5 h-2 w-2 flex-shrink-0 rounded-full",
-                      n.readAt ? "bg-transparent" : "bg-teal-500",
+                      n.readAt ? "bg-transparent" : "bg-brand-500",
                     )}
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm leading-snug text-slate-700">
+                    <span className="block text-sm leading-snug text-foreground">
                       {n.message}
                     </span>
-                    <span className="mt-0.5 block text-xs text-slate-400">
+                    <span className="mt-0.5 block text-xs text-subtle">
                       {formatRelativeShort(n.createdAt)}
                     </span>
                   </span>

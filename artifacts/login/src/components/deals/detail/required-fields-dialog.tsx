@@ -104,9 +104,9 @@ export function RequiredFieldsDialog({
           field grid scrolls. Two columns on desktop keeps 25+ fields
           manageable; wide controls (multi-select chips, textareas) span both. */}
       <DialogContent className="flex max-h-[min(88vh,52rem)] flex-col gap-0 p-0 sm:max-w-2xl">
-        <DialogHeader className="border-b border-slate-100 px-6 pb-4 pt-5">
+        <DialogHeader className="border-b border-border px-6 pb-4 pt-5">
           <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
+            <AlertTriangle className="h-4 w-4 shrink-0 text-warning-glyph" />
             {stageName ? t("deals.requiredFields.titleStage", { stage: stageName }) : t("deals.requiredFields.title")}
           </DialogTitle>
           <DialogDescription>
@@ -118,13 +118,13 @@ export function RequiredFieldsDialog({
           </DialogDescription>
           {shown.length > 0 && (
             <div className="flex items-center gap-2.5 pt-1">
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-teal-500 transition-[width] duration-300"
+                  className="h-full rounded-full bg-brand-500 transition-[width] duration-300"
                   style={{ width: `${(filled / shown.length) * 100}%` }}
                 />
               </div>
-              <span className="shrink-0 text-xs font-medium tabular-nums text-slate-500">
+              <span className="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">
                 {filled}/{shown.length} filled
               </span>
             </div>
@@ -133,7 +133,7 @@ export function RequiredFieldsDialog({
 
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
           {fields == null ? (
-            <div className="flex items-center justify-center py-16 text-sm text-slate-400">
+            <div className="flex items-center justify-center py-16 text-sm text-subtle">
               <Loader2 className="me-2 h-4 w-4 animate-spin" /> {t("deals.requiredFields.loading")}
             </div>
           ) : (
@@ -144,7 +144,7 @@ export function RequiredFieldsDialog({
                   label={isUnfilled(f) ? `${f.label} *` : f.label}
                   className={cn(
                     "rounded-md border-s-2 py-1 ps-3",
-                    isUnfilled(f) ? "border-amber-300" : "border-teal-200",
+                    isUnfilled(f) ? "border-warning/30" : "border-brand-200",
                     // Chip groups and long text need the full row; compact
                     // inputs sit two-up.
                     (f.fieldType === "set" || f.fieldType === "text") &&
@@ -158,7 +158,7 @@ export function RequiredFieldsDialog({
           )}
         </div>
 
-        <DialogFooter className="items-center border-t border-slate-100 px-6 py-3">
+        <DialogFooter className="items-center border-t border-border px-6 py-3">
           {blocking ? (
             <>
               <Button

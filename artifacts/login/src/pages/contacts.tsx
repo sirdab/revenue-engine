@@ -91,7 +91,7 @@ function ViewSwitcher({
 }) {
   const { t } = useI18n();
   return (
-    <div className="flex items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+    <div className="flex items-center gap-0.5 rounded-lg border border-border bg-surface-whisper p-0.5">
       {(
         [
           { key: "table", label: "views.table", icon: TableIcon },
@@ -105,8 +105,8 @@ function ViewSwitcher({
           className={cn(
             "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
             view === key
-              ? "bg-card text-teal-700 shadow-sm"
-              : "text-slate-500 hover:text-slate-700",
+              ? "bg-card text-brand shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           <Icon className="h-4 w-4" />
@@ -127,13 +127,13 @@ function SummaryCards({
       {cards.map((card) => (
         <div
           key={card.label}
-          className="rounded-lg border border-slate-200 bg-card px-4 py-3"
+          className="rounded-lg border border-border bg-card px-4 py-3"
         >
-          <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <span className={cn("h-2 w-2 rounded-full", card.dot)} />
             {card.label}
           </div>
-          <div className="mt-1 text-2xl font-bold tabular-nums text-slate-900">
+          <div className="mt-1 text-2xl font-bold tabular-nums text-foreground">
             {card.value.toLocaleString()}
           </div>
         </div>
@@ -197,10 +197,10 @@ export default function ContactsPage() {
     <div className="flex h-full flex-col overflow-hidden bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 pb-1 pt-3">
         <div>
-          <h1 className="font-heading text-xl font-bold tracking-tight text-slate-900">
+          <h1 className="font-heading text-xl font-bold tracking-tight text-foreground">
             {t("common.contacts")}
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted-foreground">
             {t("contacts.subtitle")}
           </p>
         </div>
@@ -217,7 +217,7 @@ export default function ContactsPage() {
               <ViewSwitcher view={personsView} onChange={setPersonsView} />
               <PersonFormDialog
                 trigger={
-                  <Button className="bg-teal-600 text-white hover:bg-teal-700">
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary-hover">
                     <Plus className="me-2 h-4 w-4" /> {t("contacts.addPerson")}
                   </Button>
                 }
@@ -234,7 +234,7 @@ export default function ContactsPage() {
               <ViewSwitcher view={orgsView} onChange={setOrgsView} />
               <OrgFormDialog
                 trigger={
-                  <Button className="bg-teal-600 text-white hover:bg-teal-700">
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary-hover">
                     <Plus className="me-2 h-4 w-4" /> {t("contacts.addOrganization")}
                   </Button>
                 }
@@ -350,7 +350,7 @@ function PersonsView({
   const total = data?.total ?? 0;
 
   const summary = useMemo(
-    () => [{ label: t("deals.related.people"), value: total, dot: "bg-slate-400" }],
+    () => [{ label: t("deals.related.people"), value: total, dot: "bg-gray-400" }],
     [total],
   );
 
@@ -366,11 +366,11 @@ function PersonsView({
             <Link
               href={`/person/${row.original.id}`}
               dir="auto"
-              className="block truncate font-medium text-slate-800 hover:text-teal-700 hover:underline"
+              className="block truncate font-medium text-foreground hover:text-brand hover:underline"
             >
               {dash(row.original.name)}
             </Link>
-            <div className="truncate text-xs text-slate-400">
+            <div className="truncate text-xs text-subtle">
               #{row.original.id}
             </div>
           </div>
@@ -382,7 +382,7 @@ function PersonsView({
         header: t("common.jobTitle"),
         size: 180,
         cell: ({ row }) => (
-          <span dir="auto" className="truncate text-slate-600">
+          <span dir="auto" className="truncate text-muted-foreground">
             {dash(row.original.jobTitle)}
           </span>
         ),
@@ -396,12 +396,12 @@ function PersonsView({
           row.original.email ? (
             <a
               href={`mailto:${row.original.email}`}
-              className="truncate text-teal-700 hover:underline"
+              className="truncate text-brand hover:underline"
             >
               {row.original.email}
             </a>
           ) : (
-            <span className="text-slate-400">—</span>
+            <span className="text-subtle">—</span>
           ),
       },
       {
@@ -410,7 +410,7 @@ function PersonsView({
         header: t("common.phone"),
         size: 170,
         cell: ({ row }) => (
-          <span dir="auto" className="truncate text-slate-600">
+          <span dir="auto" className="truncate text-muted-foreground">
             {dash(row.original.phone)}
           </span>
         ),
@@ -422,12 +422,12 @@ function PersonsView({
         size: 220,
         cell: ({ row }) =>
           row.original.organizationName ? (
-            <span className="flex items-center gap-1.5 truncate text-slate-600">
-              <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+            <span className="flex items-center gap-1.5 truncate text-muted-foreground">
+              <Building2 className="h-3.5 w-3.5 shrink-0 text-subtle" />
               {row.original.organizationName}
             </span>
           ) : (
-            <span className="text-slate-400">—</span>
+            <span className="text-subtle">—</span>
           ),
       },
       {
@@ -446,7 +446,7 @@ function PersonsView({
         size: 90,
         meta: { align: "right" },
         cell: ({ row }) => (
-          <span className="tabular-nums text-slate-700">
+          <span className="tabular-nums text-foreground">
             {row.original.dealCount ?? 0}
           </span>
         ),
@@ -488,9 +488,9 @@ function PersonsView({
       {filtersOpen && <SummaryCards cards={summary} />}
 
       {filtersOpen && (
-        <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-4 py-2.5">
+        <div className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-2.5">
             <div className="relative w-full sm:w-auto">
-              <Search className="pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
               <Input
                 value={query}
                 onChange={(e) => {
@@ -524,7 +524,7 @@ function PersonsView({
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-slate-500"
+                className="text-muted-foreground"
                 onClick={() => {
                   setFilters({
                     query: "",
@@ -601,28 +601,28 @@ function PersonsView({
 function PersonCard({ person }: { person: Person }) {
   const { t } = useI18n();
   return (
-    <div className="group flex flex-col rounded-xl border border-slate-200 bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md">
+    <div className="group flex flex-col rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md">
       <div className="flex items-start justify-between gap-2">
         <Link
           href={`/person/${person.id}`}
           className="flex min-w-0 items-center gap-2.5"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-50 text-sm font-semibold text-teal-700">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-subtle text-sm font-semibold text-brand">
             {person.name.charAt(0).toUpperCase()}
           </span>
           <div className="min-w-0">
             <div
               dir="auto"
-              className="truncate font-semibold text-slate-900 hover:text-teal-700 hover:underline"
+              className="truncate font-semibold text-foreground hover:text-brand hover:underline"
             >
               {person.name}
             </div>
             {person.jobTitle && (
-              <div dir="auto" className="truncate text-xs text-slate-500">
+              <div dir="auto" className="truncate text-xs text-muted-foreground">
                 {person.jobTitle}
               </div>
             )}
-            <div className="text-xs text-slate-400">
+            <div className="text-xs text-subtle">
               {person.dealCount ?? 0} deals
             </div>
           </div>
@@ -633,20 +633,20 @@ function PersonCard({ person }: { person: Person }) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 shrink-0 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100"
+              className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity group-hover:opacity-100"
             >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
           }
         />
       </div>
-      <div className="mt-3 space-y-1.5 text-sm text-slate-600">
+      <div className="mt-3 space-y-1.5 text-sm text-muted-foreground">
         {person.email && (
           <div className="flex items-center gap-2">
-            <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+            <Mail className="h-3.5 w-3.5 shrink-0 text-subtle" />
             <a
               href={`mailto:${person.email}`}
-              className="truncate hover:text-teal-700"
+              className="truncate hover:text-brand"
             >
               {person.email}
             </a>
@@ -654,7 +654,7 @@ function PersonCard({ person }: { person: Person }) {
         )}
         {person.phone && (
           <div className="flex items-center gap-2">
-            <Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+            <Phone className="h-3.5 w-3.5 shrink-0 text-subtle" />
             <span dir="auto" className="truncate">
               {person.phone}
             </span>
@@ -662,14 +662,14 @@ function PersonCard({ person }: { person: Person }) {
         )}
         {person.organizationName && (
           <div className="flex items-center gap-2">
-            <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-            <span className="truncate text-teal-700">
+            <Building2 className="h-3.5 w-3.5 shrink-0 text-subtle" />
+            <span className="truncate text-brand">
               {person.organizationName}
             </span>
           </div>
         )}
         {!person.email && !person.phone && !person.organizationName && (
-          <div className="text-xs text-slate-400">{t("contacts.noContactDetails")}</div>
+          <div className="text-xs text-subtle">{t("contacts.noContactDetails")}</div>
         )}
       </div>
     </div>
@@ -736,7 +736,7 @@ function OrganizationsView({
   const total = data?.total ?? 0;
 
   const summary = useMemo(
-    () => [{ label: t("contacts.organizations"), value: total, dot: "bg-slate-400" }],
+    () => [{ label: t("contacts.organizations"), value: total, dot: "bg-gray-400" }],
     [total],
   );
 
@@ -752,11 +752,11 @@ function OrganizationsView({
             <Link
               href={`/organization/${row.original.id}`}
               dir="auto"
-              className="block truncate font-medium text-slate-800 hover:text-teal-700 hover:underline"
+              className="block truncate font-medium text-foreground hover:text-brand hover:underline"
             >
               {dash(row.original.name)}
             </Link>
-            <div className="truncate text-xs text-slate-400">
+            <div className="truncate text-xs text-subtle">
               #{row.original.id}
             </div>
           </div>
@@ -768,7 +768,7 @@ function OrganizationsView({
         header: t("common.address"),
         size: 300,
         cell: ({ row }) => (
-          <span dir="auto" className="truncate text-slate-600">
+          <span dir="auto" className="truncate text-muted-foreground">
             {dash(row.original.address)}
           </span>
         ),
@@ -789,7 +789,7 @@ function OrganizationsView({
         size: 110,
         meta: { align: "right" },
         cell: ({ row }) => (
-          <span className="tabular-nums text-slate-700">
+          <span className="tabular-nums text-foreground">
             {row.original.personCount ?? 0}
           </span>
         ),
@@ -801,7 +801,7 @@ function OrganizationsView({
         size: 90,
         meta: { align: "right" },
         cell: ({ row }) => (
-          <span className="tabular-nums text-slate-700">
+          <span className="tabular-nums text-foreground">
             {row.original.dealCount ?? 0}
           </span>
         ),
@@ -834,9 +834,9 @@ function OrganizationsView({
       {filtersOpen && <SummaryCards cards={summary} />}
 
       {filtersOpen && (
-        <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-4 py-2.5">
+        <div className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-2.5">
             <div className="relative w-full sm:w-auto">
-              <Search className="pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
               <Input
                 value={query}
                 onChange={(e) => {
@@ -852,7 +852,7 @@ function OrganizationsView({
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-slate-500"
+                className="text-muted-foreground"
                 onClick={() => {
                   setFilters({ query: "" });
                   setPage(1);
@@ -923,17 +923,17 @@ function OrganizationsView({
 function OrgCard({ org }: { org: Organization }) {
   const { t } = useI18n();
   return (
-    <div className="group flex flex-col rounded-xl border border-slate-200 bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md">
+    <div className="group flex flex-col rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
             <Building2 className="h-4 w-4" />
           </span>
           <div className="min-w-0">
-            <div dir="auto" className="truncate font-semibold text-slate-900">
+            <div dir="auto" className="truncate font-semibold text-foreground">
               {org.name}
             </div>
-            <div className="text-xs text-slate-400">
+            <div className="text-xs text-subtle">
               {t("contacts.orgCardCounts", { contacts: org.personCount ?? 0, deals: org.dealCount ?? 0 })}
             </div>
           </div>
@@ -944,18 +944,18 @@ function OrgCard({ org }: { org: Organization }) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 shrink-0 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100"
+              className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity group-hover:opacity-100"
             >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
           }
         />
       </div>
-      <div className="mt-3 text-sm text-slate-600">
+      <div className="mt-3 text-sm text-muted-foreground">
         {org.address ? (
           <span dir="auto">{org.address}</span>
         ) : (
-          <span className="text-xs text-slate-400">{t("contacts.noAddress")}</span>
+          <span className="text-xs text-subtle">{t("contacts.noAddress")}</span>
         )}
       </div>
     </div>
@@ -980,15 +980,15 @@ function CardsGrid({
   const { t } = useI18n();
   if (isLoading) {
     return (
-      <div className="flex h-40 items-center justify-center text-sm text-slate-500">
-        <Loader2 className="me-2 h-5 w-5 animate-spin text-teal-600" />
+      <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+        <Loader2 className="me-2 h-5 w-5 animate-spin text-brand" />
         {t("common.loading")}
       </div>
     );
   }
   if (isEmpty) {
     return (
-      <div className="flex h-40 items-center justify-center text-sm text-slate-500">
+      <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
         {emptyMessage}
       </div>
     );

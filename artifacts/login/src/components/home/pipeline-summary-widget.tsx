@@ -60,8 +60,8 @@ export function PipelineSummaryWidget({ userId }: { userId: number }) {
       {data && (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm text-slate-600">
-              <span className="font-bold tabular-nums text-slate-900">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-bold tabular-nums text-foreground">
                 {data.totalCount}
               </span>{" "}
               {t("home.pipeline.summary", { value: formatCurrency(data.totalValue), weighted: formatCurrency(data.totalWeightedValue) })}
@@ -90,15 +90,15 @@ export function PipelineSummaryWidget({ userId }: { userId: number }) {
                 key={s.stageId}
                 type="button"
                 onClick={() => openStage(s.stageId)}
-                className="min-w-[110px] flex-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-start transition-colors hover:border-teal-400 hover:bg-teal-50"
+                className="min-w-[110px] flex-1 rounded-md border border-border bg-surface-whisper px-3 py-2 text-start transition-colors hover:border-brand-400 hover:bg-brand-subtle"
               >
-                <p className="truncate text-xs font-medium text-slate-500">
+                <p className="truncate text-xs font-medium text-muted-foreground">
                   {s.name}
                 </p>
-                <p className="text-lg font-bold tabular-nums text-slate-900">
+                <p className="text-lg font-bold tabular-nums text-foreground">
                   {s.count}
                 </p>
-                <p className="truncate text-xs tabular-nums text-slate-500">
+                <p className="truncate text-xs tabular-nums text-muted-foreground">
                   {formatCurrency(s.totalValue)}
                 </p>
               </button>

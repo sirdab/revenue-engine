@@ -106,7 +106,7 @@ export default function ForgotPasswordPage() {
                     type="email"
                     autoComplete="email"
                     autoFocus
-                    className="h-12 bg-card px-4 border-slate-200 transition-colors focus-visible:ring-primary/20 focus-visible:border-primary"
+                    className="h-12 bg-card px-4 border-border transition-colors focus-visible:ring-primary/20 focus-visible:border-primary"
                     {...field}
                   />
                 </FormControl>

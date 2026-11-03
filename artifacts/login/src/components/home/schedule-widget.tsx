@@ -39,21 +39,21 @@ export function ScheduleWidget({ userId }: { userId: number }) {
       isEmpty={!!data && meetings.length === 0}
       emptyText={t("home.schedule.empty")}
     >
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-border">
         {meetings.map((a) => {
           const meta = ACTIVITY_TYPE_CONFIG[a.type];
           return (
             <div key={a.id} className="group flex items-center gap-3 py-2">
-              <span className="w-11 shrink-0 text-xs font-semibold tabular-nums text-slate-600">
+              <span className="w-11 shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">
                 {a.dueTime ?? "—"}
               </span>
               <meta.Icon className={cn("h-4 w-4 shrink-0", meta.iconColor)} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-slate-900">
+                <p className="truncate text-sm font-medium text-foreground">
                   {a.subject}
                 </p>
                 {(a.personName || a.dealTitle) && (
-                  <p className="truncate text-xs text-slate-500">
+                  <p className="truncate text-xs text-muted-foreground">
                     {a.personName ?? a.dealTitle}
                   </p>
                 )}
@@ -63,7 +63,7 @@ export function ScheduleWidget({ userId }: { userId: number }) {
                 onClick={() => removeActivity(a)}
                 aria-label={t("activities.deleteSubject", { subject: a.subject })}
                 title={t("activity.row.delete")}
-                className="rounded p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
+                className="rounded p-1 text-subtle transition-colors hover:bg-destructive-subtle hover:text-destructive"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>

@@ -25,7 +25,7 @@ export interface ExtraColumnSpec {
   group?: MessageKey;
 }
 
-const dash = <span className="text-slate-400">—</span>;
+const dash = <span className="text-subtle">—</span>;
 
 function YesNo({ value }: { value: boolean }) {
   const { t } = useI18n();
@@ -38,14 +38,14 @@ function renderValue(kind: ExtraKind | undefined, value: unknown): React.ReactNo
   switch (kind) {
     case "number":
       return (
-        <span className="tabular-nums text-slate-600">
+        <span className="tabular-nums text-muted-foreground">
           {formatNumber(Number(value))}
         </span>
       );
     case "date":
     case "datetime":
       return (
-        <span className="truncate text-slate-500">
+        <span className="truncate text-muted-foreground">
           {formatDateTime(String(value))}
         </span>
       );
@@ -55,8 +55,8 @@ function renderValue(kind: ExtraKind | undefined, value: unknown): React.ReactNo
           variant="outline"
           className={
             value
-              ? "border-teal-200 bg-teal-50 px-1.5 py-0 text-[10px] text-teal-700"
-              : "border-slate-200 bg-slate-50 px-1.5 py-0 text-[10px] text-slate-500"
+              ? "border-brand-200 bg-brand-subtle px-1.5 py-0 text-[10px] text-brand"
+              : "border-border bg-surface-whisper px-1.5 py-0 text-[10px] text-muted-foreground"
           }
         >
           <YesNo value={!!value} />
@@ -66,14 +66,14 @@ function renderValue(kind: ExtraKind | undefined, value: unknown): React.ReactNo
       const arr = Array.isArray(value) ? value : [value];
       if (arr.length === 0) return dash;
       return (
-        <span dir="auto" className="truncate text-slate-600">
+        <span dir="auto" className="truncate text-muted-foreground">
           {arr.map(String).join(", ")}
         </span>
       );
     }
     default:
       return (
-        <span dir="auto" className="truncate text-slate-600">
+        <span dir="auto" className="truncate text-muted-foreground">
           {String(value)}
         </span>
       );

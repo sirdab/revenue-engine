@@ -162,7 +162,7 @@ export default function OrganizationDetailPage() {
   return (
     <div className="mx-auto h-full w-full max-w-7xl overflow-y-auto px-3 py-3 lg:px-4">
       <div className="flex flex-col gap-3">
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-card shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
           <OrganizationHeader organization={organization} onCommit={commit} />
         </div>
 
@@ -172,7 +172,7 @@ export default function OrganizationDetailPage() {
             <DealSectionCard title={t("common.details")}>
               <div className="space-y-4">
                 <div>
-                  <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                  <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-subtle">
                     {t("common.address")}
                   </div>
                   <EditableTextarea
@@ -183,7 +183,7 @@ export default function OrganizationDetailPage() {
                   />
                 </div>
                 <div>
-                  <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                  <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-subtle">
                     {t("deals.field.labels")}
                   </div>
                   <LabelsEditor
@@ -192,7 +192,7 @@ export default function OrganizationDetailPage() {
                     onChange={(labels) => commit({ labels })}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-4 border-t border-slate-100 pt-4">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-4 border-t border-border pt-4">
                   <DealField label={t("common.owner")} value={organization.ownerName} />
                   <DealField
                     label={t("common.added")}

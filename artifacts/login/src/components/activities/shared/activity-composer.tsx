@@ -295,7 +295,7 @@ export const ActivityComposer = forwardRef<
       <>
         <div className="py-2">{strip}</div>
         <DialogFooter>
-          <Button onClick={dismissNotice} className="bg-teal-600 text-white hover:bg-teal-700">
+          <Button onClick={dismissNotice} className="bg-primary text-primary-foreground hover:bg-primary-hover">
             {t("common.done")}
           </Button>
         </DialogFooter>
@@ -318,7 +318,7 @@ export const ActivityComposer = forwardRef<
       <Button
         onClick={() => void submit()}
         disabled={busy || (!logging && !subject.trim())}
-        className="bg-teal-600 text-white hover:bg-teal-700"
+        className="bg-primary text-primary-foreground hover:bg-primary-hover"
       >
         {source.pending ? (
           <Loader2 className="me-1.5 h-4 w-4 animate-spin" />
@@ -335,7 +335,7 @@ export const ActivityComposer = forwardRef<
       className={cn(
         "min-w-0 space-y-3",
         !dialog && "p-4",
-        !dialog && !bare && "border-b border-slate-100 bg-slate-50/50",
+        !dialog && !bare && "border-b border-border bg-surface-whisper/50",
       )}
     >
       <ModeToggle mode={mode} onChange={switchMode} disabled={disabled} />
@@ -352,7 +352,7 @@ export const ActivityComposer = forwardRef<
         </Dialog>
       )}
       <div className="space-y-1.5">
-        <Label className="text-xs font-medium text-slate-500">{t("common.type")}</Label>
+        <Label className="text-xs font-medium text-muted-foreground">{t("common.type")}</Label>
         <TypeField
           options={typesFor(mode, lists).flatMap((v) => {
             const o = source.typeOptions.find((x) => x.value === v);
@@ -394,7 +394,7 @@ export const ActivityComposer = forwardRef<
         </div>
       )}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-medium text-slate-500">{t("activity.composer.duration")}</span>
+        <span className="text-xs font-medium text-muted-foreground">{t("activity.composer.duration")}</span>
         <DurationPicker value={duration} onChange={setDuration} />
       </div>
       {showLinks && <LinkFields value={links} onChange={setLinks} />}
@@ -414,7 +414,7 @@ export const ActivityComposer = forwardRef<
           has nothing to say, so there is nothing to show. */}
       <div className={cn(contact && reply !== "successful" && "hidden")}>
         {contact && (
-          <label className="mb-1 block text-xs font-medium text-slate-500">
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">
             {t("activity.outcome.responseLabel")}
           </label>
         )}
@@ -430,13 +430,13 @@ export const ActivityComposer = forwardRef<
           onSubmit={() => void submit()}
         />
         {missing === "response" && (
-          <p className="mt-1 text-xs text-red-600">
+          <p className="mt-1 text-xs text-destructive">
             {t(contact ? "activity.outcome.responseOrSubjectRequired" : "activity.outcome.responseRequired")}
           </p>
         )}
       </div>
       {canMarkDone && (
-        <label className="flex items-center gap-2 text-sm text-slate-600">
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
           <Checkbox checked={markDone} onCheckedChange={(v) => setMarkDone(v === true)} />
           {t("activity.row.markDone")}
         </label>

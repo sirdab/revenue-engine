@@ -17,7 +17,7 @@ export function ViewSwitcher({
   onChange: (view: DealsView) => void;
 }) {
   return (
-    <div className="inline-flex items-center gap-1 rounded-lg bg-slate-100 p-1">
+    <div className="inline-flex items-center gap-1 rounded-lg bg-muted p-1">
       {TABS.map((tab) => {
         const Icon = tab.icon;
         const active = value === tab.value;
@@ -29,8 +29,8 @@ export function ViewSwitcher({
             className={cn(
               "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
               active
-                ? "bg-card text-teal-700 shadow-sm"
-                : "text-slate-600 hover:text-slate-900",
+                ? "bg-card text-brand shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
             aria-pressed={active}
             aria-label={tab.label}

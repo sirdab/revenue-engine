@@ -37,11 +37,11 @@ export function AttachmentTray({
           className={cn(
             "flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm",
             item.status === "error"
-              ? "border-red-200 bg-red-50"
-              : "border-slate-200 bg-slate-50",
+              ? "border-destructive/30 bg-destructive-subtle"
+              : "border-border bg-surface-whisper",
           )}
         >
-          <span className="shrink-0 text-slate-400">
+          <span className="shrink-0 text-subtle">
             {item.isImage ? (
               <ImageIcon className="h-4 w-4" />
             ) : (
@@ -50,8 +50,8 @@ export function AttachmentTray({
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-slate-700">{item.name}</span>
-              <span className="shrink-0 text-[11px] text-slate-400">
+              <span className="truncate text-foreground">{item.name}</span>
+              <span className="shrink-0 text-[11px] text-subtle">
                 {formatFileSize(item.size)}
               </span>
             </div>
@@ -59,7 +59,7 @@ export function AttachmentTray({
               <Progress value={item.progress} className="mt-1 h-1" />
             )}
             {item.status === "error" && (
-              <div className="mt-0.5 text-[11px] text-red-600">
+              <div className="mt-0.5 text-[11px] text-destructive">
                 {item.error ?? t("deals.attach.uploadFailed")}
               </div>
             )}
@@ -69,7 +69,7 @@ export function AttachmentTray({
               type="button"
               title={t("common.retry")}
               onClick={() => onRetry(item)}
-              className="shrink-0 text-slate-400 transition-colors hover:text-slate-700"
+              className="shrink-0 text-subtle transition-colors hover:text-foreground"
             >
               <RotateCw className="h-3.5 w-3.5" />
             </button>
@@ -78,7 +78,7 @@ export function AttachmentTray({
             type="button"
             title={item.status === "uploading" ? t("common.cancel") : t("common.remove")}
             onClick={() => onRemove(item)}
-            className="shrink-0 text-slate-400 transition-colors hover:text-red-600"
+            className="shrink-0 text-subtle transition-colors hover:text-destructive"
           >
             <X className="h-3.5 w-3.5" />
           </button>

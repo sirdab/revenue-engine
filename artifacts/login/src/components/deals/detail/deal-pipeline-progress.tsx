@@ -60,7 +60,7 @@ export function DealPipelineProgress({
 
   if (loading) {
     return (
-      <div className="border-t border-slate-100 px-4 py-3">
+      <div className="border-t border-border px-4 py-3">
         <div className="flex gap-1">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-7 flex-1 rounded" />
@@ -75,7 +75,7 @@ export function DealPipelineProgress({
   const NOTCH = 13;
 
   return (
-    <div className="border-t border-slate-100 px-4 pt-2 pb-3">
+    <div className="border-t border-border px-4 pt-2 pb-3">
       <div className="mb-2">
         <DealPipelineSelector
           deal={deal}
@@ -118,10 +118,10 @@ export function DealPipelineProgress({
               className={cn(
                 "relative flex h-10 min-w-0 flex-1 flex-col items-center justify-center pe-4 leading-none transition-colors",
                 isCurrent
-                  ? "bg-teal-600 font-semibold text-white"
+                  ? "bg-primary font-semibold text-primary-foreground"
                   : isPast
-                    ? "bg-teal-500 text-white hover:bg-teal-600"
-                    : "bg-slate-200 text-slate-500 hover:bg-slate-300",
+                    ? "bg-primary text-primary-foreground hover:bg-primary-hover"
+                    : "bg-gray-200 text-muted-foreground hover:bg-gray-300",
                 !isClosed && !isCurrent && "cursor-pointer",
                 isClosed && "cursor-default",
               )}
@@ -133,7 +133,7 @@ export function DealPipelineProgress({
                 <span
                   className={cn(
                     "mt-0.5 text-[10px] font-normal tabular-nums",
-                    isCurrent || isPast ? "text-white/75" : "text-slate-400",
+                    isCurrent || isPast ? "text-white/75" : "text-subtle",
                   )}
                 >
                   {formatDuration(seconds)}

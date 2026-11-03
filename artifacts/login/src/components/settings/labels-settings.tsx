@@ -118,7 +118,7 @@ function ColorPicker({
                 "h-6 w-6 rounded-full transition-transform hover:scale-110",
                 labelColorClasses(token).swatch,
                 token === color &&
-                  "ring-2 ring-slate-500 ring-offset-1 ring-offset-white",
+                  "ring-2 ring-ring ring-offset-1 ring-offset-white",
               )}
             />
           ))}
@@ -154,10 +154,10 @@ function LabelRow({
         <EditableText
           value={label.name}
           onCommit={(next) => next.trim() && onRename(next.trim())}
-          className="-ms-1 text-sm font-medium text-slate-800"
+          className="-ms-1 text-sm font-medium text-foreground"
         />
       </div>
-      <span className="shrink-0 text-xs tabular-nums text-slate-400">
+      <span className="shrink-0 text-xs tabular-nums text-subtle">
         {usageText(label.usageCount, noun)}
       </span>
       <AlertDialog>
@@ -167,7 +167,7 @@ function LabelRow({
             size="icon"
             disabled={busy}
             aria-label={`Delete ${label.name}`}
-            className="h-7 w-7 shrink-0 text-slate-300 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
+            className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
@@ -185,7 +185,7 @@ function LabelRow({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={onDelete}
-              className="bg-red-600 text-white hover:bg-red-700"
+              className="bg-destructive text-white hover:bg-destructive"
             >
               Delete label
             </AlertDialogAction>
@@ -265,14 +265,14 @@ function LabelsPanel({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center gap-2 px-5 py-10 text-sm text-slate-400">
+      <div className="flex items-center justify-center gap-2 px-5 py-10 text-sm text-subtle">
         <Loader2 className="h-4 w-4 animate-spin" /> Loading labels…
       </div>
     );
   }
   if (isError || !data) {
     return (
-      <div className="px-5 py-10 text-center text-sm text-red-600">
+      <div className="px-5 py-10 text-center text-sm text-destructive">
         Failed to load labels.
       </div>
     );
@@ -281,7 +281,7 @@ function LabelsPanel({
   return (
     <div>
       {adding && (
-        <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50/60 px-5 py-3">
+        <div className="flex items-center gap-3 border-b border-border bg-surface-whisper/60 px-5 py-3">
           <ColorPicker color={draftColor} onPick={setDraftColor} />
           <Input
             autoFocus
@@ -299,7 +299,7 @@ function LabelsPanel({
             size="sm"
             onClick={submitDraft}
             disabled={!draft.trim() || busy}
-            className="h-8 bg-teal-600 text-white hover:bg-teal-700"
+            className="h-8 bg-primary text-primary-foreground hover:bg-primary-hover"
           >
             Add
           </Button>
@@ -316,16 +316,16 @@ function LabelsPanel({
 
       {data.labels.length === 0 && data.unregistered.length === 0 ? (
         <div className="px-5 py-10 text-center">
-          <Tag className="mx-auto mb-2 h-6 w-6 text-slate-300" />
-          <p className="text-sm text-slate-500">No labels yet.</p>
-          <p className="mt-1 text-xs text-slate-400">
+          <Tag className="mx-auto mb-2 h-6 w-6 text-subtle" />
+          <p className="text-sm text-muted-foreground">No labels yet.</p>
+          <p className="mt-1 text-xs text-subtle">
             Create one here, or add labels directly on records; they'll show
             up here so you can add them to your list.
           </p>
         </div>
       ) : (
         <>
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-border">
             {data.labels.map((label) => (
               <LabelRow
                 key={label.id}
@@ -344,11 +344,11 @@ function LabelsPanel({
           </ul>
 
           {data.unregistered.length > 0 && (
-            <div className="border-t border-slate-100 bg-slate-50/40">
-              <p className="px-5 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <div className="border-t border-border bg-surface-whisper/40">
+              <p className="px-5 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-subtle">
                 In use, not in your list
               </p>
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-border">
                 {data.unregistered.map((u: UnregisteredLabel) => (
                   <li
                     key={u.name.toLowerCase()}
@@ -360,10 +360,10 @@ function LabelsPanel({
                         labelColorClasses("slate").swatch,
                       )}
                     />
-                    <span className="min-w-0 flex-1 truncate text-sm text-slate-700">
+                    <span className="min-w-0 flex-1 truncate text-sm text-foreground">
                       {u.name}
                     </span>
-                    <span className="shrink-0 text-xs tabular-nums text-slate-400">
+                    <span className="shrink-0 text-xs tabular-nums text-subtle">
                       {usageText(u.usageCount, noun)}
                     </span>
                     <Button
@@ -385,7 +385,7 @@ function LabelsPanel({
         </>
       )}
 
-      <p className="border-t border-slate-100 px-5 py-3 text-[11px] leading-relaxed text-slate-400">
+      <p className="border-t border-border px-5 py-3 text-[11px] leading-relaxed text-subtle">
         Renaming a label updates every record carrying it; renaming it to an
         existing label's name merges the two. Deleting strips it from all
         records.
@@ -423,7 +423,7 @@ function LabelsSection() {
           <Button
             size="sm"
             onClick={() => setAdding(true)}
-            className="h-8 bg-teal-600 text-white hover:bg-teal-700"
+            className="h-8 bg-primary text-primary-foreground hover:bg-primary-hover"
           >
             <Plus className="me-1 h-3.5 w-3.5" /> New label
           </Button>
@@ -470,15 +470,15 @@ function LostReasonRow({
         <EditableText
           value={reason.name}
           onCommit={(next) => next.trim() && onRename(next.trim())}
-          className="-ms-1 text-sm font-medium text-slate-800"
+          className="-ms-1 text-sm font-medium text-foreground"
         />
       </div>
       {!reason.active && (
-        <span className="shrink-0 rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+        <span className="shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
           Archived
         </span>
       )}
-      <span className="shrink-0 text-xs tabular-nums text-slate-400">
+      <span className="shrink-0 text-xs tabular-nums text-subtle">
         {reason.usageCount === 0
           ? "No deals"
           : `${reason.usageCount.toLocaleString()} ${reason.usageCount === 1 ? "deal" : "deals"}`}
@@ -490,7 +490,7 @@ function LostReasonRow({
         onClick={onToggle}
         aria-label={reason.active ? "Archive reason" : "Restore reason"}
         title={reason.active ? "Archive (hide from picker)" : "Restore"}
-        className="h-7 w-7 shrink-0 text-slate-300 opacity-0 transition-opacity hover:text-slate-600 group-hover:opacity-100"
+        className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity hover:text-muted-foreground group-hover:opacity-100"
       >
         {reason.active ? (
           <Archive className="h-3.5 w-3.5" />
@@ -505,7 +505,7 @@ function LostReasonRow({
             size="icon"
             disabled={busy}
             aria-label={`Delete ${reason.name}`}
-            className="h-7 w-7 shrink-0 text-slate-300 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
+            className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
@@ -523,7 +523,7 @@ function LostReasonRow({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={onDelete}
-              className="bg-red-600 text-white hover:bg-red-700"
+              className="bg-destructive text-white hover:bg-destructive"
             >
               Delete reason
             </AlertDialogAction>
@@ -574,7 +574,7 @@ function LostReasonsSection() {
       title="Lost reasons"
       description="The list reps pick from when marking a deal lost. They can still type a one-off custom reason; recurring ones surface below so you can promote them."
     >
-      <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-3">
+      <div className="flex items-center gap-2 border-b border-border px-5 py-3">
         <Input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -587,28 +587,28 @@ function LostReasonsSection() {
           size="sm"
           onClick={submit}
           disabled={!draft.trim() || busy}
-          className="h-8 bg-teal-600 text-white hover:bg-teal-700"
+          className="h-8 bg-primary text-primary-foreground hover:bg-primary-hover"
         >
           <Plus className="me-1 h-3.5 w-3.5" /> Add
         </Button>
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center gap-2 px-5 py-10 text-sm text-slate-400">
+        <div className="flex items-center justify-center gap-2 px-5 py-10 text-sm text-subtle">
           <Loader2 className="h-4 w-4 animate-spin" /> Loading reasons…
         </div>
       ) : isError || !data ? (
-        <div className="px-5 py-10 text-center text-sm text-red-600">
+        <div className="px-5 py-10 text-center text-sm text-destructive">
           Failed to load lost reasons.
         </div>
       ) : (
         <>
           {data.reasons.length === 0 ? (
-            <div className="px-5 py-8 text-center text-sm text-slate-500">
+            <div className="px-5 py-8 text-center text-sm text-muted-foreground">
               No managed reasons yet. Add your first above.
             </div>
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-border">
               {data.reasons.map((reason) => (
                 <LostReasonRow
                   key={reason.id}
@@ -630,23 +630,23 @@ function LostReasonsSection() {
           )}
 
           {data.unmanaged.length > 0 && (
-            <div className="border-t border-slate-100 bg-slate-50/40">
-              <p className="px-5 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <div className="border-t border-border bg-surface-whisper/40">
+              <p className="px-5 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-subtle">
                 Found on lost deals
               </p>
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-border">
                 {data.unmanaged.map((u: UnmanagedLostReason) => (
                   <li
                     key={u.name.toLowerCase()}
                     className="flex items-center gap-3 px-5 py-2"
                   >
                     <span
-                      className="min-w-0 flex-1 truncate text-sm text-slate-700"
+                      className="min-w-0 flex-1 truncate text-sm text-foreground"
                       title={u.name}
                     >
                       {u.name}
                     </span>
-                    <span className="shrink-0 text-xs tabular-nums text-slate-400">
+                    <span className="shrink-0 text-xs tabular-nums text-subtle">
                       {u.usageCount.toLocaleString()}{" "}
                       {u.usageCount === 1 ? "deal" : "deals"}
                     </span>
@@ -665,7 +665,7 @@ function LostReasonsSection() {
             </div>
           )}
 
-          <p className="border-t border-slate-100 px-5 py-3 text-[11px] leading-relaxed text-slate-400">
+          <p className="border-t border-border px-5 py-3 text-[11px] leading-relaxed text-subtle">
             Renaming a reason updates every deal that carries it. Archiving
             hides it from the picker without touching history.
           </p>
@@ -686,19 +686,19 @@ function CurrencySection() {
       description="The workspace default used for deal values, forecasts and totals."
     >
       <div className="flex items-center gap-4 px-5 py-4">
-        <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-teal-200 bg-teal-50 text-teal-700">
+        <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-brand-200 bg-brand-subtle text-brand">
           <SaudiRiyal className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-slate-900">
+            <span className="text-sm font-semibold text-foreground">
               Saudi Riyal
             </span>
-            <span className="rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-teal-700">
+            <span className="rounded-full border border-brand-200 bg-brand-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand">
               Default
             </span>
           </div>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             SAR: amounts across the app render with the official riyal symbol
             introduced by SAMA.
           </p>
@@ -714,10 +714,10 @@ export function LabelsSettings() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-6">
       <header className="mb-5">
-        <h1 className="font-heading text-xl font-bold text-slate-900">
+        <h1 className="font-heading text-xl font-bold text-foreground">
           Labels &amp; lost reasons
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Curate the shared vocabulary your team uses to classify deals,
           contacts and losses.
         </p>

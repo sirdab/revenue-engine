@@ -51,7 +51,7 @@ export function Highlight({ text, term }: { text: string; term: string }) {
     }
     if (idx > i) parts.push(<span key={key++}>{text.slice(i, idx)}</span>);
     parts.push(
-      <mark key={key++} className="rounded bg-teal-100 px-0.5 text-teal-900">
+      <mark key={key++} className="rounded bg-brand-subtle px-0.5 text-brand">
         {text.slice(idx, idx + needle.length)}
       </mark>,
     );

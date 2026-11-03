@@ -293,10 +293,10 @@ export default function AdminImportPage() {
   return (
     <div className="mx-auto flex h-full max-w-5xl flex-col">
       <div className="mb-5">
-        <h1 className="font-heading text-xl font-bold tracking-tight text-slate-900">
+        <h1 className="font-heading text-xl font-bold tracking-tight text-foreground">
           Import data
         </h1>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted-foreground">
           Bring organizations, people and deals in from a CSV, with a template,
           validation and a preview before anything is created.
         </p>
@@ -386,9 +386,9 @@ function Stepper({ current }: { current: StepId }) {
             <span
               className={cn(
                 "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
-                active && "bg-teal-600 text-white",
-                done && "bg-teal-100 text-teal-700",
-                !active && !done && "bg-slate-100 text-slate-400",
+                active && "bg-primary text-primary-foreground",
+                done && "bg-brand-subtle text-brand",
+                !active && !done && "bg-muted text-subtle",
               )}
             >
               {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
@@ -396,13 +396,13 @@ function Stepper({ current }: { current: StepId }) {
             <span
               className={cn(
                 "font-medium",
-                active ? "text-slate-900" : "text-slate-400",
+                active ? "text-foreground" : "text-subtle",
               )}
             >
               {STEP_LABELS[s]}
             </span>
             {i < STEPS.length - 1 && (
-              <span className="mx-1 h-px w-6 bg-slate-200" />
+              <span className="mx-1 h-px w-6 bg-gray-200" />
             )}
           </li>
         );
@@ -413,11 +413,11 @@ function Stepper({ current }: { current: StepId }) {
 
 function RequiredBadge({ required }: { required: boolean }) {
   return required ? (
-    <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+    <Badge variant="outline" className="border-warning/30 bg-warning-subtle text-warning">
       Required
     </Badge>
   ) : (
-    <Badge variant="outline" className="text-slate-400">
+    <Badge variant="outline" className="text-subtle">
       Optional
     </Badge>
   );
@@ -427,7 +427,7 @@ function Card({ children, className }: { children: ReactNode; className?: string
   return (
     <div
       className={cn(
-        "rounded-xl border border-slate-200 bg-card p-5 shadow-sm",
+        "rounded-xl border border-border bg-card p-5 shadow-sm",
         className,
       )}
     >
@@ -447,7 +447,7 @@ function EntityStep({ onChoose }: { onChoose: (k: EntityKey) => void }) {
         return (
           <div
             key={key}
-            className="group flex flex-col rounded-xl border border-slate-200 bg-card p-5 text-start shadow-sm transition-all hover:border-teal-300 hover:shadow-md"
+            className="group flex flex-col rounded-xl border border-border bg-card p-5 text-start shadow-sm transition-all hover:border-brand-300 hover:shadow-md"
           >
             {/* Two sibling buttons, not one inside the other: a nested button
                 is invalid HTML and reads as one control to a screen reader. */}
@@ -456,14 +456,14 @@ function EntityStep({ onChoose }: { onChoose: (k: EntityKey) => void }) {
               onClick={() => onChoose(key)}
               className="flex flex-1 flex-col text-start"
             >
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-teal-50 text-teal-600">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-subtle text-brand">
                 <Icon className="h-5 w-5" />
               </div>
-              <div className="text-base font-semibold text-slate-900">
+              <div className="text-base font-semibold text-foreground">
                 {spec.label}
               </div>
-              <p className="mb-3 text-sm text-slate-500">{spec.description}</p>
-              <div className="mt-auto flex items-center gap-1 text-sm font-medium text-teal-700">
+              <p className="mb-3 text-sm text-muted-foreground">{spec.description}</p>
+              <div className="mt-auto flex items-center gap-1 text-sm font-medium text-brand">
                 Import {spec.label}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </div>
@@ -471,7 +471,7 @@ function EntityStep({ onChoose }: { onChoose: (k: EntityKey) => void }) {
             <button
               type="button"
               onClick={() => downloadTemplate(key)}
-              className="mt-3 inline-flex w-fit items-center gap-1.5 text-xs text-slate-500 hover:text-teal-700"
+              className="mt-3 inline-flex w-fit items-center gap-1.5 text-xs text-muted-foreground hover:text-brand"
             >
               <Download className="h-3.5 w-3.5" /> Download template
             </button>
@@ -509,7 +509,7 @@ function UploadStep({
     <div className="space-y-4">
       <Card>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="font-semibold text-slate-900">
+          <h2 className="font-semibold text-foreground">
             Fields for {spec.label}
           </h2>
           <Button
@@ -523,12 +523,12 @@ function UploadStep({
         <div className="grid gap-1.5 sm:grid-cols-2">
           {spec.fields.map((f) => (
             <div key={f.key} className="flex items-center gap-2 text-sm">
-              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-700">
+              <code className="rounded bg-muted px-1.5 py-0.5 text-xs text-foreground">
                 {f.key}
               </code>
               <RequiredBadge required={f.required} />
               {f.help && (
-                <span className="truncate text-xs text-slate-400">{f.help}</span>
+                <span className="truncate text-xs text-subtle">{f.help}</span>
               )}
             </div>
           ))}
@@ -550,11 +550,11 @@ function UploadStep({
           }}
           className={cn(
             "flex flex-col items-center justify-center rounded-lg border-2 border-dashed px-6 py-10 text-center transition-colors",
-            drag ? "border-teal-400 bg-teal-50" : "border-slate-200 bg-slate-50",
+            drag ? "border-brand-400 bg-brand-subtle" : "border-border bg-surface-whisper",
           )}
         >
-          <UploadCloud className="mb-2 h-8 w-8 text-slate-400" />
-          <p className="text-sm font-medium text-slate-700">
+          <UploadCloud className="mb-2 h-8 w-8 text-subtle" />
+          <p className="text-sm font-medium text-foreground">
             Drag a .csv file here, or
           </p>
           <Button
@@ -577,14 +577,14 @@ function UploadStep({
             }}
           />
           {fileName && (
-            <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-slate-500">
+            <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
               <FileSpreadsheet className="h-3.5 w-3.5" /> {fileName}
             </p>
           )}
         </div>
 
         <details className="mt-4">
-          <summary className="cursor-pointer text-sm font-medium text-slate-600">
+          <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
             Or paste CSV text
           </summary>
           <Textarea
@@ -595,7 +595,7 @@ function UploadStep({
           />
           <Button
             size="sm"
-            className="mt-2 bg-teal-600 text-white hover:bg-teal-700"
+            className="mt-2 bg-primary text-primary-foreground hover:bg-primary-hover"
             disabled={!pasteText.trim()}
             onClick={onParsePaste}
           >
@@ -671,8 +671,8 @@ function MapStep({
     <div className="space-y-4">
       {/* Bulk-select defaults — the answer to "a key detail isn't there". */}
       <Card>
-        <h2 className="font-semibold text-slate-900">Defaults for every row</h2>
-        <p className="mb-3 text-sm text-slate-500">
+        <h2 className="font-semibold text-foreground">Defaults for every row</h2>
+        <p className="mb-3 text-sm text-muted-foreground">
           Applied to any row that leaves the matching column blank. Use these
           when your file doesn’t carry IDs.
         </p>
@@ -815,9 +815,9 @@ function MapStep({
 
       {/* Column mapping */}
       <Card>
-        <h2 className="mb-3 font-semibold text-slate-900">
+        <h2 className="mb-3 font-semibold text-foreground">
           Map columns{" "}
-          <span className="font-normal text-slate-400">
+          <span className="font-normal text-subtle">
             ({rowCount} rows detected)
           </span>
         </h2>
@@ -828,10 +828,10 @@ function MapStep({
               className="grid grid-cols-[1fr_auto_1.2fr] items-center gap-3 rounded-md px-1 py-1"
             >
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-slate-800">
+                <span className="text-sm font-medium text-foreground">
                   {f.label}
                 </span>
-                <code className="rounded bg-slate-100 px-1 py-0.5 text-[10px] text-slate-500">
+                <code className="rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
                   {f.key}
                 </code>
               </div>
@@ -876,19 +876,19 @@ function MapStep({
           <ArrowLeft className="me-1.5 h-4 w-4" /> Back
         </Button>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-500">
-            <span className="font-semibold text-teal-700">{validCount}</span>{" "}
+          <span className="text-sm text-muted-foreground">
+            <span className="font-semibold text-brand">{validCount}</span>{" "}
             ready
             {errorCount > 0 && (
               <>
                 {" · "}
-                <span className="font-semibold text-red-600">{errorCount}</span>{" "}
+                <span className="font-semibold text-destructive">{errorCount}</span>{" "}
                 with errors
               </>
             )}
           </span>
           <Button
-            className="bg-teal-600 text-white hover:bg-teal-700"
+            className="bg-primary text-primary-foreground hover:bg-primary-hover"
             disabled={unsatisfied.length > 0}
             onClick={onContinue}
           >
@@ -911,9 +911,9 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-slate-500">
+      <label className="text-xs font-medium text-muted-foreground">
         {label}
-        {required && <span className="ms-1 text-amber-600">*</span>}
+        {required && <span className="ms-1 text-warning">*</span>}
       </label>
       {children}
     </div>
@@ -978,12 +978,12 @@ function ReviewStep({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <Badge className="border-teal-200 bg-teal-50 text-teal-700">
+        <Badge className="border-brand-200 bg-brand-subtle text-brand">
           <CheckCircle2 className="me-1 h-3.5 w-3.5" /> {validCount} ready to
           import
         </Badge>
         {errorCount > 0 && (
-          <Badge variant="outline" className="border-red-200 bg-red-50 text-red-600">
+          <Badge variant="outline" className="border-destructive/30 bg-destructive-subtle text-destructive">
             <AlertCircle className="me-1 h-3.5 w-3.5" /> {errorCount} will be
             skipped
           </Badge>
@@ -1005,7 +1005,7 @@ function ReviewStep({
       <Card className="p-0">
         <div className="max-h-[52vh] overflow-auto">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-slate-50 text-start text-xs uppercase tracking-wide text-slate-500">
+            <thead className="sticky top-0 bg-surface-whisper text-start text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="w-16 px-3 py-2 font-semibold">Row</th>
                 <th className="w-24 px-3 py-2 font-semibold">Status</th>
@@ -1017,23 +1017,23 @@ function ReviewStep({
               {visible.map((r) => {
                 const ok = r.errors.length === 0;
                 return (
-                  <tr key={r.index} className="border-t border-slate-100">
-                    <td className="px-3 py-2 text-slate-400">{r.index + 2}</td>
+                  <tr key={r.index} className="border-t border-border">
+                    <td className="px-3 py-2 text-subtle">{r.index + 2}</td>
                     <td className="px-3 py-2">
                       {ok ? (
-                        <span className="inline-flex items-center gap-1 text-teal-700">
+                        <span className="inline-flex items-center gap-1 text-brand">
                           <CheckCircle2 className="h-3.5 w-3.5" /> Ready
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-red-600">
+                        <span className="inline-flex items-center gap-1 text-destructive">
                           <AlertCircle className="h-3.5 w-3.5" /> Error
                         </span>
                       )}
                     </td>
-                    <td className="px-3 py-2 text-slate-700">
+                    <td className="px-3 py-2 text-foreground">
                       {primarySummary(spec.key, r.data)}
                     </td>
-                    <td className="px-3 py-2 text-xs text-red-600">
+                    <td className="px-3 py-2 text-xs text-destructive">
                       {r.errors.map((e) => e.message).join(" ")}
                     </td>
                   </tr>
@@ -1043,7 +1043,7 @@ function ReviewStep({
           </table>
         </div>
         {hiddenCount > 0 && (
-          <div className="border-t border-slate-100 px-3 py-2 text-center text-xs text-slate-400">
+          <div className="border-t border-border px-3 py-2 text-center text-xs text-subtle">
             +{hiddenCount} more rows not shown
           </div>
         )}
@@ -1054,7 +1054,7 @@ function ReviewStep({
           <ArrowLeft className="me-1.5 h-4 w-4" /> Back
         </Button>
         <Button
-          className="bg-teal-600 text-white hover:bg-teal-700"
+          className="bg-primary text-primary-foreground hover:bg-primary-hover"
           disabled={validCount === 0 || importing}
           onClick={onImport}
         >
@@ -1094,16 +1094,16 @@ function ResultStep({
     <div className="space-y-4">
       <Card className="flex flex-col items-center py-8 text-center">
         {result.failed === 0 ? (
-          <CheckCircle2 className="mb-3 h-12 w-12 text-teal-500" />
+          <CheckCircle2 className="mb-3 h-12 w-12 text-brand" />
         ) : (
-          <AlertCircle className="mb-3 h-12 w-12 text-amber-500" />
+          <AlertCircle className="mb-3 h-12 w-12 text-warning-glyph" />
         )}
-        <h2 className="text-lg font-semibold text-slate-900">
+        <h2 className="text-lg font-semibold text-foreground">
           Imported {result.created}{" "}
           {result.created === 1 ? spec.singular : spec.label.toLowerCase()}
         </h2>
         {result.failed > 0 && (
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted-foreground">
             {result.failed} row{result.failed === 1 ? "" : "s"} were rejected by
             the server.
           </p>
@@ -1112,7 +1112,7 @@ function ResultStep({
 
       {result.errors.length > 0 && (
         <Card>
-          <h3 className="mb-2 text-sm font-semibold text-slate-700">
+          <h3 className="mb-2 text-sm font-semibold text-foreground">
             Server-rejected rows
           </h3>
           <ul className="max-h-56 space-y-1 overflow-y-auto text-sm">
@@ -1120,8 +1120,8 @@ function ResultStep({
               const csvIndex = submittedIndices[e.row - 1];
               const line = csvIndex != null ? csvIndex + 2 : e.row;
               return (
-                <li key={i} className="flex gap-2 text-red-600">
-                  <span className="shrink-0 text-slate-400">Row {line}:</span>
+                <li key={i} className="flex gap-2 text-destructive">
+                  <span className="shrink-0 text-subtle">Row {line}:</span>
                   {e.message}
                 </li>
               );
@@ -1134,7 +1134,7 @@ function ResultStep({
         <Button variant="outline" onClick={onImportMore}>
           Import another file
         </Button>
-        <Button className="bg-teal-600 text-white hover:bg-teal-700" onClick={onView}>
+        <Button className="bg-primary text-primary-foreground hover:bg-primary-hover" onClick={onView}>
           View {spec.label}
         </Button>
       </div>

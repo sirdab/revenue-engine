@@ -43,7 +43,7 @@ const TABS: { key: Tab; label: MessageKey; icon: typeof User }[] = [
 
 function EmptyPanel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-dashed border-slate-200 py-6 text-center text-sm text-slate-400">
+    <div className="rounded-lg border border-dashed border-border py-6 text-center text-sm text-subtle">
       {children}
     </div>
   );
@@ -134,7 +134,7 @@ function RelatedEditableField({
               }}
               rows={2}
               disabled={saving}
-              className="min-h-[56px] w-full rounded-md border border-slate-300 bg-card px-2.5 py-1.5 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/30 disabled:opacity-60"
+              className="min-h-[56px] w-full rounded-md border border-input bg-card px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:opacity-60"
               autoFocus
             />
           ) : (
@@ -181,10 +181,10 @@ function RelatedEditableField({
               <X className="h-3.5 w-3.5" /> {t("common.cancel")}
             </Button>
             {error ? (
-              <span className="text-xs text-red-600">{error}</span>
+              <span className="text-xs text-destructive">{error}</span>
             ) : (
               multiline && (
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-subtle">
                   {t("deals.related.editorHint")}
                 </span>
               )
@@ -206,13 +206,13 @@ function RelatedEditableField({
             <span className="break-words">{value}</span>
           )
         ) : required ? (
-          <span className="text-slate-400">—</span>
+          <span className="text-subtle">—</span>
         ) : (
           <button
             ref={pencilRef}
             type="button"
             onClick={onStartEdit}
-            className="inline-flex items-center gap-1 text-sm text-teal-700 hover:underline"
+            className="inline-flex items-center gap-1 text-sm text-brand hover:underline"
           >
             <Plus className="h-3.5 w-3.5" />{" "}
             {addLabel ?? t("deals.related.addField", { field: label.toLowerCase() })}
@@ -224,7 +224,7 @@ function RelatedEditableField({
             type="button"
             onClick={onStartEdit}
             aria-label={t("deals.related.editField", { field: label.toLowerCase() })}
-            className="ms-auto shrink-0 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            className="ms-auto shrink-0 rounded p-1 text-subtle hover:bg-gray-alpha-100 hover:text-foreground"
           >
             <Pencil className="h-3.5 w-3.5" />
           </button>
@@ -305,7 +305,7 @@ function PersonPanel({
           <a
             href={`mailto:${email}`}
             title={email}
-            className="flex min-w-0 items-center gap-1.5 text-teal-700 hover:underline"
+            className="flex min-w-0 items-center gap-1.5 text-brand hover:underline"
           >
             <Mail className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{email}</span>
@@ -324,7 +324,7 @@ function PersonPanel({
         renderDisplay={(phone) => (
           <a
             href={`tel:${phone}`}
-            className="inline-flex items-center gap-1.5 text-teal-700 hover:underline"
+            className="inline-flex items-center gap-1.5 text-brand hover:underline"
           >
             <Phone className="h-3.5 w-3.5" /> {phone}
           </a>
@@ -362,13 +362,13 @@ function OrganizationPanel({
           {organizationId != null ? (
             <Link
               href={`/organization/${organizationId}`}
-              className="inline-flex items-center gap-1 font-medium text-teal-700 hover:underline"
+              className="inline-flex items-center gap-1 font-medium text-brand hover:underline"
             >
               {organizationName}
               <ArrowUpRight className="h-3.5 w-3.5 shrink-0" />
             </Link>
           ) : (
-            organizationName ?? <span className="text-slate-400">—</span>
+            organizationName ?? <span className="text-subtle">—</span>
           )}
         </DealField>
       </div>
@@ -399,7 +399,7 @@ function OrganizationPanel({
         renderDisplay={(name) => (
           <Link
             href={`/organization/${orgId}`}
-            className="inline-flex items-center gap-1 font-medium text-teal-700 hover:underline"
+            className="inline-flex items-center gap-1 font-medium text-brand hover:underline"
           >
             {name}
             <ArrowUpRight className="h-3.5 w-3.5 shrink-0" />
@@ -438,7 +438,7 @@ export function DealRelatedEntities({
 
   return (
     <DealSectionCard title={t("deals.related.title")}>
-      <div className="mb-4 flex items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+      <div className="mb-4 flex items-center gap-0.5 rounded-lg border border-border bg-surface-whisper p-0.5">
         {TABS.map(({ key, label: labelKey, icon: Icon }) => (
           <button
             key={key}
@@ -447,8 +447,8 @@ export function DealRelatedEntities({
             className={cn(
               "flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors",
               tab === key
-                ? "bg-card text-teal-700 shadow-sm"
-                : "text-slate-500 hover:text-slate-700",
+                ? "bg-card text-brand shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <Icon className="h-3.5 w-3.5" />

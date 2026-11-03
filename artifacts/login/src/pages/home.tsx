@@ -50,10 +50,10 @@ export default function HomePage() {
     <div className="mx-auto max-w-7xl space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-bold text-slate-900">
+          <h1 className="font-heading text-2xl font-bold text-foreground">
             {t("home.greetingName", { greeting: t(greetingKeyFor(now)), name: firstName })}
           </h1>
-          <p className="text-sm text-slate-500">{dateLabel}</p>
+          <p className="text-sm text-muted-foreground">{dateLabel}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => setDealOpen(true)}>
