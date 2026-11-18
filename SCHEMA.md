@@ -1,4 +1,4 @@
-# CRM — Data Schema (for data mapping & import)
+# Sirdab Revenue Engine — Data Schema (for data mapping & import)
 
 This document describes the full data schema so you (or an LLM) can map source data onto it. The backend is Postgres (via Drizzle ORM).
 

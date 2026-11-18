@@ -128,7 +128,7 @@ function requestOnce(
         // No cookie/auth headers; ask for uncompressed so the byte cap is also
         // the decompressed cap (no decompression bomb).
         headers: {
-          "User-Agent": "CRM-LinkPreview/1.0",
+          "User-Agent": "RevenueEngine-LinkPreview/1.0",
           Accept: "text/html,application/xhtml+xml",
           "Accept-Encoding": "identity",
         },
