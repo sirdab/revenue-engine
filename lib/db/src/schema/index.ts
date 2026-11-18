@@ -1,3 +1,4 @@
+export * from "./tenants";
 export * from "./users";
 export * from "./password-reset-tokens";
 export * from "./pipelines";
@@ -11,8 +12,6 @@ export * from "./note-reactions";
 export * from "./link-previews";
 export * from "./notifications";
 export * from "./notification-subscriptions";
-export * from "./leads";
-export * from "./files";
 export * from "./crm-files";
 export * from "./deal-views";
 export * from "./user-preferences";
@@ -24,7 +23,7 @@ export * from "./teams";
 export * from "./assignment-rules";
 export * from "./automations";
 export * from "./automation-templates";
-export * from "./sync-state";
 export * from "./app-settings";
 export * from "./insights";
 export * from "./rate-limits";
+

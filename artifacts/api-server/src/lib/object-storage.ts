@@ -6,8 +6,8 @@ import {
 } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 
-// S3-compatible object storage for file attachment blobs (Cloudflare R2,
-// AWS S3, MinIO or any other S3-compatible endpoint —
+// S3-compatible object storage for file attachment blobs (Cloudflare R2 in
+// production; MinIO or any other S3-compatible endpoint works locally —
 // forcePathStyle covers both). Metadata stays in Postgres (crm_files); only
 // the bytes live here, keyed by the crm_files row id.
 

@@ -19,8 +19,8 @@ import {
 } from "@workspace/api-zod";
 import { currentUser, requireAdmin } from "../lib/auth";
 import { logDealCreated } from "../lib/change-events";
-import { isRealIsoDate } from "../lib/team-dates";
-import { phoneNsn, phoneNsnSql, PHONE_MIN_NSN } from "../lib/queries";
+import { isRealIsoDate } from "../lib/assistant-dates";
+import { phoneNsn, phoneDigitsSql, phoneDigitsVariants, PHONE_MIN_NSN } from "../lib/queries";
 
 // ---------------------------------------------------------------------------
 // Bulk CSV import for organizations, persons and deals.
@@ -103,22 +103,23 @@ async function personIdSet(ids: number[]): Promise<Set<number>> {
 }
 
 // For the deals importer's inline contact creation: map a normalized phone
-// (national significant number) to the most-recently-created person carrying
+// (national number, see phoneNsn) to the most-recently-created person carrying
 // it, so a deal row links the existing contact instead of spawning a duplicate.
-// Matching on the NSN — not the raw string — mirrors the rest of the app
-// (search.ts / queries.ts), so "+966 50 000 1234" and "0500001234" reuse the
-// same contact rather than creating a second one.
+// Matching on the normalized form, not the raw string, mirrors the rest of the
+// app (search.ts / queries.ts): "+44 7700 900123" and "07700900123" reuse the
+// same contact when PHONE_COUNTRY_CODE=44.
 async function personIdsByPhoneNsn(nsns: string[]): Promise<Map<string, number>> {
   const map = new Map<string, number>();
   if (!nsns.length) return map;
   const rows = await db
-    .select({ id: personsTable.id, nsn: phoneNsnSql(personsTable.phone) })
+    .select({ id: personsTable.id, phone: personsTable.phone })
     .from(personsTable)
-    .where(inArray(phoneNsnSql(personsTable.phone), nsns));
+    .where(inArray(phoneDigitsSql(personsTable.phone), nsns.flatMap(phoneDigitsVariants)));
   for (const r of rows) {
-    if (!r.nsn) continue;
-    const prev = map.get(r.nsn);
-    if (prev == null || r.id > prev) map.set(r.nsn, r.id);
+    const nsn = phoneNsn(r.phone);
+    if (!nsn) continue;
+    const prev = map.get(nsn);
+    if (prev == null || r.id > prev) map.set(nsn, r.id);
   }
   return map;
 }
@@ -466,7 +467,7 @@ router.post("/import/deals", requireAdmin, async (req, res): Promise<void> => {
     values.push({
       title: r.title.trim(),
       value: r.value ?? 0,
-      currency: r.currency ?? user.defaultCurrency ?? "SAR",
+      currency: r.currency ?? user.defaultCurrency ?? "USD",
       pipelineId: r.pipelineId,
       stageId: r.stageId,
       ownerId: r.ownerId ?? user.id,

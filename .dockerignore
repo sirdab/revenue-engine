@@ -10,13 +10,11 @@ node_modules
 .vscode
 .cache
 .local
-.env
-.env.*
 
 # Docs and deploy config aren't needed inside the image.
 *.md
 Dockerfile
 .dockerignore
-docker-compose.yml
+fly.toml
 
 .DS_Store

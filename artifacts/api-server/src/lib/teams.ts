@@ -3,16 +3,12 @@ import { db, teamsTable, usersTable } from "@workspace/db";
 
 // Teams service — the ownership grouping layer.
 //
-// Teams are a hybrid registry: admin-created (pipedrive_id null) or imported
-// from Pipedrive (see migrations/pipedrive-api-sync/sync.js). Membership is one
-// primary team per user via users.team_id; assigning a user to a team is a plain
+// Membership is one primary team per user via users.team_id; assigning a user to a team is a plain
 // users update handled by the users route. This service owns team CRUD and the
 // "team with its members" projection the admin panel reads.
 //
-// Deliberately NO name-uniqueness check (matching the schema's lack of a
-// lower(name) unique index): the Pipedrive import upserts ON CONFLICT
-// (pipedrive_id) and must never abort on a name collision with a native team,
-// and duplicate display names are tolerable for a grouping.
+// Deliberately NO name-uniqueness check: duplicate display names are
+// tolerable for a grouping.
 
 export class TeamError extends Error {
   constructor(
@@ -34,7 +30,6 @@ export interface TeamWithMembers {
   name: string;
   active: boolean;
   orderIndex: number;
-  pipedriveId: number | null;
   memberCount: number;
   members: TeamMember[];
 }
@@ -43,12 +38,11 @@ export interface TeamWithMembers {
 // exposed to non-admins (the full member list is admin-only, see adminListTeams).
 export type TeamOption = Omit<TeamWithMembers, "members">;
 
-// Registry columns a Team projection reads — everything except the raw
-// pipedrive_data jsonb, which no consumer needs. Kept as one shape so the three
+// Registry columns a Team projection reads. Kept as one shape so the three
 // call sites (create / update / list) can't drift.
 type TeamRow = Pick<
   TeamWithMembers,
-  "id" | "name" | "active" | "orderIndex" | "pipedriveId"
+  "id" | "name" | "active" | "orderIndex"
 >;
 
 function toTeam(row: TeamRow, members: TeamMember[]): TeamWithMembers {
@@ -79,7 +73,6 @@ export async function listActiveTeams(): Promise<TeamOption[]> {
       name: teamsTable.name,
       active: teamsTable.active,
       orderIndex: teamsTable.orderIndex,
-      pipedriveId: teamsTable.pipedriveId,
     })
     .from(teamsTable)
     .where(eq(teamsTable.active, true))
@@ -106,7 +99,6 @@ export async function adminListTeams(): Promise<TeamWithMembers[]> {
       name: teamsTable.name,
       active: teamsTable.active,
       orderIndex: teamsTable.orderIndex,
-      pipedriveId: teamsTable.pipedriveId,
     })
     .from(teamsTable)
     .orderBy(asc(teamsTable.orderIndex), asc(sql`lower(${teamsTable.name})`));

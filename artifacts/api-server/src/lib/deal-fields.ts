@@ -12,6 +12,7 @@ import {
   type DealFieldType,
   type DealFieldConfig,
   type ChangeValueSnapshot,
+  runAsSystem,
 } from "@workspace/db";
 import {
   logDealChanges,
@@ -22,7 +23,7 @@ import {
 import { logger } from "./logger";
 
 // The deal-field registry service: one accessor for every field regardless of
-// where its value lives (a native column, the Pipedrive-decoded custom_fields
+// where its value lives (a native column, an imported custom_fields
 // jsonb, or a user-created custom_fields key). Reads via resolveDealFields,
 // writes via setDealField (validated + audited), discovers existing keys via
 // runDiscovery. See lib/db/src/schema/deal-fields.ts for the data model.
@@ -181,10 +182,8 @@ export async function computeMissingRequiredFields(
   return map.get(deal.id) ?? [];
 }
 
-/**
- * The pipeline's won-required fields that are currently empty on the deal.
- * Marking a deal won is refused until this is empty.
- */
+/** The pipeline's won-required fields still empty on `deal`, as the deal
+ *  will be after the write being checked. */
 export async function computeMissingWonFields(
   deal: Deal,
   pipelineId: number,
@@ -193,11 +192,11 @@ export async function computeMissingWonFields(
     .select({ wonRequiredFields: pipelinesTable.wonRequiredFields })
     .from(pipelinesTable)
     .where(eq(pipelinesTable.id, pipelineId));
-  const required = new Set(pipeline?.wonRequiredFields ?? []);
-  if (required.size === 0) return [];
+  const keys = new Set(pipeline?.wonRequiredFields ?? []);
+  if (keys.size === 0) return [];
   const registry = await loadFieldRegistry();
   return resolveDealFields(deal, registry).filter(
-    (f) => required.has(f.key) && isRequirementUnmet(f),
+    (f) => keys.has(f.key) && isRequirementUnmet(f),
   );
 }
 
@@ -488,10 +487,10 @@ export async function setDealField(
 // Built-in column-backed definitions.
 // ---------------------------------------------------------------------------
 
-// `value` and `expected_close_date` are core deal columns registered ACTIVE so
-// the stage/won required-fields pickers can offer them (Pipedrive parity);
-// their dedicated editors live on the deal header/details cards, so the
-// custom-fields card hides them (CORE_COLUMN_FIELD_KEYS on the client).
+// Core deal columns registered as system, column-backed field definitions so
+// the stage/won required-fields pickers can offer them. Their dedicated
+// editors live on the deal header/details cards, so the custom-fields card
+// hides them (CORE_COLUMN_FIELD_KEYS on the client).
 const NATIVE_COLUMN_FIELDS: {
   key: string;
   label: string;
@@ -504,8 +503,8 @@ const NATIVE_COLUMN_FIELDS: {
 ];
 
 /** Idempotent: register the native columns as system, column-backed field
- *  definitions. Called
- *  once at server startup; existing definitions (same key or same
+ *  definitions for the current tenant. Called when a tenant is created and,
+ *  for every tenant, at server startup; existing definitions (same key or same
  *  storage+source) are left untouched. */
 export async function ensureNativeColumnFields(): Promise<void> {
   await db
@@ -544,67 +543,6 @@ export async function ensureNativeColumnFields(): Promise<void> {
         "Native column field is shadowed by a conflicting deal_field definition — requirements on this key will not read the native column",
       );
     }
-  }
-}
-
-// Intake fields with no native column (today just the UTM ad group). These live in deals.custom_fields
-// jsonb keyed by `sourceKey` (storage="data") — the inbound lead webhook writes
-// them there via its `customFields` map, and the deal page's Custom Fields card
-// renders them editable. Seeded ACTIVE (per product decision: every intake field
-// must be fillable/visible out of the box), grouped so the card reads cleanly.
-const SEEDED_DATA_FIELDS: {
-  key: string;
-  label: string;
-  sourceKey: string;
-  fieldType: DealFieldType;
-  group: string;
-}[] = [
-  { key: "utm_ad_group", label: "UTM Ad Group", sourceKey: "utm_ad_group", fieldType: "varchar", group: "Source & attribution" },
-];
-
-/** The seeded data-field source keys, exported so the webhook can resolve an
- *  incoming `customFields` label/key to the right custom_fields json key. */
-export const SEEDED_DATA_FIELD_DEFS = SEEDED_DATA_FIELDS;
-
-/** Idempotent: register the intake fields as ACTIVE,
- *  system, data-backed (custom_fields jsonb) definitions, and force them active
- *  even if a prior discovery pass created them inactive — so every intake field
- *  is fillable and visible. Existing config flags are preserved; only `active`
- *  and the display `group` are set. Called once at server startup. */
-export async function ensureSeededDataFields(): Promise<void> {
-  await db
-    .insert(dealFieldsTable)
-    .values(
-      SEEDED_DATA_FIELDS.map((f) => ({
-        key: f.key,
-        label: f.label,
-        fieldType: f.fieldType,
-        storage: "data" as const,
-        sourceKey: f.sourceKey,
-        editable: true,
-        active: true,
-        system: true,
-        config: { group: f.group } as DealFieldConfig,
-      })),
-    )
-    .onConflictDoNothing();
-  // A prior runDiscovery() may already hold these source keys as inactive
-  // definitions (which blocks the insert above via the storage+source unique
-  // index). Flip those active and stamp the group so they surface editable.
-  for (const f of SEEDED_DATA_FIELDS) {
-    await db
-      .update(dealFieldsTable)
-      .set({
-        active: true,
-        config: sql`COALESCE(${dealFieldsTable.config}, '{}'::jsonb) || ${JSON.stringify({ group: f.group })}::jsonb`,
-      })
-      .where(
-        and(
-          eq(dealFieldsTable.storage, "data"),
-          eq(dealFieldsTable.sourceKey, f.sourceKey),
-          eq(dealFieldsTable.active, false),
-        ),
-      );
   }
 }
 
@@ -676,6 +614,16 @@ function desiredIndexDdl(field: DealField): string | null {
 
 /** Make the deals expression indexes match the current filterable flags. */
 export async function reconcileFieldIndexes(): Promise<{
+  created: number;
+  dropped: number;
+}> {
+  // The indexes live on the shared deals table, so the desired set is the
+  // union over EVERY tenant's flagged fields. Reading only the current
+  // tenant's fields would drop the indexes other tenants rely on.
+  return runAsSystem(reconcileAllFieldIndexes);
+}
+
+async function reconcileAllFieldIndexes(): Promise<{
   created: number;
   dropped: number;
 }> {

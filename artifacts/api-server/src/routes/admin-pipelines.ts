@@ -5,7 +5,6 @@ import { requireAdmin, currentUser } from "../lib/auth";
 import { logger } from "../lib/logger";
 import {
   lockForCreate,
-  nextLocalId,
   pipelineActiveDealCount,
   stageActiveDealCount,
   PipelineAdminError,
@@ -75,7 +74,6 @@ router.post("/admin/pipelines", requireAdmin, async (req, res): Promise<void> =>
   try {
     const created = await db.transaction(async (tx) => {
       await lockForCreate(tx, PIPELINE_LOCK_KEY);
-      const id = await nextLocalId(tx, "pipelines");
       const [agg] = await tx
         .select({
           maxOrder: sql<number>`coalesce(max(${pipelinesTable.orderIndex}), 0)::int`,
@@ -85,14 +83,13 @@ router.post("/admin/pipelines", requireAdmin, async (req, res): Promise<void> =>
       const [row] = await tx
         .insert(pipelinesTable)
         .values({
-          id,
           name,
           orderIndex: (agg?.maxOrder ?? 0) + 1,
           isDefault: (agg?.total ?? 0) === 0, // first pipeline becomes default
           adminOnlyReassign: req.body?.adminOnlyReassign === true,
         })
         .returning();
-      await logEntityEvent(tx, "pipeline", id, "created", null, { id, label: name }, {
+      await logEntityEvent(tx, "pipeline", row.id, "created", null, { id: row.id, label: name }, {
         changedBy: user.id,
       });
       return row;
@@ -400,7 +397,6 @@ router.post("/admin/stages", requireAdmin, async (req, res): Promise<void> => {
       if (!pipeline)
         throw new PipelineAdminError("Pipeline not found", 404);
       await lockForCreate(tx, STAGE_LOCK_KEY);
-      const id = await nextLocalId(tx, "stages");
       const [agg] = await tx
         .select({ maxOrder: sql<number>`coalesce(max(${stagesTable.orderIndex}), 0)::int` })
         .from(stagesTable)
@@ -408,7 +404,6 @@ router.post("/admin/stages", requireAdmin, async (req, res): Promise<void> => {
       const [row] = await tx
         .insert(stagesTable)
         .values({
-          id,
           name,
           pipelineId,
           orderIndex: (agg?.maxOrder ?? 0) + 1,
@@ -417,7 +412,7 @@ router.post("/admin/stages", requireAdmin, async (req, res): Promise<void> => {
           requiredFields,
         })
         .returning();
-      await logEntityEvent(tx, "stage", id, "created", null, { id, label: name }, {
+      await logEntityEvent(tx, "stage", row.id, "created", null, { id: row.id, label: name }, {
         changedBy: user.id,
       });
       return row;

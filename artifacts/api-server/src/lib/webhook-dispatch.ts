@@ -12,10 +12,31 @@ import { logger } from "./logger";
 // transaction (a slow endpoint would hold it open) nor block the user's
 // response — every call is best-effort and logged, never awaited for success.
 
+/** The account subject an account-triggered webhook carries instead of a deal. */
+export interface WebhookAccountSubject {
+  orgId: number;
+  stage: string | null;
+  previousStage: string | null;
+  accountManager: string | null;
+  /** Secondary owner label for the account, or null. */
+  collectionsOwner: string | null;
+}
+
 export interface WebhookIntent {
   config: CallWebhookConfig;
   event: AutomationTriggerEvent;
+  /**
+   * Exactly one of `deal` / `account` is set, by trigger:
+   *   deal_added / deal_updated  -> deal
+   *   (account triggers)         -> account — none are defined at present
+   *
+   * The payload shape follows, so an external consumer must branch on `event`
+   * rather than assume `deal` is always present. Kept as two optional fields
+   * instead of a discriminated union because the config, ids and firing path are
+   * identical — only the body differs.
+   */
   deal?: Deal;
+  account?: WebhookAccountSubject;
   automationId: number;
   automationName: string;
 }
@@ -33,7 +54,7 @@ async function fireOne(
   intent: WebhookIntent,
   secret: string | null,
 ): Promise<void> {
-  const { config, event, deal, automationId, automationName } = intent;
+  const { config, event, deal, account, automationId, automationName } = intent;
   const headers: Record<string, string> = {
     "content-type": "application/json",
   };
@@ -66,12 +87,16 @@ async function fireOne(
     }
   }
 
+  // `deal` stays in the body for deal triggers (unchanged contract) and
+  // `account` appears for account triggers. Both keys are always present so a
+  // consumer can read one and find null rather than a missing property.
   const body = JSON.stringify({
     event,
     automationId,
     automationName,
     firedAt: new Date().toISOString(),
     deal: dealPayload ?? null,
+    account: config.includeDeal ? (account ?? null) : null,
   });
 
   const controller = new AbortController();

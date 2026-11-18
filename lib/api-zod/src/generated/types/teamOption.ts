@@ -15,7 +15,5 @@ export interface TeamOption {
   name: string;
   active: boolean;
   orderIndex: number;
-  /** @nullable */
-  pipedriveId?: number | null;
   memberCount: number;
 }

@@ -47,7 +47,7 @@ export { InsightsQueryError, type PerformanceResult };
 // filterable expression indexes), values are always bound parameters.
 //
 // Filter conditions accept BOTH vocabularies: the Insights field keys that
-// /insights/fields advertises (createdAt, utmSource, …) and the
+// /insights/fields advertises (createdAt, utmSource, value, …) and the
 // 11 base deals-filter DSL names (createdDate, wonTime, …) so filters encoded
 // by the existing deals page remain valid. Aliases map between the two.
 // ---------------------------------------------------------------------------
@@ -79,8 +79,8 @@ const BASE_DSL_ALIASES: Record<string, string> = {
 };
 
 // spec.dateBasis values the deals `performance` report can serve today.
-// enteredStageAt needs change_events (funnel work); activityDoneAt and
-// invoiceDate belong to other scopes. Rejected early with a clear message
+// enteredStageAt needs change_events (funnel work); activityDoneAt belongs
+// to another scope. Rejected early with a clear message
 // instead of failing only when a board date filter happens to be active.
 const DATE_BASIS_COLUMNS: Record<string, AnyColumn> = {
   createdAt: dealsTable.addTime,
@@ -94,8 +94,9 @@ const DEALS_NATIVE_BY_KEY = new Map(DEALS_NATIVE_FIELDS.map((f) => [f.key, f]));
 const DATE_FIELD_KEYS = new Set(["createdAt", "wonAt", "lostAt", "closedAt"]);
 
 /** JSONB accessor for a registry custom field. The key is registry-owned
- *  (never raw client input); embedding it as an escaped literal lets a btree
- *  expression index over (custom_fields ->> '<key>') match if one is added. */
+ *  (never raw client input); embedding it as an escaped literal lets btree
+ *  expression indexes over (custom_fields ->> '<key>') match — today only
+ *  `qualification` has one (deals_cf_qualification_idx); other keys scan. */
 function customExpr(def: InsightsFieldDef): SQL {
   const key = (def.customKey ?? "").replace(/'/g, "''");
   return sql`(${dealsTable.customFields} ->> ${sql.raw(`'${key}'`)})`;
@@ -246,6 +247,7 @@ export interface GlobalFilters {
   ownerIds?: number[];
   pipelineIds?: number[];
   statuses?: string[];
+  qualification?: string;
   /** base64url-encoded extended filter group (the board's Add-filter). */
   filters?: string | null;
 }
@@ -256,6 +258,22 @@ export interface CompiledGlobalFilters {
   conditions: SQL[];
   applied: string[];
   needsOrgJoin: boolean;
+}
+
+/** The qualification quick-chip resolves through the custom-field registry.
+ *  Failing loudly beats the silent-drop failure mode: a filter the user set
+ *  must never be ignored. Shared with the activities scope (deal-side). */
+export function qualificationCondition(
+  catalog: DealsFieldCatalog,
+  value: string,
+): SQL {
+  const def = catalog.customByRef.get("cf:qualification");
+  if (!def) {
+    throw new InsightsQueryError(
+      'Qualification filter is unavailable: no active "qualification" deal field',
+    );
+  }
+  return compileCustomCondition(def, "is", value);
 }
 
 export function compileGlobalFilters(
@@ -283,6 +301,10 @@ export function compileGlobalFilters(
       applied.push(`Status is any of ${statuses.join(", ")}`);
     }
   }
+  if (global.qualification) {
+    conditions.push(qualificationCondition(catalog, global.qualification));
+    applied.push(`Qualification is ${global.qualification}`);
+  }
   if (global.filters) {
     const group = decodeBoardFilters(global.filters);
     const compiled = compileExtendedGroup(group, catalog);
@@ -309,7 +331,7 @@ export function compileGlobalFilters(
 
 // ---------------------------------------------------------------------------
 // The `performance` report: measure × viewBy (× segmentBy) with date
-// bucketing in Asia/Riyadh.
+// bucketing in the app time zone.
 // ---------------------------------------------------------------------------
 
 interface Dimension {

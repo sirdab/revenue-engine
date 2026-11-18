@@ -11,7 +11,6 @@ import {
   FILE_CATEGORIES,
   FileValidationError,
   validateUpload,
-  requireValidTarget,
   type FileCategory,
 } from "./file-validation";
 import { putObject, getObject, deleteObject } from "./object-storage";
@@ -26,11 +25,11 @@ export {
   type FileCategory,
 } from "./file-validation";
 
-// Transactional storage for deal file attachments.
+// Transactional storage for deal file attachments (R1, R4, R8, R9).
 // Metadata lives in Postgres (crm_files); the blob lives in S3-compatible
-// object storage (object-storage.ts). No Express types in this module's
-// signatures, so a data-migration script can call saveFile directly without
-// going through HTTP.
+// object storage (object-storage.ts — Cloudflare R2 in production). No
+// Express types in this module's signatures, so a script (e.g. a bulk
+// import) can call saveFile directly (R8) without going through HTTP.
 
 export class FileNotFoundError extends Error {
   constructor(id: number) {
@@ -90,7 +89,6 @@ export interface SaveFileInput {
  * caller should still commit one file per transaction.
  */
 export async function saveFile(input: SaveFileInput): Promise<CrmFile> {
-  requireValidTarget(input.dealId);
   if (!FILE_CATEGORIES.safeParse(input.category).success) {
     throw new FileValidationError(`Unknown file category "${input.category}".`);
   }
@@ -130,14 +128,14 @@ export async function saveFile(input: SaveFileInput): Promise<CrmFile> {
         mimeType,
         sizeBytes: input.buffer.length,
         category: input.category,
-        dealId: input.dealId ?? null,
+        dealId: input.dealId,
         noteId: input.noteId ?? null,
         uploadedBy: input.uploadedBy,
       })
       .returning();
 
     // Draft-targeted uploads defer their history event to post time; every
-    // other target (deal, account, already-posted comment) logs immediately.
+    // target (the deal, an already-posted comment) logs immediately.
     if (noteIsDraft) {
       return { row: inserted, eventId: null as number | null };
     }
@@ -261,15 +259,13 @@ export async function listFiles(target: FileTarget): Promise<CrmFile[]> {
       .orderBy(desc(crmFilesTable.addTime));
     return rows.map((r) => r.file);
   }
-  // Deal docs only — comment attachments (note_id set) are excluded.
-  const condition = and(
-    eq(crmFilesTable.dealId, target.dealId),
-    isNull(crmFilesTable.noteId),
-  );
+  // Deal docs only — comment attachments (note_id set) are excluded (R5).
   return db
     .select()
     .from(crmFilesTable)
-    .where(condition)
+    .where(
+      and(eq(crmFilesTable.dealId, target.dealId), isNull(crmFilesTable.noteId)),
+    )
     .orderBy(desc(crmFilesTable.addTime));
 }
 
@@ -299,7 +295,7 @@ export async function deleteBlobs(ids: number[]): Promise<void> {
  * orphaned blob is a cheap cleanup item, not a correctness problem (nothing
  * still references it).
  *
- * Deal/account files stay flat-and-hard for any authenticated user (the
+ * Deal files stay flat-and-hard for any authenticated user (the
  * notes-route precedent). Comment attachments are gated (R10): a draft's
  * attachment is creator-only; a posted comment's attachment is author-or-admin
  * only — otherwise this legacy route would bypass the note permission model.

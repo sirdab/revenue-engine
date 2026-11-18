@@ -57,6 +57,16 @@ export const forgotPasswordRateLimiter = rateLimit({
   message: TOO_MANY,
 });
 
+// Each sign-up creates a workspace, so cap it per IP.
+export const signupRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new PgRateLimitStore("signup:"),
+  message: TOO_MANY,
+});
+
 // Uploads buffer the whole file in process memory (multer memoryStorage, up
 // to MAX_FILE_SIZE_BYTES) before it ever reaches object storage, on a
 // resource-constrained host -- cap concurrent/rapid uploads per user so one
@@ -97,6 +107,22 @@ export const insightsQueryRateLimiter = rateLimit({
 // The assistant sits behind requireAuth, so key per authenticated user
 // (falling back to IP if that's ever missing) rather than per-IP — one
 // person's usage shouldn't throttle everyone else on the same network.
+function assistantKey(req: Request, res: Response): string {
+  const userId = (res.locals.user as { id?: number } | undefined)?.id;
+  return userId ? `user:${userId}` : ipKeyGenerator(req.ip ?? "unknown");
+}
+
+// Generous enough for normal back-and-forth chat use, tight enough to stop a
+// runaway script/retry-loop from quietly running up the Claude API bill.
+export const assistantRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: assistantKey,
+  message: { error: "Too many requests to the assistant. Please slow down." },
+});
+
 // Caps how fast one user can toggle notification subscriptions. Postgres-backed
 // so the cap holds across instances. Sized loosely on purpose: saving a
 // subscription must not 429 during ordinary use, so this only has to stop a

@@ -14,9 +14,11 @@ import { usersTable } from "./users";
 import { personsTable } from "./persons";
 import { organizationsTable } from "./organizations";
 import { dealsTable } from "./deals";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 export const notesTable = pgTable("notes", {
   id: serial("id").primaryKey(),
+  tenantId: tenantIdColumn(),
   content: text("content").notNull(),
   dealId: integer("deal_id").references(() => dealsTable.id),
   personId: integer("person_id").references(() => personsTable.id),
@@ -36,9 +38,8 @@ export const notesTable = pgTable("notes", {
     .$onUpdate(() => new Date()),
   leadId: integer("lead_id"),
   pinnedToLeadFlag: boolean("pinned_to_lead_flag").notNull().default(false),
-  pipedriveId: integer("pipedrive_id").unique(),
-  pipedriveData: jsonb("pipedrive_data"),
 }, (table) => [
+    tenantPolicy(),
   // Detail views list notes by their owning entity; without these the table
   // (~18k rows) was full-scanned on every deal/contact/org open.
   index("notes_deal_idx").on(table.dealId),

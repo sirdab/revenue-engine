@@ -20,7 +20,9 @@ import { fileURLToPath } from "node:url";
 // So renumbering one migration around another makes filename order and
 // authoring order disagree, and the file that ends up numbered later but was
 // written earlier is never applied to any database that already existed.
-// That failure is silent: two schema objects can simply never get created.
+// Production shipped exactly that: 0064 and 0065 were written before 0063 and
+// renumbered above it, the deploy carrying 0063 moved the watermark past both,
+// and two schema objects silently never got created.
 //
 // WHY THIS TEST AND NOT A REAL MIGRATION RUN: `!lastDbMigration ||` short
 // circuits when the database has no migrations at all, so EVERY migration
@@ -48,10 +50,12 @@ interface Entry {
 /**
  * Migrations already merged whose `when` sits below an earlier entry's.
  *
- * These would be HISTORY and could not be repaired by editing them: every
- * environment that migrated from an empty database did apply them, so changing
- * their timestamps would make them run a second time and fail. Listing one here
- * keeps the rule below strict about everything new. Empty today.
+ * Any listed here are HISTORY and cannot be repaired by editing them: every environment
+ * that migrated from an empty database did apply them, so changing their
+ * timestamps now would make them run a second time and fail. They stay listed
+ * here so the rule below can be strict about everything new.
+ *
+ * None yet.
  */
 const KNOWN_OUT_OF_ORDER = new Set<string>([]);
 

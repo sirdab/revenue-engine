@@ -10,9 +10,11 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 export const organizationsTable = pgTable("organizations", {
   id: serial("id").primaryKey(),
+  tenantId: tenantIdColumn(),
   name: text("name").notNull().default(""),
   address: text("address"),
   ownerId: integer("owner_id").references(() => usersTable.id),
@@ -25,9 +27,8 @@ export const organizationsTable = pgTable("organizations", {
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
-  pipedriveId: integer("pipedrive_id").unique(),
-  pipedriveData: jsonb("pipedrive_data"),
 }, (table) => [
+    tenantPolicy(),
   index("organizations_owner_idx").on(table.ownerId),
   index("organizations_update_idx").on(table.updateTime),
 ]);

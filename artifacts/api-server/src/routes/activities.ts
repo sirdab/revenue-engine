@@ -54,7 +54,7 @@ import {
   ARCHIVED_DEAL_ERROR,
   stripFalsyBooleanParams,
 } from "../lib/queries";
-import { isRealIsoDate } from "../lib/team-dates";
+import { isRealIsoDate } from "../lib/assistant-dates";
 import { currentUser } from "../lib/auth";
 import { notifyMentions } from "../lib/mentions";
 import { claimUntouchedDeal } from "../lib/deal-claim";
@@ -672,8 +672,7 @@ router.post("/activities/:id/post", async (req, res): Promise<void> => {
   res.json(PostActivityResponse.parse(activity));
 });
 
-// "No reply" on planned work, the deal-side twin of the
-// account-activity endpoint: the attempt closes as no_reply and an open copy
+// "No reply" on planned work: the attempt closes as no_reply and an open copy
 // takes its place to reschedule, with the history rows, in one transaction.
 // Drafts are refused (post first) and a foreign draft 404s like a missing row.
 router.post("/activities/:id/no-reply", async (req, res): Promise<void> => {

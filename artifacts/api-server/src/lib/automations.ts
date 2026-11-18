@@ -36,7 +36,7 @@ import {
 } from "./slack";
 import { postNotificationAction } from "./notification-subscriptions";
 import { logger } from "./logger";
-import { teamDateInDays } from "./team-dates";
+import { appDateInDays } from "./assistant-dates";
 
 // Deal-automations engine. Given a trigger event and the (post-write) deal,
 // run every active matching automation in priority order. Runs INLINE inside
@@ -381,8 +381,9 @@ async function createActivityAction(
   await tx.insert(activitiesTable).values({
     subject: config.subject,
     type: config.activityType,
-    // "Due in N days" counts from the team's calendar day, not UTC's.
-    dueDate: teamDateInDays(config.dueInDays),
+    // "Due in N days" counts from the team's calendar day, not UTC's: between
+    // midnight in the app time zone and midnight UTC the dates differ.
+    dueDate: appDateInDays(config.dueInDays),
     dealId: deal.id,
     personId: deal.personId,
     orgId: deal.organizationId,

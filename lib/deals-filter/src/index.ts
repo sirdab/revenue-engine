@@ -62,6 +62,8 @@ export const FILTER_FIELD_NAMES = [
   "adName",
   "gclid",
   "fbclid",
+  "wbraid",
+  "gbraid",
 ] as const;
 export type FilterFieldName = (typeof FILTER_FIELD_NAMES)[number];
 
@@ -203,6 +205,8 @@ export const FILTER_FIELDS: FilterFieldDef[] = [
   { field: "adName", label: "Ad name", type: "text", operators: TEXT_OPS, group: G_SRC, listOnly: true },
   { field: "gclid", label: "gclid", type: "text", operators: TEXT_OPS, group: G_SRC, listOnly: true },
   { field: "fbclid", label: "fbclid", type: "text", operators: TEXT_OPS, group: G_SRC, listOnly: true },
+  { field: "wbraid", label: "wbraid", type: "text", operators: TEXT_OPS, group: G_SRC, listOnly: true },
+  { field: "gbraid", label: "gbraid", type: "text", operators: TEXT_OPS, group: G_SRC, listOnly: true },
 ];
 
 /** The subset the assignment-rule / automation wizards may use — fields the
@@ -276,7 +280,7 @@ export function isCustomFieldRef(field: string): boolean {
   return field.startsWith(CUSTOM_FIELD_PREFIX);
 }
 
-/** `cf:pallet_count` -> `pallet_count` */
+/** `cf:contract_term` -> `contract_term` */
 export function customFieldKey(field: string): string {
   return field.slice(CUSTOM_FIELD_PREFIX.length);
 }

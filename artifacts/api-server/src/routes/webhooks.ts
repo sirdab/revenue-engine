@@ -1,4 +1,10 @@
-import { Router, type IRouter } from "express";
+import {
+  Router,
+  type IRouter,
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import { and, asc, eq, ilike, isNotNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
@@ -10,12 +16,12 @@ import {
   stagesTable,
   usersTable,
   labelsTable,
+  runWithTenant,
   type DealField,
 } from "@workspace/db";
 import {
-  getWebhookSecret,
   presentedSecret,
-  secretsMatch,
+  tenantIdForWebhookSecret,
 } from "../lib/app-settings";
 import {
   logDealCreated,
@@ -33,15 +39,30 @@ import { fireWebhooks, type WebhookIntent } from "../lib/webhook-dispatch";
 import { fireSlackMessages, type SlackIntent } from "../lib/slack";
 import { loadDealById } from "../lib/queries";
 import { logger } from "../lib/logger";
-import { resolveOwner } from "../lib/webhook-owner";
 import { notify } from "../lib/notifications";
 
 const router: IRouter = Router();
 
 // Inbound lead webhook for n8n (and any other automation). Public — mounted
-// BEFORE requireAuth — and authenticated by a shared secret managed in the
-// admin Settings page (stored in app_settings). Creates a deal in the target
-// pipeline and optionally creates/links a person + organization.
+// BEFORE requireAuth — and authenticated by a per-workspace shared secret
+// managed in the admin Settings page (stored in app_settings). The secret is
+// also what says WHICH workspace the call is for: the request is bound to that
+// tenant before any handler runs. Creates a deal in the target pipeline and
+// optionally creates/links a person + organization.
+router.use(
+  "/webhooks",
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const presented = presentedSecret(req);
+    const tenantId = presented
+      ? await tenantIdForWebhookSecret(presented)
+      : null;
+    if (tenantId == null) {
+      res.status(401).json({ error: "Invalid or missing webhook secret" });
+      return;
+    }
+    runWithTenant(tenantId, () => next());
+  },
+);
 
 const idOrName = z.union([z.number().int().positive(), z.string().trim().min(1)]);
 
@@ -80,6 +101,7 @@ const LeadWebhookBody = z.object({
       z.array(z.string().trim().min(1)),
     )
     .optional(),
+  // Optional deal detail fields.
   expectedCloseDate: z.string().trim().min(1).optional(),
   comments: z.string().trim().min(1).optional(),
   // UTM / ad attribution (native deals columns). Ad group (utm_content) has no
@@ -91,6 +113,10 @@ const LeadWebhookBody = z.object({
   adName: z.string().trim().min(1).optional(),
   gclid: z.string().trim().min(1).optional(),
   fbclid: z.string().trim().min(1).optional(),
+  // iOS Google Ads click ids (gclid's replacements under ATT), stored for
+  // ad-conversion attribution.
+  wbraid: z.string().trim().min(1).optional(),
+  gbraid: z.string().trim().min(1).optional(),
   // Generic map of deal-field label/key -> value for every other field
   // (ad group and any user-created custom field).
   // Resolved against the deal-field registry and stored in custom_fields jsonb;
@@ -183,21 +209,6 @@ function unflattenBody(body: unknown): unknown {
 }
 
 router.post("/webhooks/leads", async (req, res): Promise<void> => {
-  // --- Authenticate ---------------------------------------------------------
-  const configured = await getWebhookSecret();
-  if (!configured) {
-    res.status(503).json({
-      error:
-        "Webhook secret not configured. Set it in Settings → Integrations first.",
-    });
-    return;
-  }
-  const presented = presentedSecret(req);
-  if (!presented || !secretsMatch(presented, configured)) {
-    res.status(401).json({ error: "Invalid or missing webhook secret" });
-    return;
-  }
-
   // --- Validate body --------------------------------------------------------
   const parsed = LeadWebhookBody.safeParse(unflattenBody(req.body));
   if (!parsed.success) {
@@ -401,7 +412,7 @@ router.post("/webhooks/leads", async (req, res): Promise<void> => {
         .values({
           title,
           value: b.value ?? 0,
-          currency: b.currency ?? owner.defaultCurrency ?? "SAR",
+          currency: b.currency ?? owner.defaultCurrency ?? "USD",
           pipelineId: pipeline.id,
           stageId,
           ownerId: dealOwnerId,
@@ -419,6 +430,8 @@ router.post("/webhooks/leads", async (req, res): Promise<void> => {
           adName: b.adName ?? null,
           gclid: b.gclid ?? null,
           fbclid: b.fbclid ?? null,
+          wbraid: b.wbraid ?? null,
+          gbraid: b.gbraid ?? null,
           customFields: Object.keys(cfPatch).length ? cfPatch : null,
           stageChangeTime: now,
         })
@@ -471,21 +484,6 @@ router.post("/webhooks/leads", async (req, res): Promise<void> => {
 });
 
 router.post("/webhooks/deals/update", async (req, res): Promise<void> => {
-  // --- Authenticate (same shared secret as the lead webhook) ----------------
-  const configured = await getWebhookSecret();
-  if (!configured) {
-    res.status(503).json({
-      error:
-        "Webhook secret not configured. Set it in Settings → Integrations first.",
-    });
-    return;
-  }
-  const presented = presentedSecret(req);
-  if (!presented || !secretsMatch(presented, configured)) {
-    res.status(401).json({ error: "Invalid or missing webhook secret" });
-    return;
-  }
-
   // --- Validate body --------------------------------------------------------
   const normalized = unflattenBody(req.body);
   if (normalized && typeof normalized === "object") {
@@ -744,6 +742,42 @@ async function buildCustomFieldsPatch(
     patch[storeKey] = coerceCustomValue(field?.fieldType, rawVal);
   }
   return patch;
+}
+
+interface OwnerRow {
+  id: number;
+  defaultCurrency: string;
+}
+
+// Payload ownerEmail -> WEBHOOK_DEFAULT_OWNER_EMAIL env -> first ACTIVE admin.
+// Every step only accepts an active user: an email that names a deactivated
+// user falls through to the next option rather than hand a new lead to
+// somebody who no longer signs in.
+async function resolveOwner(email?: string): Promise<OwnerRow | null> {
+  const byEmail = async (e: string): Promise<OwnerRow | undefined> => {
+    const [u] = await db
+      .select({ id: usersTable.id, defaultCurrency: usersTable.defaultCurrency })
+      .from(usersTable)
+      .where(and(ilike(usersTable.email, e), eq(usersTable.activeFlag, true)))
+      .limit(1);
+    return u;
+  };
+  if (email) {
+    const u = await byEmail(email);
+    if (u) return u;
+  }
+  const envEmail = process.env.WEBHOOK_DEFAULT_OWNER_EMAIL;
+  if (envEmail) {
+    const u = await byEmail(envEmail);
+    if (u) return u;
+  }
+  const [admin] = await db
+    .select({ id: usersTable.id, defaultCurrency: usersTable.defaultCurrency })
+    .from(usersTable)
+    .where(and(eq(usersTable.isAdmin, true), eq(usersTable.activeFlag, true)))
+    .orderBy(asc(usersTable.id))
+    .limit(1);
+  return admin ?? null;
 }
 
 export default router;

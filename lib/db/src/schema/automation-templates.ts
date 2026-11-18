@@ -14,6 +14,7 @@ import type {
   AutomationActionType,
   AutomationTriggerEvent,
 } from "./automations";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 // Saved automation templates — a shared, org-wide gallery. Anyone can save an
 // automation's current setup as a reusable starting point; every Rev Engine
@@ -26,6 +27,7 @@ import type {
 
 export const automationTemplatesTable = pgTable("automation_templates", {
   id: serial("id").primaryKey(),
+  tenantId: tenantIdColumn(),
   name: text("name").notNull(),
   description: text("description").notNull().default(""),
   // A single emoji shown on the gallery card; null renders a neutral default.
@@ -46,6 +48,6 @@ export const automationTemplatesTable = pgTable("automation_templates", {
   addTime: timestamp("add_time", { withTimezone: true })
     .notNull()
     .default(sql`now()`),
-});
+}, () => [tenantPolicy()]);
 
 export type AutomationTemplate = typeof automationTemplatesTable.$inferSelect;

@@ -3,7 +3,7 @@ S = os.path.dirname(os.path.abspath(__file__))
 # Derived from this file's location for the same reason as in codemod.ts:
 # the tooling is committed, so it must work in any checkout.
 REPO = os.path.abspath(os.path.join(S, "..", ".."))
-LOGIN = os.path.join(REPO, "artifacts/login")
+LOGIN = os.path.join(REPO, "artifacts/web")
 
 def run(file, strings=(), edits=(), keys=()):
     """strings: list of (en, key, ar) or (en, key) for reuse. edits: list of (old, new)."""

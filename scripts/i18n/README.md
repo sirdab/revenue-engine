@@ -9,12 +9,11 @@ Used to move the frontend's English strings into `lib/i18n/{en,ar}.json`.
 - `drift.py` — wording drift between the dictionaries: the same English label
   rendered two ways in Arabic, plus values that were never translated. What
   the parity test cannot decide, because it needs a human to say whether two
-  renderings are correct disambiguation or one feature named twice. See
-  `docs/i18n/arabic-review-checklist.md`.
+  renderings are correct disambiguation or one feature named twice.
 - `job.py` — a thin Python wrapper: `run(file, strings, edits, keys)`,
   `edit(file, (old, new)…)`, `plural(...)`.
 
-Run from `artifacts/login` with `npx tsx ../../scripts/i18n/codemod.ts …`,
+Run from `artifacts/web` with `npx tsx ../../scripts/i18n/codemod.ts …`,
 or `PYTHONPATH=scripts/i18n python3 - <<EOF … EOF` for `job.py`.
 
 Both resolve the repo from their own location, so they work in any checkout.

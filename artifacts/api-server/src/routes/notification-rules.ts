@@ -16,7 +16,6 @@ import {
   SetAutomationNotificationsResponse,
 } from "@workspace/api-zod";
 import { currentUser } from "../lib/auth";
-
 import { notificationSubscribeRateLimiter } from "../lib/rate-limit";
 
 // Self-serve notification rules.
@@ -109,7 +108,8 @@ router.get("/notification-rules", async (_req, res): Promise<void> => {
 // hit the unique index and surface as a 500.
 router.put(
   "/notification-rules/:id/subscription",
-  // Cross-instance cap, loose enough that ordinary use never trips it.
+  // Cross-instance cap, loose enough that ordinary use (switch on, then
+  // retune) never trips it.
   notificationSubscribeRateLimiter,
   async (req, res): Promise<void> => {
     const params = SetNotificationSubscriptionParams.safeParse(req.params);
@@ -218,13 +218,10 @@ router.put(
  * This replaces the per-rule subscription list, which was the worst part of this
  * feature's design: authoring a rule in Settings looked like finishing, and a
  * second, identical-looking toggle on a different page was what actually made it
- * deliver — with nothing on the first page saying so. One switch, and the lead time belongs to the automation.
+ * deliver — with nothing on the first page saying so. One switch.
  *
- * Implemented over the existing subscription rows rather than replacing them.
- * The claim key is `sub:<subscriptionId>:…`, and live claims exist, so moving to
- * a per-user key would make every one of them unmatchable and re-notify everybody
- * once. Keeping the rows costs nothing and keeps that history intact — the change
- * is that nobody has to see them.
+ * Implemented over the per-rule subscription rows, so the engine keeps one
+ * delivery model; nobody has to see them.
  */
 router.put(
   "/notification-rules/automations",
@@ -258,9 +255,8 @@ router.put(
           userId: user.id,
           automationId: rule.id,
           active,
-          // No per-subscriber tuning any more: the lead time is the rule's, set
-          // where the automation is authored. Cleared rather than left stale so a
-          // previously tuned row starts honouring the rule.
+          // No per-subscriber tuning on this path; cleared rather than left
+          // stale so a previously tuned row starts honouring the rule.
           params: null,
         })
         .onConflictDoUpdate({

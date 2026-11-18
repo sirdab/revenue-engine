@@ -22,7 +22,7 @@ import {
 //                        from any concrete value, so is_not matches it)
 //   - `is` / `gt` / `lt` / `between` => plain comparison; a NULL field never
 //                        matches (SQL `NULL <op> x` is NULL => row excluded)
-//   - date fields compared as `(ts AT TIME ZONE 'Asia/Riyadh')::date` vs the
+//   - date fields compared as `(ts AT TIME ZONE <app tz>)::date` vs the
 //     value's date portion (`v::date`)
 //   - empty group imposes no constraint (compileGroup returns undefined => all
 //     rows match), so an empty/vacuous group evaluates to true
@@ -107,7 +107,7 @@ function reqDateOnly(v: unknown): string {
   }
   // Take the literal date portion — matches Postgres `::date` on a date-only or
   // local-timestamp string WITHOUT shifting by timezone (the value is not tz
-  // converted; only the deal's timestamp fact is, in Asia/Riyadh below).
+  // converted; only the deal's timestamp fact is, in the app time zone below).
   const m = v.match(/^(\d{4}-\d{2}-\d{2})/);
   return m ? m[1] : v.slice(0, 10);
 }
@@ -122,16 +122,21 @@ function reqStatus(v: unknown): string {
   throw new EvaluateError("Invalid status value");
 }
 
-// The deal's timestamp truncated to a Riyadh-local calendar date. en-CA yields
+// The deal's timestamp truncated to an app-time-zone calendar date — the same
+// APP_TIMEZONE the server's SQL compiler uses (rules only ever evaluate on the
+// server, so reading the env here is safe; it defaults to UTC). en-CA yields
 // an ISO "YYYY-MM-DD" string, which compares chronologically as a string.
-const riyadhDateFmt = new Intl.DateTimeFormat("en-CA", {
-  timeZone: "Asia/Riyadh",
+const appTimeZone =
+  (globalThis as { process?: { env?: Record<string, string | undefined> } })
+    .process?.env?.APP_TIMEZONE || "UTC";
+const appDateFmt = new Intl.DateTimeFormat("en-CA", {
+  timeZone: appTimeZone,
   year: "numeric",
   month: "2-digit",
   day: "2-digit",
 });
-function riyadhDate(d: Date): string {
-  return riyadhDateFmt.format(d);
+function appDate(d: Date): string {
+  return appDateFmt.format(d);
 }
 
 /**
@@ -215,7 +220,7 @@ function evalCondition(c: FilterCondition, facts: DealFacts): boolean {
     }
     case "date": {
       const d = raw as Date | null;
-      const local = d === null ? null : riyadhDate(d);
+      const local = d === null ? null : appDate(d);
       if (op === "is") return local !== null && local === reqDateOnly(v);
       if (op === "is_not") return isDistinctFrom(local, reqDateOnly(v));
       if (op === "gt") return local !== null && local > reqDateOnly(v);

@@ -8,6 +8,6 @@
 import type { UserPreferencesLooseObject } from './userPreferencesLooseObject';
 
 /**
- * Saved live filter state per surface, e.g. "persons", "organizations".
+ * Saved live filter state per surface, e.g. "deals", "persons".
  */
 export type UserPreferencesFilters = {[key: string]: UserPreferencesLooseObject};

@@ -10,7 +10,7 @@ import {
 //
 // A widget is pure config: this spec plus a viz descriptor. The server owns
 // compilation — one compiler per scope maps allow-listed field names to real
-// columns via Drizzle SQL. Field names in `measure`/`viewBy`/
+// columns (compiled to parameterized Postgres SQL via Drizzle). Field names in `measure`/`viewBy`/
 // `segmentBy`/`sort` are validated against the per-scope allow-list at compile
 // time and never interpolated from client input. Graph-level `filters` reuse
 // the shared deals-filter DSL (extended form: native fields + `cf:<key>`

@@ -5,6 +5,7 @@
  * Sirdab Revenue Engine API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { UserPreferencesCsTasks } from './userPreferencesCsTasks';
 import type { UserPreferencesDeals } from './userPreferencesDeals';
 import type { UserPreferencesFilterPanels } from './userPreferencesFilterPanels';
 import type { UserPreferencesFilters } from './userPreferencesFilters';
@@ -26,7 +27,7 @@ Namespace conventions (no separate schema version field — the shape below IS t
   on deploy.
 - A `Record<string, T>` namespace (filterPanels/viewModes/tables) is
   keyed by a short semantic surface id (e.g. "deals",
-  "persons") chosen once and then stable — renaming a key
+  "dealsActive") chosen once and then stable — renaming a key
   orphans whatever data was stored under the old one.
 - PATCH deep-merges (see UserPreferencesPatch): objects merge
   recursively, arrays/scalars replace, `null` deletes a key. New
@@ -38,9 +39,9 @@ export interface UserPreferences {
   layout?: UserPreferencesLayout;
   /** Filter-panel collapsed state per surface, e.g. "persons", "organizations". */
   filterPanels?: UserPreferencesFilterPanels;
-  /** Current view mode per surface, e.g. deals "pipeline" | "list". */
+  /** Current view mode per surface, e.g. deals "table" | "board". */
   viewModes?: UserPreferencesViewModes;
-  /** Saved live filter state per surface, e.g. "persons", "organizations". */
+  /** Saved live filter state per surface, e.g. "deals", "persons". */
   filters?: UserPreferencesFilters;
   /** Saved kanban/card sort mode per surface. */
   kanbanSorts?: UserPreferencesKanbanSorts;
@@ -48,6 +49,7 @@ export interface UserPreferences {
   tables?: UserPreferencesTables;
   deals?: UserPreferencesDeals;
   notifications?: UserPreferencesNotifications;
+  csTasks?: UserPreferencesCsTasks;
   /**
      * Most-recently-viewed deal/organization/person records, most recent first.
      * @maxItems 15

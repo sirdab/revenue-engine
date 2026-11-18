@@ -1,12 +1,18 @@
 import { Router, type IRouter } from "express";
 import { and, eq, isNull } from "drizzle-orm";
-import { db, usersTable, passwordResetTokensTable } from "@workspace/db";
+import {
+  db,
+  usersTable,
+  passwordResetTokensTable,
+  runAsSystem,
+} from "@workspace/db";
 import {
   LoginBody,
   LoginResponse,
   GetCurrentUserResponse,
   ForgotPasswordBody,
   ResetPasswordBody,
+  SignupBody,
 } from "@workspace/api-zod";
 import {
   verifyPasswordOrDummy,
@@ -22,10 +28,12 @@ import {
 } from "../lib/auth";
 import { sendPasswordResetEmail, appBaseUrl } from "../lib/email";
 import { logger } from "../lib/logger";
+import { createWorkspace, EmailTakenError, getTenant } from "../lib/tenants";
 import {
   loginRateLimiter,
   loginIpRateLimiter,
   forgotPasswordRateLimiter,
+  signupRateLimiter,
 } from "../lib/rate-limit";
 
 const router: IRouter = Router();
@@ -41,10 +49,11 @@ router.post(
       return;
     }
     const email = parsed.data.email.toLowerCase().trim();
-    const [user] = await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.email, email));
+    // Before sign-in there is no tenant to scope to: emails are unique across
+    // workspaces, so the email alone finds the user and, with it, the tenant.
+    const [user] = await runAsSystem(() =>
+      db.select().from(usersTable).where(eq(usersTable.email, email)),
+    );
 
     // A missing or inactive account still pays for scrypt (against a dummy
     // hash), so the response time does not say whether the email exists.
@@ -56,13 +65,57 @@ router.post(
     }
 
     const now = new Date();
-    await db
-      .update(usersTable)
-      .set({ lastLogin: now })
-      .where(eq(usersTable.id, account.id));
+    await runAsSystem(() =>
+      db
+        .update(usersTable)
+        .set({ lastLogin: now })
+        .where(eq(usersTable.id, account.id)),
+    );
 
     setSessionCookie(res, account.id, account.passwordChangedAt);
     res.json(LoginResponse.parse(toSafeUser({ ...account, lastLogin: now })));
+  },
+);
+
+// Self-serve sign-up: a new workspace (tenant) with the caller as its admin.
+router.post(
+  "/auth/signup",
+  signupRateLimiter,
+  async (req, res): Promise<void> => {
+    const parsed = SignupBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    const email = parsed.data.email.toLowerCase().trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      res.status(400).json({ error: "Enter a valid email address." });
+      return;
+    }
+    const pwError = validatePasswordStrength(parsed.data.password);
+    if (pwError) {
+      res.status(400).json({ error: pwError });
+      return;
+    }
+    try {
+      const { tenant, userId } = await createWorkspace({ ...parsed.data, email });
+      const [user] = await runAsSystem(() =>
+        db.select().from(usersTable).where(eq(usersTable.id, userId)),
+      );
+      setSessionCookie(res, user.id, user.passwordChangedAt);
+      res.status(201).json(
+        GetCurrentUserResponse.parse({
+          ...toSafeUser(user),
+          workspace: { id: tenant.id, name: tenant.name, slug: tenant.slug },
+        }),
+      );
+    } catch (err) {
+      if (err instanceof EmailTakenError) {
+        res.status(409).json({ error: err.message });
+        return;
+      }
+      throw err;
+    }
   },
 );
 
@@ -73,7 +126,15 @@ router.post("/auth/logout", async (_req, res): Promise<void> => {
 
 router.get("/auth/me", requireAuth, async (_req, res): Promise<void> => {
   const user = currentUser(res);
-  res.json(GetCurrentUserResponse.parse(user));
+  const tenant = await getTenant(user.tenantId);
+  res.json(
+    GetCurrentUserResponse.parse({
+      ...user,
+      workspace: tenant
+        ? { id: tenant.id, name: tenant.name, slug: tenant.slug }
+        : undefined,
+    }),
+  );
 });
 
 // Always returns a generic 200 so callers cannot tell whether an account exists.
@@ -96,11 +157,13 @@ router.post(
     // trip only happen for a real account, so awaiting them would let the
     // response time say whether the email exists.
     res.json(generic);
-    void issuePasswordReset({
+    void runAsSystem(() =>
+      issuePasswordReset({
       email,
       requestedIp: req.ip ?? null,
-      userAgent: req.get("user-agent") ?? null,
-    }).catch((err) => {
+        userAgent: req.get("user-agent") ?? null,
+      }),
+    ).catch((err) => {
       logger.error({ err }, "Failed to issue password reset");
     });
   },
@@ -162,6 +225,8 @@ router.post("/auth/reset-password", async (req, res): Promise<void> => {
     .select()
     .from(passwordResetTokensTable)
     .where(eq(passwordResetTokensTable.tokenHash, tokenHash));
+  // The token identifies the user; the users table is tenant-scoped, so the
+  // write below runs in the system scope.
 
   if (!token || token.usedAt || token.expiresAt.getTime() < Date.now()) {
     res.status(400).json({
@@ -173,7 +238,7 @@ router.post("/auth/reset-password", async (req, res): Promise<void> => {
   const newHash = await hashPassword(parsed.data.password);
   const now = new Date();
   let claimed = false;
-  await db.transaction(async (tx) => {
+  await runAsSystem(() => db.transaction(async (tx) => {
     // Atomically claim the token: only the request that flips usedAt from NULL
     // wins, so a token can never reset a password more than once even under
     // concurrent requests racing on the same link.
@@ -194,7 +259,7 @@ router.post("/auth/reset-password", async (req, res): Promise<void> => {
       .update(usersTable)
       .set({ passwordHash: newHash, passwordChangedAt: now })
       .where(eq(usersTable.id, rows[0].userId));
-  });
+  }));
 
   if (!claimed) {
     res.status(400).json({

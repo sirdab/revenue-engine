@@ -151,9 +151,9 @@ test("isNotificationParamKey gates unknown keys", () => {
 
 test("placeholders resolve from their scope", () => {
   const out = renderNotificationMessage("{{deal.title}} moved to {{deal.stage}}", {
-    deal: { title: "Nakheel Foods", stage: "Negotiation" },
+    deal: { title: "Northwind", stage: "Negotiation" },
   });
-  assert.equal(out, "Nakheel Foods moved to Negotiation");
+  assert.equal(out, "Northwind moved to Negotiation");
 });
 
 test("a subscriber's own tuning renders from the params scope", () => {

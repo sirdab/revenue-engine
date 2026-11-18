@@ -34,6 +34,7 @@ import {
   ROW_CAP,
   compileExtendedGroup,
   compileOrganizationCondition,
+  qualificationCondition,
   resolveSortTarget,
   type GlobalFilters,
 } from "./compile-deals";
@@ -49,7 +50,7 @@ import { ACTIVITIES_NATIVE_FIELDS, loadDealsFieldCatalog } from "./fields";
 //
 // Board (global) filters keep their deal semantics on a mixed dashboard:
 // owner and date range apply to the activity itself; pipeline, status,
-// and the board's Add-filter group apply to the
+// qualification and the board's Add-filter group apply to the
 // activity's LINKED DEAL via an EXISTS subquery — "won deals" narrows an
 // activities widget to activities on won deals, never silently no-ops.
 // ---------------------------------------------------------------------------
@@ -85,7 +86,7 @@ const ACTIVITY_DATE_BASIS_COLUMNS: Record<string, SQL> = {
   activityDoneAt: localDate(activitiesTable.markedAsDoneTime),
 };
 
-/** Riyadh-local ::date expression per date field. due_date is already a
+/** App-time-zone ::date expression per date field. due_date is already a
  *  plain date column; the timestamps need the timezone conversion. */
 function activityDateExpr(key: string, col: AnyColumn): SQL {
   return key === "dueDate" ? sql`${col}` : localDate(col);
@@ -197,6 +198,10 @@ export function compileActivitiesGlobalFilters(
       applied.push(`Deal status is any of ${statuses.join(", ")}`);
     }
   }
+  if (global.qualification) {
+    dealSide.push(qualificationCondition(catalog, global.qualification));
+    applied.push(`Deal qualification is ${global.qualification}`);
+  }
   if (global.filters) {
     const group = decodeBoardFilters(global.filters);
     const compiled = compileExtendedGroup(group, catalog);
@@ -234,7 +239,7 @@ export function compileActivitiesGlobalFilters(
 }
 
 // ---------------------------------------------------------------------------
-// The `performance` report: count × viewBy (× segmentBy), Asia/Riyadh
+// The `performance` report: count × viewBy (× segmentBy), the app time zone
 // bucketing — same result contract as the deals report.
 // ---------------------------------------------------------------------------
 
@@ -324,7 +329,7 @@ export async function runActivitiesPerformance(
     );
   }
 
-  // The catalog only serves board deal-side filters (the
+  // The catalog only serves board deal-side filters (qualification / the
   // board Add-filter group); it is cached, so the load is effectively free.
   const catalog = await loadDealsFieldCatalog();
   const board = compileActivitiesGlobalFilters(global, spec, catalog);

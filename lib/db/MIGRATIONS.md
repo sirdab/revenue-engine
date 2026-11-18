@@ -1,9 +1,10 @@
 # Database migrations — how to add or change tables
 
-Deploys apply schema changes with `drizzle-kit migrate`, which runs the versioned SQL files in `drizzle/` and tracks them in a
+Deploys apply schema changes with `drizzle-kit migrate`, which runs the
+versioned SQL files in `drizzle/` and tracks them in a
 `drizzle.__drizzle_migrations` table. It trusts the **migration files**, not the
-schema code. So a schema change without a matching migration file makes the deploy
-think the table/column shouldn't exist → it generates a destructive `DROP`.
+schema code, so a schema change without a matching migration file never reaches
+the database.
 
 ## The rule
 
@@ -14,24 +15,36 @@ think the table/column shouldn't exist → it generates a destructive `DROP`.
 # 2. generate the migration files
 pnpm --filter @workspace/db run generate
 # 3. commit BOTH the schema change and the new drizzle/ files together
-git add lib/db/src/schema lib/db/drizzle
-git commit -m "Add my_table"
 ```
 
-`generate` creates `drizzle/NNNN_*.sql` plus updates `drizzle/meta/`. Deploy →
-migrate applies it cleanly, no destructive diff.
+## A new table must be tenant-scoped
 
-## Local dev shortcut
+Unless it is genuinely global (like `rate_limit_counters`), a new table needs
+all three of these, or one workspace will see another's rows:
 
-For fast local iteration you can skip migration files and push the schema straight
-to your dev DB:
+1. `tenantId: tenantIdColumn(),` among its columns (from `./tenants`). It
+   defaults to the connection's tenant, so application inserts never pass it.
+2. `tenantPolicy()` in its extras array — the row-level-security policy.
+   drizzle-kit generates the `CREATE POLICY` and `ENABLE ROW LEVEL SECURITY`.
+3. A **custom** migration (`pnpm --filter @workspace/db exec drizzle-kit
+   generate --custom --name …`) with
+   `ALTER TABLE "x" FORCE ROW LEVEL SECURITY;` and a `tenant_id` index —
+   drizzle-kit cannot emit FORCE, and without it the table owner (usually the
+   app role) bypasses the policy. See `drizzle/0001_rls_force_and_search.sql`.
 
-```bash
-pnpm --filter @workspace/db run push
+Any unique index must include `tenant_id` first, so two workspaces can each
+have a label called "Hot".
+
+## The app role
+
+Superusers and roles with `BYPASSRLS` ignore row-level security even when it is
+forced. The app — locally too — must connect as an ordinary role that owns the
+database:
+
+```sql
+CREATE ROLE crm_app LOGIN PASSWORD '…' NOSUPERUSER NOBYPASSRLS;
+CREATE DATABASE crm OWNER crm_app;
 ```
-
-But **before deploying**, always `generate` + commit the migration — push does not
-create the files a deploy's `migrate` needs.
 
 ## Useful commands
 
@@ -42,13 +55,5 @@ pnpm --filter @workspace/db run migrate    # apply pending migrations (uses DATA
 pnpm --filter @workspace/db run push       # dev only: diff schema -> DB directly
 ```
 
-## Important: a pre-existing database needs a baseline
-
-`drizzle-kit migrate` only skips a migration if it's recorded in
-`drizzle.__drizzle_migrations`. A database that already has the tables (e.g. one
-populated by `push` or a data import) but **no** migration-tracking table will make
-migrate try to `CREATE TABLE` things that already exist → it fails.
-
-To "baseline" such a DB (mark migration `0000` as already applied *without*
-running its SQL), insert its journal entry into `drizzle.__drizzle_migrations`
-once. Do this before pointing a deploy's `migrate` at a pre-populated database.
+`push` does not apply the custom migrations (FORCE RLS, tenant indexes, search
+indexes). Use `migrate` for any database you test isolation on.

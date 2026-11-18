@@ -9,7 +9,7 @@ process.env.DATABASE_URL ??= "postgres://test:test@localhost:5432/test";
 
 const { nextInRotation } = await import("./assignment.ts");
 
-// Regression test for: "all deals go to the same owner." The
+// Regression test: "all deals go to the same owner." The
 // round-robin used to pick "whoever currently has the fewest open deals"
 // (leastLoadedActiveMember), recomputed live on every assignment. A rule with
 // takeoverOwned reassigns deals away from whoever the rule just picked as
@@ -20,7 +20,7 @@ const { nextInRotation } = await import("./assignment.ts");
 // to get stuck re-selecting the same member.
 
 test("nextInRotation cycles through all members before repeating", () => {
-  const members = [15, 18, 22, 23]; // Saif, Mohamed Khaled, Yasser, Sahal
+  const members = [15, 18, 22, 23];
   let cursor: number | null = null;
   const picks: number[] = [];
   for (let i = 0; i < members.length; i++) {
@@ -31,7 +31,7 @@ test("nextInRotation cycles through all members before repeating", () => {
 });
 
 test("nextInRotation keeps advancing even when the same member is repeatedly 'least loaded'", () => {
-  // The exact shape: member 18 (Mohamed) gets picked, then some
+  // The exact regression shape: member 18 gets picked, then some
   // unrelated process (a manual reassignment) removes his open deal — under
   // the old least-loaded logic he'd look least-loaded again immediately. The
   // rotation doesn't care: it just keeps moving past him regardless.

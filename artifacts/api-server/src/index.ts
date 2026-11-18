@@ -1,10 +1,8 @@
 import "./lib/instrument";
 import app from "./app";
 import { logger } from "./lib/logger";
-import {
-  ensureNativeColumnFields,
-  ensureSeededDataFields,
-} from "./lib/deal-fields";
+import { ensureNativeColumnFields } from "./lib/deal-fields";
+import { forEachTenant } from "./lib/tenants";
 
 const rawPort = process.env["PORT"];
 
@@ -22,11 +20,11 @@ if (Number.isNaN(port) || port <= 0) {
 
 // Best-effort: the server must still boot if the registry seed fails (e.g.
 // during a brief DB outage); the seed is idempotent and re-runs next start.
-void ensureNativeColumnFields().catch((err) =>
+// New workspaces are seeded at sign-up; this backfills any added since.
+void forEachTenant("Registering native column deal fields", () =>
+  ensureNativeColumnFields(),
+).catch((err) =>
   logger.error({ err }, "Failed to register native column deal fields"),
-);
-void ensureSeededDataFields().catch((err) =>
-  logger.error({ err }, "Failed to register intake deal fields"),
 );
 
 app.listen(port, (err) => {

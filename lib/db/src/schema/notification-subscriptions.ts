@@ -12,6 +12,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
 import { automationsTable } from "./automations";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 // Per-user subscriptions to a notification automation.
 //
@@ -35,6 +36,7 @@ export const notificationSubscriptionsTable = pgTable(
   "notification_subscriptions",
   {
     id: serial("id").primaryKey(),
+    tenantId: tenantIdColumn(),
     // The subscriber and the recipient — always the same person. Never taken
     // from a request body; the routes read it off the session.
     userId: integer("user_id")
@@ -63,6 +65,7 @@ export const notificationSubscriptionsTable = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
+    tenantPolicy(),
     // One subscription per person per rule. Subscribing twice is a no-op
     // upsert at the API layer rather than a 500 out of this index.
     uniqueIndex("notification_subscriptions_user_automation_idx").on(

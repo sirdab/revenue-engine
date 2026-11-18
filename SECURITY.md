@@ -2,24 +2,31 @@
 
 ## Reporting a vulnerability
 
-Please do not report security issues through public GitHub issues.
+Please **do not open a public issue** for security problems. Report them
+privately through GitHub: the repository's **Security** tab → **Report a
+vulnerability**. Include what you found, how to reproduce it and what an
+attacker could do with it.
 
-Use GitHub's private vulnerability reporting on this repository (Security tab →
-"Report a vulnerability"). Include what you found, how to reproduce it, and the
-impact you expect. We aim to acknowledge reports within a few working days and
-will keep you updated until a fix is released.
+You should get an acknowledgement within a few days. Once a fix is released
+we'll credit you in the release notes unless you'd rather stay anonymous.
 
-## Supported versions
+## Scope
 
-Security fixes land on the `main` branch. Run the latest release.
+Things we especially want to hear about:
 
-## Hardening checklist for self-hosters
+- **Cross-workspace access**: any way for a user of one workspace to read or
+  change another workspace's data. Isolation relies on Postgres row-level
+  security (see `CLAUDE.md` → Multi-tenancy), so a query path that escapes the
+  tenant scope is a vulnerability even if nothing leaks today.
+- Authentication and session bypasses, privilege escalation to admin.
+- Injection (SQL, stored XSS through notes, comments or imported data), SSRF
+  through link previews or webhooks.
 
-- Set a long random `SESSION_SECRET` and keep it secret; rotating it signs
-  everyone out.
-- Serve the app over HTTPS only (production cookies are `Secure`).
-- Give the database user only the access the app needs, and keep backups.
-- Keep the inbound webhook secret (Admin → Settings → Integrations) private and
-  rotate it if it leaks.
-- Restrict the S3 bucket for attachments to the app's credentials; files are
-  served through the API, never by public URL.
+## Running it safely
+
+- Connect the app as a database role that is **neither superuser nor
+  BYPASSRLS**. Either one silently turns tenant isolation off.
+- Use a long random `SESSION_SECRET` (`openssl rand -hex 32`) and serve the app
+  over HTTPS.
+- Never run `pnpm seed` against a database you care about: it deletes every
+  workspace.

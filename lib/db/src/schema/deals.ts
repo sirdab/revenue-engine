@@ -12,6 +12,7 @@ import {
   pgEnum,
   index,
   check,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -21,6 +22,7 @@ import { personsTable } from "./persons";
 import { organizationsTable } from "./organizations";
 import { pipelinesTable } from "./pipelines";
 import { stagesTable } from "./stages";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 export const dealStatusEnum = pgEnum("deal_status", [
   "open",
@@ -31,9 +33,10 @@ export const dealStatusEnum = pgEnum("deal_status", [
 
 export const dealsTable = pgTable("deals", {
   id: serial("id").primaryKey(),
+  tenantId: tenantIdColumn(),
   title: text("title").notNull(),
   value: doublePrecision("value").notNull().default(0),
-  currency: text("currency").notNull().default("SAR"),
+  currency: text("currency").notNull().default("USD"),
   status: dealStatusEnum("status").notNull().default("open"),
   ownerId: integer("owner_id").references(() => usersTable.id),
   creatorUserId: integer("creator_user_id").references(() => usersTable.id),
@@ -68,6 +71,11 @@ export const dealsTable = pgTable("deals", {
   adName: text("ad_name"),
   gclid: text("gclid"),
   fbclid: text("fbclid"),
+  // iOS Google Ads click ids — Apple's tracking limits replace gclid with
+  // wbraid (web-to-web) / gbraid (app-to-web); stored for ad-conversion
+  // attribution.
+  wbraid: text("wbraid"),
+  gbraid: text("gbraid"),
   // Free-form categorisation tags shown on the deal (Pipedrive-style labels).
   labels: text("labels").array(),
   // Timestamps
@@ -80,19 +88,17 @@ export const dealsTable = pgTable("deals", {
   wonTime: timestamp("won_time", { withTimezone: true }),
   lostTime: timestamp("lost_time", { withTimezone: true }),
   closeTime: timestamp("close_time", { withTimezone: true }),
-  // Pipedrive import: stable external id (upsert key) + full original record.
-  pipedriveId: integer("pipedrive_id").unique(),
-  pipedriveData: jsonb("pipedrive_data"),
-  // Decoded Pipedrive custom fields, keyed by human-readable field name
-  // (enum/set option ids resolved to their labels).
+  // Custom field values, keyed by the deal_field registry key.
   customFields: jsonb("custom_fields"),
   // Idempotency key for externally-created deals (e.g. the n8n lead webhook).
   // Unique when set; multiple NULLs allowed for app/Pipedrive-sourced deals.
-  externalId: text("external_id").unique(),
+  externalId: text("external_id"),
   // Set when this deal was merged into another: the deal is
   // archived and this points at the survivor, so nothing dead-ends.
   mergedIntoDealId: integer("merged_into_deal_id"),
 }, (table) => [
+    tenantPolicy(),
+  uniqueIndex("deals_external_id_uq").on(table.tenantId, table.externalId),
   index("deals_status_idx").on(table.status),
   index("deals_pipeline_idx").on(table.pipelineId),
   index("deals_stage_idx").on(table.stageId),
@@ -106,6 +112,15 @@ export const dealsTable = pgTable("deals", {
   index("deals_won_time_idx").on(table.wonTime),
   index("deals_value_idx").on(table.value),
   index("deals_expected_close_idx").on(table.expectedCloseDate),
+  // Expression index for the hottest registry custom-field filter: the
+  // Insights board's qualification quick-chip compiles to
+  // (custom_fields ->> 'qualification') = $1 on every widget of a filtered
+  // board. GIN/jsonb_path_ops cannot serve `->>` text predicates — it must
+  // be a btree over the extracted key. Add siblings as other cf: keys get hot.
+  index("deals_cf_qualification_idx").using(
+    "btree",
+    sql`(${table.customFields} ->> 'qualification')`,
+  ),
   // A merged deal is ALWAYS archived — the merge sets both in one statement,
   // so the two columns are really one state and must not drift. They did:
   // restoring a merged deal cleared `archived` and left the pointer, and the

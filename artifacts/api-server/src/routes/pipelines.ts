@@ -8,7 +8,12 @@ import {
   GetPipelineFunnelQueryParams,
   GetPipelineFunnelResponse,
 } from "@workspace/api-zod";
-import { compileDealFilters, dealQuery, DealFilterError } from "../lib/queries";
+import {
+  compileDealFilters,
+  dealQuery,
+  DealFilterError,
+  APP_TZ_SQL,
+} from "../lib/queries";
 import { buildDealWhere } from "./deals";
 
 const router: IRouter = Router();
@@ -139,10 +144,10 @@ router.get("/funnel", async (req, res): Promise<void> => {
   // Optional scoping predicates applied to the deals that enter the funnel.
   const ownerFilter = ownerId != null ? sql` and d.owner_id = ${ownerId}` : sql``;
   const fromFilter = from
-    ? sql` and (d.add_time at time zone 'Asia/Riyadh')::date >= ${from}::date`
+    ? sql` and (d.add_time at time zone ${APP_TZ_SQL})::date >= ${from}::date`
     : sql``;
   const toFilter = to
-    ? sql` and (d.add_time at time zone 'Asia/Riyadh')::date <= ${to}::date`
+    ? sql` and (d.add_time at time zone ${APP_TZ_SQL})::date <= ${to}::date`
     : sql``;
 
   const result = await db.execute<FunnelRow>(sql`

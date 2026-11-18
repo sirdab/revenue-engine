@@ -35,8 +35,8 @@ test("asset-shaped requests outside /assets/ do not get the SPA shell", () => {
 test("real SPA navigations still get the shell", () => {
   for (const p of [
     "/",
-    "/accounts/4036",
-    "/quotes",
+    "/organization/4036",
+    "/activities",
     "/deals/123",
     "/admin/settings",
     "/not-a-real-route",
@@ -53,9 +53,9 @@ test("a route segment containing a dot is still a navigation", () => {
 });
 
 test("HEAD navigations get the shell, other methods never do", () => {
-  assert.equal(shouldServeSpaShell("/quotes", "HEAD"), true);
+  assert.equal(shouldServeSpaShell("/activities", "HEAD"), true);
   for (const m of ["POST", "PUT", "PATCH", "DELETE"]) {
-    assert.equal(shouldServeSpaShell("/quotes", m), false, m);
+    assert.equal(shouldServeSpaShell("/activities", m), false, m);
   }
 });
 

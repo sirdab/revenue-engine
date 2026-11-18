@@ -205,8 +205,8 @@ async function logLabelFanout(
 
 // Rewrite every occurrence of `from` (case-insensitive) to `to` in an entity's
 // label arrays, deduping in case both spellings coexisted on one record.
-// Returns the touched rows' before/after label arrays (the caller
-// uses this to log one change_events row per affected entity). The
+// Returns the touched rows' before/after label arrays (the caller uses
+// this to log one change_events row per affected entity). The
 // unqualified `labels` in SET is safe because every entity table names the
 // column identically.
 async function rewriteLabel(

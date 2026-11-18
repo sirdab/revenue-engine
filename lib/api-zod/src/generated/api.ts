@@ -42,8 +42,62 @@ export const LoginResponse = zod.object({
   "created": zod.coerce.date(),
   "lastLogin": zod.coerce.date().nullish(),
   "teamId": zod.number().nullish(),
-  "teamName": zod.string().nullish()
+  "teamName": zod.string().nullish(),
+  "tenantId": zod.number().optional().describe('The workspace this user belongs to.'),
+  "workspace": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "slug": zod.string()
+}).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
+
+
+/**
+ * @summary Create a new workspace and its first admin, then sign in
+ */
+export const signupBodyWorkspaceNameMax = 120;
+
+export const signupBodyNameMax = 120;
+
+export const signupBodyEmailMin = 3;
+
+
+
+
+export const SignupBody = zod.object({
+  "workspaceName": zod.string().min(1).max(signupBodyWorkspaceNameMax),
+  "name": zod.string().min(1).max(signupBodyNameMax),
+  "email": zod.string().min(signupBodyEmailMin),
+  "password": zod.string().min(1)
+})
+
+
+/**
+ * @summary The signed-in user's workspace
+ */
+export const GetWorkspaceResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "slug": zod.string()
+}).describe('A tenant — one customer\'s isolated CRM workspace.')
+
+
+/**
+ * @summary Rename the workspace (admin)
+ */
+export const updateWorkspaceBodyNameMax = 120;
+
+
+
+export const UpdateWorkspaceBody = zod.object({
+  "name": zod.string().min(1).max(updateWorkspaceBodyNameMax)
+})
+
+export const UpdateWorkspaceResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "slug": zod.string()
+}).describe('A tenant — one customer\'s isolated CRM workspace.')
 
 
 /**
@@ -62,7 +116,13 @@ export const GetCurrentUserResponse = zod.object({
   "created": zod.coerce.date(),
   "lastLogin": zod.coerce.date().nullish(),
   "teamId": zod.number().nullish(),
-  "teamName": zod.string().nullish()
+  "teamName": zod.string().nullish(),
+  "tenantId": zod.number().optional().describe('The workspace this user belongs to.'),
+  "workspace": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "slug": zod.string()
+}).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 
 
@@ -174,6 +234,8 @@ export const GetBoardResponse = zod.object({
   "adName": zod.string().nullish(),
   "gclid": zod.string().nullish(),
   "fbclid": zod.string().nullish(),
+  "wbraid": zod.string().nullish(),
+  "gbraid": zod.string().nullish(),
   "labels": zod.array(zod.string()).nullish(),
   "addTime": zod.coerce.date(),
   "updateTime": zod.coerce.date(),
@@ -266,6 +328,8 @@ export const ListDealsResponse = zod.object({
   "adName": zod.string().nullish(),
   "gclid": zod.string().nullish(),
   "fbclid": zod.string().nullish(),
+  "wbraid": zod.string().nullish(),
+  "gbraid": zod.string().nullish(),
   "labels": zod.array(zod.string()).nullish(),
   "addTime": zod.coerce.date(),
   "updateTime": zod.coerce.date(),
@@ -345,6 +409,8 @@ export const GetDealResponse = zod.object({
   "adName": zod.string().nullish(),
   "gclid": zod.string().nullish(),
   "fbclid": zod.string().nullish(),
+  "wbraid": zod.string().nullish(),
+  "gbraid": zod.string().nullish(),
   "labels": zod.array(zod.string()).nullish(),
   "addTime": zod.coerce.date(),
   "updateTime": zod.coerce.date(),
@@ -420,6 +486,8 @@ export const UpdateDealResponse = zod.object({
   "adName": zod.string().nullish(),
   "gclid": zod.string().nullish(),
   "fbclid": zod.string().nullish(),
+  "wbraid": zod.string().nullish(),
+  "gbraid": zod.string().nullish(),
   "labels": zod.array(zod.string()).nullish(),
   "addTime": zod.coerce.date(),
   "updateTime": zod.coerce.date(),
@@ -465,7 +533,7 @@ export const CountDealsResponse = zod.object({
 
 
 /**
- * @summary Forecast deals grouped by expected close month (Asia/Riyadh)
+ * @summary Forecast deals grouped by expected close month (workspace time zone)
  */
 export const ForecastDealsQueryParams = zod.object({
   "pipelineId": zod.coerce.number().optional(),
@@ -644,7 +712,7 @@ export const GetChangesFeedResponse = zod.object({
   "id": zod.unknown().optional(),
   "label": zod.string().nullish()
 }).nullish(),
-  "targetType": zod.enum(['deal', 'person', 'organization']).describe('Where the change is rendered and linked.\n'),
+  "targetType": zod.enum(['deal', 'person', 'organization']).describe('Where the change is rendered and linked.'),
   "targetId": zod.number(),
   "targetTitle": zod.string().nullish(),
   "changedByName": zod.string().nullish(),
@@ -659,8 +727,8 @@ export const GetChangesFeedResponse = zod.object({
  */
 export const GetPipelineFunnelQueryParams = zod.object({
   "pipelineId": zod.coerce.number(),
-  "from": zod.coerce.string().optional().describe('Inclusive start date (YYYY-MM-DD, Asia\/Riyadh) scoping deal entry'),
-  "to": zod.coerce.string().optional().describe('Inclusive end date (YYYY-MM-DD, Asia\/Riyadh) scoping deal entry'),
+  "from": zod.coerce.string().optional().describe('Inclusive start date (YYYY-MM-DD, workspace time zone) scoping deal entry'),
+  "to": zod.coerce.string().optional().describe('Inclusive end date (YYYY-MM-DD, workspace time zone) scoping deal entry'),
   "ownerId": zod.coerce.number().optional()
 })
 
@@ -788,8 +856,8 @@ export const GetUserPreferencesResponse = zod.object({
   "locale": zod.enum(['en', 'ar']).optional().describe('UI language. Absent means the user has never chosen, which reads as English -- there is no OS-preference fallback the way there is for `theme`, because a browser\'s Accept-Language says nothing about which language someone wants to do their job in.\n')
 }).optional(),
   "filterPanels": zod.record(zod.string(), zod.boolean()).optional().describe('Filter-panel collapsed state per surface, e.g. \"persons\", \"organizations\".'),
-  "viewModes": zod.record(zod.string(), zod.string()).optional().describe('Current view mode per surface, e.g. deals \"pipeline\" | \"list\".'),
-  "filters": zod.record(zod.string(), zod.record(zod.string(), zod.unknown())).optional().describe('Saved live filter state per surface, e.g. \"persons\", \"organizations\".'),
+  "viewModes": zod.record(zod.string(), zod.string()).optional().describe('Current view mode per surface, e.g. deals \"table\" | \"board\".'),
+  "filters": zod.record(zod.string(), zod.record(zod.string(), zod.unknown())).optional().describe('Saved live filter state per surface, e.g. \"deals\", \"persons\".'),
   "kanbanSorts": zod.record(zod.string(), zod.object({
   "id": zod.string(),
   "dir": zod.enum(['asc', 'desc'])
@@ -819,6 +887,14 @@ export const GetUserPreferencesResponse = zod.object({
   "openMode": zod.enum(['page', 'drawer']).optional().describe('Whether clicking into a deal opens the full `\/deal\/:id` page or a right-side drawer over the current view.\n')
 }).optional(),
   "notifications": zod.object({
+  "reminder": zod.object({
+  "email": zod.boolean().optional(),
+  "inApp": zod.boolean().optional()
+}).optional().describe('Per-category channel toggles. Missing\/malformed reads as on (see notify()\'s channelPrefsFor).'),
+  "overdue": zod.object({
+  "email": zod.boolean().optional(),
+  "inApp": zod.boolean().optional()
+}).optional().describe('Per-category channel toggles. Missing\/malformed reads as on (see notify()\'s channelPrefsFor).'),
   "assignment": zod.object({
   "email": zod.boolean().optional(),
   "inApp": zod.boolean().optional()
@@ -827,7 +903,11 @@ export const GetUserPreferencesResponse = zod.object({
   "email": zod.boolean().optional(),
   "inApp": zod.boolean().optional()
 }).optional().describe('Per-category channel toggles. Missing\/malformed reads as on (see notify()\'s channelPrefsFor).')
-}).optional().describe('Per-category notification channel preferences. Categories are fixed (assignment\/mention); each is optional and defaults to all-on when absent. mention.inApp is stored but inert — that row is written by mentions.ts, not notify().\n'),
+}).optional().describe('Per-category notification channel preferences. Categories are fixed (reminder\/overdue\/assignment\/mention); each is optional and defaults to all-on when absent. mention.inApp is stored but inert — that row is written by mentions.ts, not notify().\n'),
+  "csTasks": zod.object({
+  "ownerId": zod.union([zod.number(),zod.enum(['all']),zod.null()]).optional().describe('The signed-in user\'s numeric id to scope to just their own tasks, the literal \"all\" to include every member\'s tasks, or absent\/null for the default (the signed-in user).\n'),
+  "showDone": zod.boolean().optional()
+}).optional().describe('Task-list filter state, stored at csTasks.\* so the chosen owner scope and done-toggle survive navigating away and back. Not read or written by the current web app; the activities page keeps its layout under `tables.activities`.\n'),
   "recentlyViewed": zod.array(zod.object({
   "type": zod.enum(['deal', 'organization', 'person']),
   "href": zod.string(),
@@ -835,7 +915,7 @@ export const GetUserPreferencesResponse = zod.object({
   "viewedAt": zod.string()
 }).describe('One visited deal\/organization\/person, keyed for de-dup by `href` (the record\'s detail-page path).\n')).max(getUserPreferencesResponseRecentlyViewedMax).optional().describe('Most-recently-viewed deal\/organization\/person records, most recent first.'),
   "resetEpoch": zod.number().optional().describe('Server-managed, read-only. Bumped only by DELETE \/user-preferences (never by an ordinary PATCH). A PATCH sent with the X-Preferences-Reset-Epoch header set to a stale value (i.e. a write computed before a reset that has since happened elsewhere) is rejected with 409 instead of being applied — see UpdateUserPreferences. Not settable via PATCH; any value sent in the body is ignored.\n')
-}).describe('Namespaced per-user preferences document. Every property is optional; a user with nothing saved yet gets back an empty object.\nNamespace conventions (no separate schema version field — the shape below IS the version, and jsonb storage means every change here is additive-safe by construction): - Add a new namespace or leaf field as OPTIONAL. Existing documents\n  simply lack it until the client writes one; never add `required`.\n- Never change an existing field\'s meaning or type in place — add a\n  new field\/namespace instead and leave the old one alone (or have\n  the client stop reading it, same as the legacy-localStorage\n  migration this replaced). Old stored documents are never rewritten\n  on deploy.\n- A `Record<string, T>` namespace (filterPanels\/viewModes\/tables) is\n  keyed by a short semantic surface id (e.g. \"deals\",\n  \"persons\") chosen once and then stable — renaming a key\n  orphans whatever data was stored under the old one.\n- PATCH deep-merges (see UserPreferencesPatch): objects merge\n  recursively, arrays\/scalars replace, `null` deletes a key. New\n  namespaces don\'t need new endpoints or migrations, just new\n  properties here + `pnpm --filter @workspace\/api-spec run codegen`.\n')
+}).describe('Namespaced per-user preferences document. Every property is optional; a user with nothing saved yet gets back an empty object.\nNamespace conventions (no separate schema version field — the shape below IS the version, and jsonb storage means every change here is additive-safe by construction): - Add a new namespace or leaf field as OPTIONAL. Existing documents\n  simply lack it until the client writes one; never add `required`.\n- Never change an existing field\'s meaning or type in place — add a\n  new field\/namespace instead and leave the old one alone (or have\n  the client stop reading it, same as the legacy-localStorage\n  migration this replaced). Old stored documents are never rewritten\n  on deploy.\n- A `Record<string, T>` namespace (filterPanels\/viewModes\/tables) is\n  keyed by a short semantic surface id (e.g. \"deals\",\n  \"dealsActive\") chosen once and then stable — renaming a key\n  orphans whatever data was stored under the old one.\n- PATCH deep-merges (see UserPreferencesPatch): objects merge\n  recursively, arrays\/scalars replace, `null` deletes a key. New\n  namespaces don\'t need new endpoints or migrations, just new\n  properties here + `pnpm --filter @workspace\/api-spec run codegen`.\n')
 
 
 /**
@@ -883,6 +963,14 @@ export const UpdateUserPreferencesBody = zod.object({
   "openMode": zod.enum(['page', 'drawer']).optional().describe('Whether clicking into a deal opens the full `\/deal\/:id` page or a right-side drawer over the current view.\n')
 }),zod.null()]).optional(),
   "notifications": zod.union([zod.object({
+  "reminder": zod.object({
+  "email": zod.boolean().optional(),
+  "inApp": zod.boolean().optional()
+}).optional().describe('Per-category channel toggles. Missing\/malformed reads as on (see notify()\'s channelPrefsFor).'),
+  "overdue": zod.object({
+  "email": zod.boolean().optional(),
+  "inApp": zod.boolean().optional()
+}).optional().describe('Per-category channel toggles. Missing\/malformed reads as on (see notify()\'s channelPrefsFor).'),
   "assignment": zod.object({
   "email": zod.boolean().optional(),
   "inApp": zod.boolean().optional()
@@ -891,7 +979,11 @@ export const UpdateUserPreferencesBody = zod.object({
   "email": zod.boolean().optional(),
   "inApp": zod.boolean().optional()
 }).optional().describe('Per-category channel toggles. Missing\/malformed reads as on (see notify()\'s channelPrefsFor).')
-}).describe('Per-category notification channel preferences. Categories are fixed (assignment\/mention); each is optional and defaults to all-on when absent. mention.inApp is stored but inert — that row is written by mentions.ts, not notify().\n'),zod.null()]).optional(),
+}).describe('Per-category notification channel preferences. Categories are fixed (reminder\/overdue\/assignment\/mention); each is optional and defaults to all-on when absent. mention.inApp is stored but inert — that row is written by mentions.ts, not notify().\n'),zod.null()]).optional(),
+  "csTasks": zod.union([zod.object({
+  "ownerId": zod.union([zod.number(),zod.enum(['all']),zod.null()]).optional().describe('The signed-in user\'s numeric id to scope to just their own tasks, the literal \"all\" to include every member\'s tasks, or absent\/null for the default (the signed-in user).\n'),
+  "showDone": zod.boolean().optional()
+}).describe('Task-list filter state, stored at csTasks.\* so the chosen owner scope and done-toggle survive navigating away and back. Not read or written by the current web app; the activities page keeps its layout under `tables.activities`.\n'),zod.null()]).optional(),
   "recentlyViewed": zod.union([zod.array(zod.object({
   "type": zod.enum(['deal', 'organization', 'person']),
   "href": zod.string(),
@@ -911,8 +1003,8 @@ export const UpdateUserPreferencesResponse = zod.object({
   "locale": zod.enum(['en', 'ar']).optional().describe('UI language. Absent means the user has never chosen, which reads as English -- there is no OS-preference fallback the way there is for `theme`, because a browser\'s Accept-Language says nothing about which language someone wants to do their job in.\n')
 }).optional(),
   "filterPanels": zod.record(zod.string(), zod.boolean()).optional().describe('Filter-panel collapsed state per surface, e.g. \"persons\", \"organizations\".'),
-  "viewModes": zod.record(zod.string(), zod.string()).optional().describe('Current view mode per surface, e.g. deals \"pipeline\" | \"list\".'),
-  "filters": zod.record(zod.string(), zod.record(zod.string(), zod.unknown())).optional().describe('Saved live filter state per surface, e.g. \"persons\", \"organizations\".'),
+  "viewModes": zod.record(zod.string(), zod.string()).optional().describe('Current view mode per surface, e.g. deals \"table\" | \"board\".'),
+  "filters": zod.record(zod.string(), zod.record(zod.string(), zod.unknown())).optional().describe('Saved live filter state per surface, e.g. \"deals\", \"persons\".'),
   "kanbanSorts": zod.record(zod.string(), zod.object({
   "id": zod.string(),
   "dir": zod.enum(['asc', 'desc'])
@@ -942,6 +1034,14 @@ export const UpdateUserPreferencesResponse = zod.object({
   "openMode": zod.enum(['page', 'drawer']).optional().describe('Whether clicking into a deal opens the full `\/deal\/:id` page or a right-side drawer over the current view.\n')
 }).optional(),
   "notifications": zod.object({
+  "reminder": zod.object({
+  "email": zod.boolean().optional(),
+  "inApp": zod.boolean().optional()
+}).optional().describe('Per-category channel toggles. Missing\/malformed reads as on (see notify()\'s channelPrefsFor).'),
+  "overdue": zod.object({
+  "email": zod.boolean().optional(),
+  "inApp": zod.boolean().optional()
+}).optional().describe('Per-category channel toggles. Missing\/malformed reads as on (see notify()\'s channelPrefsFor).'),
   "assignment": zod.object({
   "email": zod.boolean().optional(),
   "inApp": zod.boolean().optional()
@@ -950,7 +1050,11 @@ export const UpdateUserPreferencesResponse = zod.object({
   "email": zod.boolean().optional(),
   "inApp": zod.boolean().optional()
 }).optional().describe('Per-category channel toggles. Missing\/malformed reads as on (see notify()\'s channelPrefsFor).')
-}).optional().describe('Per-category notification channel preferences. Categories are fixed (assignment\/mention); each is optional and defaults to all-on when absent. mention.inApp is stored but inert — that row is written by mentions.ts, not notify().\n'),
+}).optional().describe('Per-category notification channel preferences. Categories are fixed (reminder\/overdue\/assignment\/mention); each is optional and defaults to all-on when absent. mention.inApp is stored but inert — that row is written by mentions.ts, not notify().\n'),
+  "csTasks": zod.object({
+  "ownerId": zod.union([zod.number(),zod.enum(['all']),zod.null()]).optional().describe('The signed-in user\'s numeric id to scope to just their own tasks, the literal \"all\" to include every member\'s tasks, or absent\/null for the default (the signed-in user).\n'),
+  "showDone": zod.boolean().optional()
+}).optional().describe('Task-list filter state, stored at csTasks.\* so the chosen owner scope and done-toggle survive navigating away and back. Not read or written by the current web app; the activities page keeps its layout under `tables.activities`.\n'),
   "recentlyViewed": zod.array(zod.object({
   "type": zod.enum(['deal', 'organization', 'person']),
   "href": zod.string(),
@@ -958,7 +1062,7 @@ export const UpdateUserPreferencesResponse = zod.object({
   "viewedAt": zod.string()
 }).describe('One visited deal\/organization\/person, keyed for de-dup by `href` (the record\'s detail-page path).\n')).max(updateUserPreferencesResponseRecentlyViewedMax).optional().describe('Most-recently-viewed deal\/organization\/person records, most recent first.'),
   "resetEpoch": zod.number().optional().describe('Server-managed, read-only. Bumped only by DELETE \/user-preferences (never by an ordinary PATCH). A PATCH sent with the X-Preferences-Reset-Epoch header set to a stale value (i.e. a write computed before a reset that has since happened elsewhere) is rejected with 409 instead of being applied — see UpdateUserPreferences. Not settable via PATCH; any value sent in the body is ignored.\n')
-}).describe('Namespaced per-user preferences document. Every property is optional; a user with nothing saved yet gets back an empty object.\nNamespace conventions (no separate schema version field — the shape below IS the version, and jsonb storage means every change here is additive-safe by construction): - Add a new namespace or leaf field as OPTIONAL. Existing documents\n  simply lack it until the client writes one; never add `required`.\n- Never change an existing field\'s meaning or type in place — add a\n  new field\/namespace instead and leave the old one alone (or have\n  the client stop reading it, same as the legacy-localStorage\n  migration this replaced). Old stored documents are never rewritten\n  on deploy.\n- A `Record<string, T>` namespace (filterPanels\/viewModes\/tables) is\n  keyed by a short semantic surface id (e.g. \"deals\",\n  \"persons\") chosen once and then stable — renaming a key\n  orphans whatever data was stored under the old one.\n- PATCH deep-merges (see UserPreferencesPatch): objects merge\n  recursively, arrays\/scalars replace, `null` deletes a key. New\n  namespaces don\'t need new endpoints or migrations, just new\n  properties here + `pnpm --filter @workspace\/api-spec run codegen`.\n')
+}).describe('Namespaced per-user preferences document. Every property is optional; a user with nothing saved yet gets back an empty object.\nNamespace conventions (no separate schema version field — the shape below IS the version, and jsonb storage means every change here is additive-safe by construction): - Add a new namespace or leaf field as OPTIONAL. Existing documents\n  simply lack it until the client writes one; never add `required`.\n- Never change an existing field\'s meaning or type in place — add a\n  new field\/namespace instead and leave the old one alone (or have\n  the client stop reading it, same as the legacy-localStorage\n  migration this replaced). Old stored documents are never rewritten\n  on deploy.\n- A `Record<string, T>` namespace (filterPanels\/viewModes\/tables) is\n  keyed by a short semantic surface id (e.g. \"deals\",\n  \"dealsActive\") chosen once and then stable — renaming a key\n  orphans whatever data was stored under the old one.\n- PATCH deep-merges (see UserPreferencesPatch): objects merge\n  recursively, arrays\/scalars replace, `null` deletes a key. New\n  namespaces don\'t need new endpoints or migrations, just new\n  properties here + `pnpm --filter @workspace\/api-spec run codegen`.\n')
 
 
 /**
@@ -1253,7 +1357,7 @@ export const ListActivitiesResponseItem = zod.object({
   "dueTime": zod.string().nullish(),
   "duration": zod.string().nullish(),
   "markedAsDoneTime": zod.coerce.date().nullish(),
-  "outcome": zod.union([zod.literal('successful'),zod.literal('no_reply'),zod.literal(null)]).nullish().describe('How a completed activity went; \"no_reply\" is written only by the no-reply action.'),
+  "outcome": zod.union([zod.literal('successful'),zod.literal('no_reply'),zod.literal(null)]).nullish().describe('How a completed activity went. \"no_reply\" is written only by the no-reply action.'),
   "dealId": zod.number().nullish(),
   "dealTitle": zod.string().nullish(),
   "personId": zod.number().nullish(),
@@ -1328,7 +1432,7 @@ export const GetActivityResponse = zod.object({
   "dueTime": zod.string().nullish(),
   "duration": zod.string().nullish(),
   "markedAsDoneTime": zod.coerce.date().nullish(),
-  "outcome": zod.union([zod.literal('successful'),zod.literal('no_reply'),zod.literal(null)]).nullish().describe('How a completed activity went; \"no_reply\" is written only by the no-reply action.'),
+  "outcome": zod.union([zod.literal('successful'),zod.literal('no_reply'),zod.literal(null)]).nullish().describe('How a completed activity went. \"no_reply\" is written only by the no-reply action.'),
   "dealId": zod.number().nullish(),
   "dealTitle": zod.string().nullish(),
   "personId": zod.number().nullish(),
@@ -1380,7 +1484,7 @@ export const UpdateActivityResponse = zod.object({
   "dueTime": zod.string().nullish(),
   "duration": zod.string().nullish(),
   "markedAsDoneTime": zod.coerce.date().nullish(),
-  "outcome": zod.union([zod.literal('successful'),zod.literal('no_reply'),zod.literal(null)]).nullish().describe('How a completed activity went; \"no_reply\" is written only by the no-reply action.'),
+  "outcome": zod.union([zod.literal('successful'),zod.literal('no_reply'),zod.literal(null)]).nullish().describe('How a completed activity went. \"no_reply\" is written only by the no-reply action.'),
   "dealId": zod.number().nullish(),
   "dealTitle": zod.string().nullish(),
   "personId": zod.number().nullish(),
@@ -1425,7 +1529,7 @@ export const MarkActivityNoReplyResponse = zod.object({
   "dueTime": zod.string().nullish(),
   "duration": zod.string().nullish(),
   "markedAsDoneTime": zod.coerce.date().nullish(),
-  "outcome": zod.union([zod.literal('successful'),zod.literal('no_reply'),zod.literal(null)]).nullish().describe('How a completed activity went; \"no_reply\" is written only by the no-reply action.'),
+  "outcome": zod.union([zod.literal('successful'),zod.literal('no_reply'),zod.literal(null)]).nullish().describe('How a completed activity went. \"no_reply\" is written only by the no-reply action.'),
   "dealId": zod.number().nullish(),
   "dealTitle": zod.string().nullish(),
   "personId": zod.number().nullish(),
@@ -1451,7 +1555,7 @@ export const MarkActivityNoReplyResponse = zod.object({
   "dueTime": zod.string().nullish(),
   "duration": zod.string().nullish(),
   "markedAsDoneTime": zod.coerce.date().nullish(),
-  "outcome": zod.union([zod.literal('successful'),zod.literal('no_reply'),zod.literal(null)]).nullish().describe('How a completed activity went; \"no_reply\" is written only by the no-reply action.'),
+  "outcome": zod.union([zod.literal('successful'),zod.literal('no_reply'),zod.literal(null)]).nullish().describe('How a completed activity went. \"no_reply\" is written only by the no-reply action.'),
   "dealId": zod.number().nullish(),
   "dealTitle": zod.string().nullish(),
   "personId": zod.number().nullish(),
@@ -1487,7 +1591,7 @@ export const PostActivityResponse = zod.object({
   "dueTime": zod.string().nullish(),
   "duration": zod.string().nullish(),
   "markedAsDoneTime": zod.coerce.date().nullish(),
-  "outcome": zod.union([zod.literal('successful'),zod.literal('no_reply'),zod.literal(null)]).nullish().describe('How a completed activity went; \"no_reply\" is written only by the no-reply action.'),
+  "outcome": zod.union([zod.literal('successful'),zod.literal('no_reply'),zod.literal(null)]).nullish().describe('How a completed activity went. \"no_reply\" is written only by the no-reply action.'),
   "dealId": zod.number().nullish(),
   "dealTitle": zod.string().nullish(),
   "personId": zod.number().nullish(),
@@ -1773,7 +1877,7 @@ export const MarkNotificationReadParams = zod.object({
 
 
 /**
- * Explicit dismissal, distinct from marking read. A dismissed notification leaves both the bell and the home card.
+ * Explicit dismissal, distinct from marking read. A time-based notification stays on both surfaces until the recipient dismisses it here.
 
  * @summary Clear one notification from the bell and the home card
  */
@@ -1868,7 +1972,13 @@ export const ListUsersResponseItem = zod.object({
   "created": zod.coerce.date(),
   "lastLogin": zod.coerce.date().nullish(),
   "teamId": zod.number().nullish(),
-  "teamName": zod.string().nullish()
+  "teamName": zod.string().nullish(),
+  "tenantId": zod.number().optional().describe('The workspace this user belongs to.'),
+  "workspace": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "slug": zod.string()
+}).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 export const ListUsersResponse = zod.array(ListUsersResponseItem)
 
@@ -1916,7 +2026,13 @@ export const GetUserResponse = zod.object({
   "created": zod.coerce.date(),
   "lastLogin": zod.coerce.date().nullish(),
   "teamId": zod.number().nullish(),
-  "teamName": zod.string().nullish()
+  "teamName": zod.string().nullish(),
+  "tenantId": zod.number().optional().describe('The workspace this user belongs to.'),
+  "workspace": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "slug": zod.string()
+}).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 
 
@@ -1960,7 +2076,13 @@ export const UpdateUserResponse = zod.object({
   "created": zod.coerce.date(),
   "lastLogin": zod.coerce.date().nullish(),
   "teamId": zod.number().nullish(),
-  "teamName": zod.string().nullish()
+  "teamName": zod.string().nullish(),
+  "tenantId": zod.number().optional().describe('The workspace this user belongs to.'),
+  "workspace": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "slug": zod.string()
+}).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 
 
@@ -2206,7 +2328,6 @@ export const ListTeamsResponseItem = zod.object({
   "name": zod.string(),
   "active": zod.boolean(),
   "orderIndex": zod.number(),
-  "pipedriveId": zod.number().nullish(),
   "memberCount": zod.number()
 }).describe('A team for pickers and assignment rules — no member list (which would expose member emails to every authenticated user). The full member list is admin-only, via GET \/admin\/teams.\n')
 export const ListTeamsResponse = zod.array(ListTeamsResponseItem)
@@ -2221,7 +2342,6 @@ export const AdminListTeamsResponse = zod.object({
   "name": zod.string(),
   "active": zod.boolean(),
   "orderIndex": zod.number(),
-  "pipedriveId": zod.number().nullish().describe('Set when the team was imported from Pipedrive; null for native teams.'),
   "memberCount": zod.number(),
   "members": zod.array(zod.object({
   "id": zod.number(),
@@ -2248,7 +2368,6 @@ export const CreateTeamResponse = zod.object({
   "name": zod.string(),
   "active": zod.boolean(),
   "orderIndex": zod.number(),
-  "pipedriveId": zod.number().nullish().describe('Set when the team was imported from Pipedrive; null for native teams.'),
   "memberCount": zod.number(),
   "members": zod.array(zod.object({
   "id": zod.number(),
@@ -2280,7 +2399,6 @@ export const UpdateTeamResponse = zod.object({
   "name": zod.string(),
   "active": zod.boolean(),
   "orderIndex": zod.number(),
-  "pipedriveId": zod.number().nullish().describe('Set when the team was imported from Pipedrive; null for native teams.'),
   "memberCount": zod.number(),
   "members": zod.array(zod.object({
   "id": zod.number(),
@@ -3223,6 +3341,7 @@ export const ListInsightsDashboardsResponseItem = zod.object({
   "ownerIds": zod.array(zod.number()).optional(),
   "pipelineIds": zod.array(zod.number()).optional(),
   "statuses": zod.array(zod.enum(['open', 'won', 'lost'])).optional(),
+  "qualification": zod.enum(['qualified', 'unqualified']).optional(),
   "filters": zod.string().nullish()
 }).describe('Board-level filter state. Composes with each widget\'s own filters by intersection server-side. `filters` carries the Add-filter condition group, base64url-encoded with the shared deals-filter codec.\n'),zod.null()]).optional(),
   "layout": zod.array(zod.object({
@@ -3294,6 +3413,7 @@ export const CreateInsightsDashboardBody = zod.object({
   "ownerIds": zod.array(zod.number()).optional(),
   "pipelineIds": zod.array(zod.number()).optional(),
   "statuses": zod.array(zod.enum(['open', 'won', 'lost'])).optional(),
+  "qualification": zod.enum(['qualified', 'unqualified']).optional(),
   "filters": zod.string().nullish()
 }).describe('Board-level filter state. Composes with each widget\'s own filters by intersection server-side. `filters` carries the Add-filter condition group, base64url-encoded with the shared deals-filter codec.\n'),zod.null()]).optional(),
   "layout": zod.array(zod.object({
@@ -3329,6 +3449,7 @@ export const UpdateInsightsDashboardBody = zod.object({
   "ownerIds": zod.array(zod.number()).optional(),
   "pipelineIds": zod.array(zod.number()).optional(),
   "statuses": zod.array(zod.enum(['open', 'won', 'lost'])).optional(),
+  "qualification": zod.enum(['qualified', 'unqualified']).optional(),
   "filters": zod.string().nullish()
 }).describe('Board-level filter state. Composes with each widget\'s own filters by intersection server-side. `filters` carries the Add-filter condition group, base64url-encoded with the shared deals-filter codec.\n'),zod.null()]).optional(),
   "layout": zod.array(zod.object({
@@ -3360,6 +3481,7 @@ export const UpdateInsightsDashboardResponse = zod.object({
   "ownerIds": zod.array(zod.number()).optional(),
   "pipelineIds": zod.array(zod.number()).optional(),
   "statuses": zod.array(zod.enum(['open', 'won', 'lost'])).optional(),
+  "qualification": zod.enum(['qualified', 'unqualified']).optional(),
   "filters": zod.string().nullish()
 }).describe('Board-level filter state. Composes with each widget\'s own filters by intersection server-side. `filters` carries the Add-filter condition group, base64url-encoded with the shared deals-filter codec.\n'),zod.null()]).optional(),
   "layout": zod.array(zod.object({
@@ -3663,6 +3785,7 @@ export const RunInsightsQueryBody = zod.object({
   "ownerIds": zod.array(zod.number()).optional(),
   "pipelineIds": zod.array(zod.number()).optional(),
   "statuses": zod.array(zod.enum(['open', 'won', 'lost'])).optional(),
+  "qualification": zod.enum(['qualified', 'unqualified']).optional(),
   "filters": zod.string().nullish()
 }).describe('Board-level filter state. Composes with each widget\'s own filters by intersection server-side. `filters` carries the Add-filter condition group, base64url-encoded with the shared deals-filter codec.\n'),zod.null()]).optional()
 })
@@ -3742,6 +3865,7 @@ export const RunInsightsQueryBatchBody = zod.object({
   "ownerIds": zod.array(zod.number()).optional(),
   "pipelineIds": zod.array(zod.number()).optional(),
   "statuses": zod.array(zod.enum(['open', 'won', 'lost'])).optional(),
+  "qualification": zod.enum(['qualified', 'unqualified']).optional(),
   "filters": zod.string().nullish()
 }).describe('Board-level filter state. Composes with each widget\'s own filters by intersection server-side. `filters` carries the Add-filter condition group, base64url-encoded with the shared deals-filter codec.\n'),zod.null()]).optional()
 })).min(1).max(runInsightsQueryBatchBodyItemsMax)

@@ -25,6 +25,5 @@
     "@types/node": "catalog:",
     "@types/pg": "^8.20.0",
     "drizzle-kit": "^0.31.10"
-  },
-  "license": "AGPL-3.0-only"
+  }
 }

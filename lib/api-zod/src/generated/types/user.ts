@@ -5,6 +5,7 @@
  * Sirdab Revenue Engine API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { Workspace } from './workspace';
 
 export interface User {
   id: number;
@@ -25,4 +26,7 @@ export interface User {
   teamId?: number | null;
   /** @nullable */
   teamName?: string | null;
+  /** The workspace this user belongs to. */
+  tenantId?: number;
+  workspace?: Workspace;
 }

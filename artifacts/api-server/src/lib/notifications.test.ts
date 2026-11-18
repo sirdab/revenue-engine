@@ -19,12 +19,12 @@ test("deal_assigned builds an in-app row addressed to the deal", () => {
   const row = inAppRowFor({
     type: "deal_assigned",
     dealId: 99,
-    dealTitle: "Acme HQ warehouse",
+    dealTitle: "Acme HQ office",
     userId: 7,
   });
   assert.deepEqual(row, {
     type: "assignment",
-    message: "“Acme HQ warehouse” was assigned to you",
+    message: "“Acme HQ office” was assigned to you",
     entityType: "deal",
     entityId: 99,
   });
@@ -41,15 +41,30 @@ test("mentioned returns null — mentions.ts already inserts its own row, no dup
   assert.equal(row, null);
 });
 
-// deal_assigned reaches its owner in-app and by email only (no shared
-// channel post, no DM). These plans pin how preferences gate it.
+test("deal_won returns null — announcement only, no individual recipient", () => {
+  const row = inAppRowFor({
+    type: "deal_won",
+    dealId: 1,
+    dealTitle: "Acme HQ office",
+    value: 100000,
+    currency: "USD",
+    actorName: "Sara",
+  });
+  assert.equal(row, null);
+});
+
+// plannedChannelsFor — the pure planner behind notify()'s preference gating.
+// Tested directly (same rationale as inAppRowFor: no DB isolation seam here).
+
 const assignedEvent = {
   type: "deal_assigned" as const,
   dealId: 1,
-  dealTitle: "Acme HQ warehouse",
+  dealTitle: "Acme - Annual plan",
   userId: 7,
 };
 
+// An assignment reaches its owner in-app and by email only: it does not post
+// to the shared announcements channel (that is for won deals) or DM the owner.
 test("absent preferences send everything (Constraint 6: missing = on)", () => {
   const plan = plannedChannelsFor(assignedEvent, null);
   assert.deepEqual(plan, {
@@ -123,12 +138,13 @@ test("deal_assigned: all channels off yields an all-false plan", () => {
   // so with every channel off, plannedChannelsFor returns every field false.
   // In notify(), that means `sends` stays empty and it returns `true` early
   // ("nothing to send counts as delivered") — if it returned `false` instead,
-  // a caller retrying on failure would retry the same event forever even
-  // though the user deliberately muted every channel for this category.
+  // the reminder/assignment scheduler would treat this as a failed send,
+  // clear its claim stamp, and retry the same event forever even though the
+  // user deliberately muted every channel for this category.
   const dealAssignedEvent = {
     type: "deal_assigned" as const,
     dealId: 1,
-    dealTitle: "Acme HQ warehouse",
+    dealTitle: "Acme HQ office",
     userId: 7,
   };
   const plan = plannedChannelsFor(dealAssignedEvent, {
@@ -172,9 +188,9 @@ test("deal_won is unaffected by preferences — no recipient, no category", () =
   const dealWonEvent = {
     type: "deal_won" as const,
     dealId: 1,
-    dealTitle: "Acme HQ warehouse",
+    dealTitle: "Acme HQ office",
     value: 100000,
-    currency: "SAR",
+    currency: "USD",
     actorName: "Sara",
   };
   const plan = plannedChannelsFor(dealWonEvent, {

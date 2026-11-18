@@ -1,0 +1,58 @@
+name: Deploy
+
+# Optional auto-deploy to Fly.io on push to main. Off by default: it runs only
+# when the repository variable FLY_APP is set to your Fly app name (Settings →
+# Secrets and variables → Actions → Variables), so forks and clones never try
+# to deploy. Also needs the FLY_API_TOKEN repo secret (`flyctl tokens create
+# deploy`). Migrations run on Fly as the release command (fly.toml), where the
+# database is reachable, not here. See DEPLOY.md.
+#
+# `flyctl deploy` runs the full Docker build on Fly's amd64 remote builder (the
+# real production build), but we run a fast typecheck first so an
+# obviously-broken commit fails before spending a remote-builder run.
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch: {}
+
+# Never overlap deploys; cancel a superseded in-flight deploy when a newer main
+# commit lands so only the latest ships.
+concurrency:
+  group: deploy-fly
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: ${{ vars.FLY_APP != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          # Lockfile was written by pnpm 10; pnpm 9 fails --frozen-lockfile with
+          # ERR_PNPM_LOCKFILE_CONFIG_MISMATCH on the overrides config.
+          version: 10.34.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck gate (fast fail before remote build)
+        run: pnpm run typecheck
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy to Fly
+        # --remote-only builds on Fly's amd64 builder, avoiding the
+        # linux-x64-only native-binary problem entirely. VITE_ vars are inlined
+        # at build time, so they must be passed as --build-arg (a Fly runtime
+        # secret would be too late — vite already baked in the bundle). The Sentry DSN is
+        # not sensitive (send-only, ships in the public client bundle either
+        # way); when its secret is unset the arg is empty and Sentry no-ops.
+        run: >-
+          flyctl deploy --remote-only
+          --app "${{ vars.FLY_APP }}"
+          --build-arg VITE_SENTRY_DSN="$VITE_SENTRY_DSN"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}

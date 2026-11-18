@@ -15,6 +15,7 @@ import { z } from "zod/v4";
 import { EMPTY_FILTER, type FilterGroup } from "@workspace/deals-filter";
 import { teamsTable } from "./teams";
 import { usersTable } from "./users";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 // Auto-assignment rules — the routing engine that sets a deal's owner
 // automatically (Pipedrive "Automatic Assignment" parity). Each rule matches on
@@ -37,6 +38,7 @@ export const assignmentRulesTable = pgTable(
   "assignment_rules",
   {
     id: serial("id").primaryKey(),
+    tenantId: tenantIdColumn(),
     name: text("name").notNull(),
     triggerEvent: text("trigger_event")
       .$type<AssignmentTriggerEvent>()
@@ -59,7 +61,7 @@ export const assignmentRulesTable = pgTable(
       { onDelete: "set null" },
     ),
     // "Deal updated" rules only: when true, this rule may REASSIGN a deal
-    // that already has an owner (e.g. the SDR → closers handover on a stage
+    // that already has an owner (e.g. a handover between teams on a stage
     // move). Default false preserves the original never-overwrite behavior.
     // Reassignment still only happens on a real pipeline/stage change and
     // never when the client set the owner in the same request.
@@ -89,6 +91,7 @@ export const assignmentRulesTable = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
+    tenantPolicy(),
     // Rules are loaded/ordered per trigger event by priority.
     index("assignment_rules_event_priority_idx").on(
       table.triggerEvent,

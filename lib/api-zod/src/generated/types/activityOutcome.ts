@@ -7,7 +7,7 @@
  */
 
 /**
- * How a completed activity went; "no_reply" is written only by the no-reply action.
+ * How a completed activity went. "no_reply" is written only by the no-reply action.
  * @nullable
  */
 export type ActivityOutcome = typeof ActivityOutcome[keyof typeof ActivityOutcome] | null;

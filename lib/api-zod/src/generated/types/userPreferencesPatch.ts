@@ -5,6 +5,7 @@
  * Sirdab Revenue Engine API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { UserPreferencesCsTasks } from './userPreferencesCsTasks';
 import type { UserPreferencesDeals } from './userPreferencesDeals';
 import type { UserPreferencesLayout } from './userPreferencesLayout';
 import type { UserPreferencesNotifications } from './userPreferencesNotifications';
@@ -28,5 +29,6 @@ export interface UserPreferencesPatch {
   tables?: UserPreferencesPatchTables;
   deals?: UserPreferencesDeals | null;
   notifications?: UserPreferencesNotifications | null;
+  csTasks?: UserPreferencesCsTasks | null;
   recentlyViewed?: UserPreferencesRecentlyViewedItem[] | null;
 }

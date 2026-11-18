@@ -28,6 +28,8 @@ import webhooksRouter from "./webhooks";
 import settingsRouter from "./settings";
 import filesRouter from "./files";
 import insightsRouter from "./insights";
+import assistantRouter from "./assistant";
+import workspaceRouter from "./workspace";
 import { requireAuth } from "../lib/auth";
 import { dbClientErrorHandler } from "../lib/pg-errors";
 
@@ -43,6 +45,7 @@ router.use(webhooksRouter);
 // Everything below requires an authenticated session
 router.use(requireAuth);
 
+router.use(workspaceRouter);
 router.use(pipelinesRouter);
 router.use(stagesRouter);
 router.use(adminPipelinesRouter);
@@ -69,6 +72,7 @@ router.use(importRouter);
 router.use(settingsRouter);
 router.use(filesRouter);
 router.use(insightsRouter);
+router.use(assistantRouter);
 
 // Bad input the database caught (an id that points at nothing, 2026-02-30, a
 // number too large for its column) is a 4xx, not a 500 — see lib/pg-errors.ts.

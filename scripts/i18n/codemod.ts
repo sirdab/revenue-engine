@@ -1,4 +1,4 @@
-// i18n codemod for phase 2.
+// i18n codemod: moves hard-coded JSX strings into the locale dictionaries.
 //
 //   tsx i18n-codemod.ts scan  <file.tsx>            -> list candidate strings
 //   tsx i18n-codemod.ts apply <job.json>            -> rewrite + add keys
@@ -22,7 +22,7 @@ import path from "node:path";
 // `scan` throw ENOENT -- and because callers redirect stderr, that reads as
 // "this file has no strings left" rather than as a failure.
 const REPO = path.resolve(import.meta.dirname, "../..");
-const LOGIN = path.join(REPO, "artifacts/login");
+const LOGIN = path.join(REPO, "artifacts/web");
 const EN = path.join(LOGIN, "src/lib/i18n/en.json");
 const AR = path.join(LOGIN, "src/lib/i18n/ar.json");
 

@@ -7,6 +7,6 @@
  */
 
 /**
- * Current view mode per surface, e.g. deals "pipeline" | "list".
+ * Current view mode per surface, e.g. deals "table" | "board".
  */
 export type UserPreferencesViewModes = {[key: string]: string};

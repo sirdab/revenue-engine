@@ -40,15 +40,15 @@ const QUALIFICATION: InsightsFieldDef = {
   customKey: "qualification",
 };
 
-const SQM: InsightsFieldDef = {
-  key: "cf:first_inbound_expected_number_of_sqm_pal",
-  label: "Expected sqm/pallets",
+const SEATS: InsightsFieldDef = {
+  key: "cf:expected_seat_count",
+  label: "Expected seat count",
   type: "double",
   kind: "custom",
   filterable: true,
   groupable: true,
   measurable: true,
-  customKey: "first_inbound_expected_number_of_sqm_pal",
+  customKey: "expected_seat_count",
 };
 
 const IS_ECOMMERCE: InsightsFieldDef = {
@@ -91,7 +91,7 @@ test("insights-vocabulary fields advertised by /fields are filterable (utmSource
   assert.ok(where);
   const { sql, params } = render(where);
   assert.match(sql, /"utm_source" = /);
-  assert.match(sql, /"add_time" AT TIME ZONE 'Asia\/Riyadh'/);
+  assert.match(sql, /"add_time" AT TIME ZONE 'UTC'/);
   assert.deepEqual(params, ["google", "2026-01-01"]);
 });
 
@@ -116,7 +116,7 @@ test("organization conditions flag the required join", () => {
   const { where, needsOrgJoin } = compileExtendedGroup(
     {
       combinator: "and",
-      conditions: [{ field: "organization", operator: "contains", value: "Noon" }],
+      conditions: [{ field: "organization", operator: "contains", value: "Acme" }],
     },
     catalogWith(),
   );
@@ -124,7 +124,7 @@ test("organization conditions flag the required join", () => {
   assert.equal(needsOrgJoin, true);
   const { sql, params } = render(where);
   assert.match(sql, /"name" ilike /);
-  assert.deepEqual(params, ["%Noon%"]);
+  assert.deepEqual(params, ["%Acme%"]);
 });
 
 test("cf: conditions compile to a custom_fields accessor with bound value", () => {
@@ -164,13 +164,13 @@ test("numeric cf: fields cast and support range operators", () => {
       combinator: "and",
       conditions: [
         {
-          field: "cf:first_inbound_expected_number_of_sqm_pal",
+          field: "cf:expected_seat_count",
           operator: "between",
           value: [100, 500],
         },
       ],
     },
-    catalogWith(SQM),
+    catalogWith(SEATS),
   );
   assert.ok(where);
   const { sql, params } = render(where);
@@ -307,7 +307,7 @@ test("board filters compose as additional AND conditions (intersection)", () => 
   assert.deepEqual(rendered[0].params, [3, 4]);
   // Only the allow-listed status survived.
   assert.deepEqual(rendered[1].params, ["won"]);
-  assert.match(rendered[2].sql, /"won_time" AT TIME ZONE 'Asia\/Riyadh'/);
+  assert.match(rendered[2].sql, /"won_time" AT TIME ZONE 'UTC'/);
 });
 
 test("board date range accepts Date instances (generated zod coerces dates)", () => {
@@ -345,12 +345,32 @@ test("the board Add-filter group is decoded and compiled, not dropped", () => {
   assert.ok(applied.some((a) => a.includes("board condition")));
 });
 
+test("qualification quick-filter compiles via the registry or fails loudly", () => {
+  const spec = widgetSpecSchema.parse(BASE_SPEC);
+  const { conditions } = compileGlobalFilters(
+    { qualification: "qualified" },
+    spec,
+    catalogWith(QUALIFICATION),
+  );
+  assert.equal(conditions.length, 1);
+  const { sql, params } = render(conditions[0]);
+  assert.match(sql, /"custom_fields" ->> 'qualification'/);
+  assert.deepEqual(params, ["qualified"]);
+
+  // Without the registry field the filter must error, never silently no-op.
+  assert.throws(
+    () =>
+      compileGlobalFilters({ qualification: "qualified" }, spec, catalogWith()),
+    InsightsQueryError,
+  );
+});
+
 test("unsupported date basis is rejected with a clear error", () => {
   const spec = widgetSpecSchema.parse(BASE_SPEC);
   assert.throws(
     () =>
       compileGlobalFilters(
-        { dateRange: { from: "2026-01-01", basis: "invoiceDate" } },
+        { dateRange: { from: "2026-01-01", basis: "notADateBasis" } },
         spec,
         catalogWith(),
       ),

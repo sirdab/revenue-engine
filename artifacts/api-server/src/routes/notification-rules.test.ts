@@ -5,7 +5,7 @@ import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import express from "express";
 
-// Same harness shape as ab-invoicing.test.ts: the router pulls in `lib/auth` ->
+// The router pulls in `lib/auth` ->
 // `@workspace/db`, which refuses to load without a DATABASE_URL. Every
 // assertion below is answered by argument validation, which runs before any
 // handler reaches Postgres — so nothing here opens a connection. The env has to

@@ -8,10 +8,12 @@
 import type { UserPreferencesNotificationChannels } from './userPreferencesNotificationChannels';
 
 /**
- * Per-category notification channel preferences. Categories are fixed (assignment/mention); each is optional and defaults to all-on when absent. mention.inApp is stored but inert — that row is written by mentions.ts, not notify().
+ * Per-category notification channel preferences. Categories are fixed (reminder/overdue/assignment/mention); each is optional and defaults to all-on when absent. mention.inApp is stored but inert — that row is written by mentions.ts, not notify().
 
  */
 export interface UserPreferencesNotifications {
+  reminder?: UserPreferencesNotificationChannels;
+  overdue?: UserPreferencesNotificationChannels;
   assignment?: UserPreferencesNotificationChannels;
   mention?: UserPreferencesNotificationChannels;
 }

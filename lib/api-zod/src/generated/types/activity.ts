@@ -25,7 +25,7 @@ export interface Activity {
   /** @nullable */
   markedAsDoneTime?: Date | null;
   /**
-     * How a completed activity went; "no_reply" is written only by the no-reply action.
+     * How a completed activity went. "no_reply" is written only by the no-reply action.
      * @nullable
      */
   outcome?: ActivityOutcome;

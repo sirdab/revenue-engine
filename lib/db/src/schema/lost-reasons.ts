@@ -10,6 +10,7 @@ import {
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 // Managed lost reasons — the curated list offered when a deal is marked lost.
 //
@@ -25,6 +26,7 @@ export const lostReasonsTable = pgTable(
   "lost_reasons",
   {
     id: serial("id").primaryKey(),
+    tenantId: tenantIdColumn(),
     name: text("name").notNull(),
     active: boolean("active").notNull().default(true),
     orderIndex: integer("order_index").notNull().default(0),
@@ -37,7 +39,11 @@ export const lostReasonsTable = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
-    uniqueIndex("lost_reasons_name_uq").on(sql`lower(${table.name})`),
+    tenantPolicy(),
+    uniqueIndex("lost_reasons_name_uq").on(
+      table.tenantId,
+      sql`lower(${table.name})`,
+    ),
   ],
 );
 

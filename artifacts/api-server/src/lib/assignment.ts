@@ -7,7 +7,10 @@ import {
   type AssignmentTriggerEvent,
   type Deal,
 } from "@workspace/db";
-import { evaluate, type DealFacts } from "@workspace/deals-filter";
+import {
+  evaluate,
+  type DealFacts,
+} from "@workspace/deals-filter";
 import { logDealChanges, type Tx } from "./change-events";
 import { logger } from "./logger";
 
@@ -35,8 +38,7 @@ export interface DealForAssignment {
   status: string | null;
   utmKeyword: string | null;
   lostReason: string | null;
-  /** The deal's custom_fields jsonb (only the keys behind useCase and
-   *  firstInboundPallets are read). */
+  /** The deal's custom_fields jsonb. */
   customFields: unknown;
 }
 
@@ -180,7 +182,7 @@ export async function resolveAutoAssignment(
 
   for (const rule of rules) {
     // An owned deal may only be re-routed by a rule that explicitly opted in
-    // ("may take over owned deals" — the SDR → closers handover). All other
+    // ("may take over owned deals", e.g. a handover between teams). All other
     // rules keep the original never-overwrite behavior.
     if (opts.dealOwned && !rule.takeoverOwned) continue;
     // The evaluator throws on an un-evaluable condition (a value-less operator,

@@ -1,5 +1,6 @@
 import { logger } from "./logger";
 import { TEMPLATE_FIELDS } from "@workspace/automation-placeholders";
+import { getSetting, setSetting, clearSetting } from "./app-settings";
 
 // isAllowedTemplateToken lives in the shared placeholder module now; re-export
 // it here so existing importers (admin-automations) keep their import path.
@@ -7,11 +8,13 @@ export { isAllowedTemplateToken } from "@workspace/automation-placeholders";
 
 // Slack sender for the automations "Send Slack message" action.
 //
-// Two transports, picked by what's configured:
-//   • SLACK_BOT_TOKEN (xoxb-…) — a full Slack app. Posts to any channel and
-//     DMs users (chat.postMessage). Required for per-channel routing and DMs.
-//   • SLACK_WEBHOOK_URL — a legacy incoming webhook, one fixed channel. Used
-//     only for a channel destination when no bot token is set.
+// Each workspace (tenant) connects its OWN Slack, stored in its app_settings
+// (Settings → Integrations), so one tenant's automations can never post into
+// another tenant's Slack. Two transports, picked by what's configured:
+//   • bot token (xoxb-…) — a full Slack app. Posts to any channel and DMs
+//     users (chat.postMessage). Required for per-channel routing and DMs.
+//   • incoming webhook URL — one fixed channel. Used only for a channel
+//     destination when no bot token is set.
 //
 // Every send is best-effort: missing config or a Slack outage logs and moves
 // on, never blocking or failing the deal write that triggered it.
@@ -22,8 +25,79 @@ export { isAllowedTemplateToken } from "@workspace/automation-placeholders";
 const TIMEOUT_MS = 5000;
 const STUB = process.env.SLACK_STUB === "1";
 
-export function isSlackConfigured(): boolean {
-  return !!(process.env.SLACK_BOT_TOKEN || process.env.SLACK_WEBHOOK_URL);
+const BOT_TOKEN_KEY = "slack_bot_token";
+const WEBHOOK_URL_KEY = "slack_webhook_url";
+const ANNOUNCE_CHANNEL_KEY = "slack_announce_channel";
+
+interface SlackCredentials {
+  botToken: string | null;
+  webhookUrl: string | null;
+}
+
+/** The current tenant's Slack connection. */
+async function slackCredentials(): Promise<SlackCredentials> {
+  const [botToken, webhookUrl] = await Promise.all([
+    getSetting(BOT_TOKEN_KEY),
+    getSetting(WEBHOOK_URL_KEY),
+  ]);
+  return { botToken, webhookUrl };
+}
+
+export async function isSlackConfigured(): Promise<boolean> {
+  const { botToken, webhookUrl } = await slackCredentials();
+  return !!(botToken || webhookUrl);
+}
+
+/** What the settings page may show: whether each credential is set, never
+ *  the secret itself. */
+export interface SlackSettingsView {
+  botTokenSet: boolean;
+  webhookUrlSet: boolean;
+  announceChannel: string | null;
+}
+
+export async function getSlackSettings(): Promise<SlackSettingsView> {
+  const [{ botToken, webhookUrl }, announceChannel] = await Promise.all([
+    slackCredentials(),
+    getSetting(ANNOUNCE_CHANNEL_KEY),
+  ]);
+  return {
+    botTokenSet: !!botToken,
+    webhookUrlSet: !!webhookUrl,
+    announceChannel,
+  };
+}
+
+export class SlackSettingsError extends Error {}
+
+/** Update the tenant's Slack connection. `undefined` leaves a value as it is,
+ *  `null` or "" clears it. */
+export async function updateSlackSettings(input: {
+  botToken?: string | null;
+  webhookUrl?: string | null;
+  announceChannel?: string | null;
+}): Promise<SlackSettingsView> {
+  const apply = async (key: string, value: string | null | undefined) => {
+    if (value === undefined) return;
+    const v = value?.trim() ?? "";
+    if (v) await setSetting(key, v);
+    else await clearSetting(key);
+  };
+  if (input.botToken && !input.botToken.trim().startsWith("xoxb-")) {
+    throw new SlackSettingsError("A Slack bot token starts with xoxb-.");
+  }
+  if (
+    input.webhookUrl &&
+    !input.webhookUrl.trim().startsWith("https://hooks.slack.com/")
+  ) {
+    throw new SlackSettingsError(
+      "A Slack incoming webhook URL starts with https://hooks.slack.com/.",
+    );
+  }
+  await apply(BOT_TOKEN_KEY, input.botToken);
+  await apply(WEBHOOK_URL_KEY, input.webhookUrl);
+  await apply(ANNOUNCE_CHANNEL_KEY, input.announceChannel);
+  return getSlackSettings();
 }
 
 // ---- Local test outbox (SLACK_STUB=1) ------------------------------------
@@ -58,7 +132,7 @@ async function slackApi(
   method: string,
   body: Record<string, unknown>,
 ): Promise<Record<string, unknown> | null> {
-  const token = process.env.SLACK_BOT_TOKEN;
+  const token = (await slackCredentials()).botToken;
   if (!token) return null;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -84,7 +158,7 @@ async function slackApi(
 }
 
 async function postViaWebhook(text: string, blocks?: unknown[]): Promise<boolean> {
-  const url = process.env.SLACK_WEBHOOK_URL;
+  const url = (await slackCredentials()).webhookUrl;
   if (!url) return false;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -111,11 +185,16 @@ async function postViaWebhook(text: string, blocks?: unknown[]): Promise<boolean
 // Successful email → Slack-id lookups are cached for the process lifetime
 // (Slack ids never change); misses are retried after a short TTL so someone
 // who joins the workspace later doesn't stay unreachable until a redeploy.
+// Keyed by bot token as well as email: each tenant has its own Slack, and the
+// same email can be a different Slack user in each.
 const MISS_TTL_MS = 5 * 60 * 1000;
 const emailToId = new Map<string, { id: string | null; at: number }>();
 async function slackIdForEmail(email: string): Promise<string | null> {
   if (!email) return null;
-  const hit = emailToId.get(email);
+  const token = (await slackCredentials()).botToken;
+  if (!token) return null;
+  const cacheKey = `${token}:${email}`;
+  const hit = emailToId.get(cacheKey);
   if (hit && (hit.id !== null || Date.now() - hit.at < MISS_TTL_MS)) {
     return hit.id;
   }
@@ -126,7 +205,7 @@ async function slackIdForEmail(email: string): Promise<string | null> {
     res?.ok && res.user
       ? String((res.user as Record<string, unknown>).id)
       : null;
-  emailToId.set(email, { id, at: Date.now() });
+  emailToId.set(cacheKey, { id, at: Date.now() });
   return id;
 }
 
@@ -134,7 +213,7 @@ async function slackApiGet(
   method: string,
   params: Record<string, string>,
 ): Promise<Record<string, unknown> | null> {
-  const token = process.env.SLACK_BOT_TOKEN;
+  const token = (await slackCredentials()).botToken;
   if (!token) return null;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -161,7 +240,7 @@ async function slackApiGet(
  *  a no-op (the scheduler uses this to retry a reminder that didn't get out). */
 async function deliver(intent: SlackIntent): Promise<boolean> {
   const { target, text, blocks } = intent;
-  const hasBot = !!process.env.SLACK_BOT_TOKEN;
+  const hasBot = !!(await slackCredentials()).botToken;
   const payload = blocks?.length ? { text, blocks } : { text };
 
   if (target.kind === "channel") {
@@ -191,7 +270,7 @@ async function deliver(intent: SlackIntent): Promise<boolean> {
     return true;
   }
   if (!hasBot) {
-    logger.warn({ email: target.email }, "Slack DM needs SLACK_BOT_TOKEN — skipped");
+    logger.warn({ email: target.email }, "Slack DM needs a bot token — skipped");
     return false;
   }
   const id = await slackIdForEmail(target.email);
@@ -220,7 +299,7 @@ export async function fireSlackMessages(intents: SlackIntent[]): Promise<boolean
 }
 
 // Placeholder rendering for automation messages. Templates use
-// {{scope.field}} (e.g. {{deal.title}}, {{account.stage}}); only whitelisted
+// {{scope.field}} (e.g. {{deal.title}}, {{deal.stage}}); only whitelisted
 // fields per scope (TEMPLATE_FIELDS, from @workspace/automation-placeholders)
 // resolve — unknown placeholders render blank, so a template can never leak
 // arbitrary columns.
@@ -247,8 +326,9 @@ export function renderAutomationTemplate(
 
 /**
  * Post to the team's announcements channel (notifications controller: deal
- * won posts, reminder digests). Uses SLACK_ANNOUNCE_CHANNEL via the bot token
- * when both are set, else falls back to the incoming webhook's fixed channel.
+ * won posts, reminder digests). Uses the workspace's announce channel via the
+ * bot token when both are set, else falls back to the incoming webhook's
+ * fixed channel.
  * Never throws — announcements are best-effort by design. Returns whether the
  * post was actually delivered.
  */
@@ -256,7 +336,7 @@ export async function sendSlackMessage(text: string): Promise<boolean> {
   return deliver({
     target: {
       kind: "channel",
-      channel: process.env.SLACK_ANNOUNCE_CHANNEL ?? "",
+      channel: (await getSetting(ANNOUNCE_CHANNEL_KEY)) ?? "",
     },
     text,
   });
@@ -275,7 +355,11 @@ export interface WorkspaceChannelsResult {
 }
 
 const CHANNEL_TTL_MS = 60 * 1000;
-let channelCache: { at: number; value: WorkspaceChannelsResult } | null = null;
+// Keyed by bot token: one entry per connected Slack workspace.
+const channelCache = new Map<
+  string,
+  { at: number; value: WorkspaceChannelsResult }
+>();
 
 /**
  * List the workspace's channels for the wizard's channel picker. Degrades
@@ -294,15 +378,17 @@ export async function listWorkspaceChannels(): Promise<WorkspaceChannelsResult> 
       ],
     };
   }
-  if (!process.env.SLACK_BOT_TOKEN) return { available: false, channels: [] };
-  if (channelCache && Date.now() - channelCache.at < CHANNEL_TTL_MS) {
-    return channelCache.value;
+  const token = (await slackCredentials()).botToken;
+  if (!token) return { available: false, channels: [] };
+  const cached = channelCache.get(token);
+  if (cached && Date.now() - cached.at < CHANNEL_TTL_MS) {
+    return cached.value;
   }
   // Follow Slack's cursor pagination — one page misses larger workspaces.
   // Ask for Slack's maximum page size: pages come back sparse (well under
   // `limit`, since archived/filtered channels still consume it), and at 200
   // our workspace needed 14 pages, past the 10-page cap, so later channels
-  // (e.g. #fulfillment-onboarding) were missing from the picker. At 1000 it
+  // were missing from the picker. At 1000 it
   // takes 3, which also keeps us clear of this Tier 2 method's rate limit.
   const raw: Record<string, unknown>[] = [];
   let cursor = "";
@@ -337,7 +423,7 @@ export async function listWorkspaceChannels(): Promise<WorkspaceChannelsResult> 
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
   const value: WorkspaceChannelsResult = { available: true, channels };
-  channelCache = { at: Date.now(), value };
+  channelCache.set(token, { at: Date.now(), value });
   return value;
 }
 
@@ -355,7 +441,7 @@ export async function sendTestMessageToUser(
     stubCapture(`dm:${email || "(you)"}${blocks?.length ? " [card]" : ""}`, text);
     return { delivered: true, detail: "Test sent to you in Slack." };
   }
-  if (!process.env.SLACK_BOT_TOKEN) {
+  if (!(await slackCredentials()).botToken) {
     return {
       delivered: false,
       detail: "Slack isn't connected yet (no bot token), so a test can't be sent.",

@@ -181,8 +181,8 @@ export function resolveParams(
  * (`TEMPLATE_FIELDS`) so the two renderers can never disagree about which
  * fields resolve; only the escaping differs.
  *
- * NEVER FEED ITS OUTPUT TO SLACK. Slack text goes through
- * `slack.renderAutomationTemplate`, which renders the same template escaped.
+ * NEVER FEED ITS OUTPUT TO SLACK. A scanner building Slack text goes through
+ * the Slack card, which renders the same template escaped.
  */
 export function renderNotificationMessage(
   template: string,
@@ -202,21 +202,12 @@ export interface PostNotificationInput {
   automationId: number;
   automationName: string;
   config: PostNotificationConfig;
-  /** The record's owner (deal owner) or manager (account manager). */
+  /** The record's owner (deal owner). */
   ownerId: number | null;
   /** Who made the change. null for inbound-webhook writes (no CRM user). */
   actorId: number | null;
-  /**
-   * Where clicking the notification goes.
-   *
-   * "account" is deliberately its own type rather than "organization": an
-   * account's id is a Sirdab PLATFORM organization id (routed at
-   * /accounts/:orgId) while "organization" means a local CRM organizations.id
-   * (routed at /organization/:id). They are different id spaces, so reusing
-   * "organization" for an account would deep-link to an unrelated org that
-   * happens to share the number.
-   */
-  entityType: "deal" | "person" | "organization" | "account";
+  /** Where clicking the notification goes. */
+  entityType: "deal" | "person" | "organization";
   entityId: number;
   /** Placeholder scopes for the message, minus `params` (resolved per user). */
   scopes: Record<string, Record<string, unknown>>;

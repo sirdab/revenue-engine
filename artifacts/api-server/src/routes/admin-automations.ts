@@ -57,19 +57,16 @@ const TRIGGER_PHRASE: Record<string, string> = {
 const SAMPLE_SCOPES: Record<string, Record<string, unknown>> = {
   deal: {
     id: 42,
-    title: "Nakheel Foods - Annual Contract",
-    value: "900,000",
-    currency: "SAR",
+    title: "Acme Corp - Annual Plan",
+    value: "90,000",
+    currency: "USD",
     status: "open",
     stageId: 3,
     pipelineId: 1,
-    owner: "Omar Khalid",
+    owner: "Jordan Lee",
     stage: "Negotiation",
     pipeline: "Sales",
-    organization: "Nakheel Foods",
-  },
-  params: {
-    days: 30,
+    organization: "Acme Corp",
   },
 };
 
@@ -291,10 +288,10 @@ router.post(
         : "🧪 Test preview: this is the message this automation would send:";
     // Same rich card the real send produces, rendered against sample data.
     const card = buildDealCardBlocks(rendered, {
-      valueText: "900,000 SAR",
-      ownerName: "Omar Khalid",
+      valueText: "90,000 USD",
+      ownerName: "Jordan Lee",
       pipelineName: "Sales",
-      organizationName: "Nakheel Foods",
+      organizationName: "Acme Corp",
       dealId: 42,
     });
     const blocks = [

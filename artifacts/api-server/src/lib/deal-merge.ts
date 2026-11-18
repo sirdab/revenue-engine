@@ -4,7 +4,6 @@ import {
   dealsTable,
   activitiesTable,
   notesTable,
-  filesTable,
   crmFilesTable,
   changeEventsTable,
   type Deal,
@@ -16,7 +15,8 @@ import {
 //   - The PRIMARY's fields always win; where the primary is empty, the
 //     duplicate's value fills in. Labels are unioned.
 //   - Every child record (activities, notes, documents and comment
-//     attachments, audit history) moves to the primary — nothing is deleted. The one exception is the
+//     attachments, audit history)
+//     moves to the primary — nothing is deleted. The one exception is the
 //     duplicate's stage history (see STAGE_HISTORY_FIELD_KEYS).
 //   - The duplicate is soft-retired: archived, with merged_into_deal_id
 //     pointing at the survivor. It disappears from working views but stays
@@ -88,7 +88,6 @@ async function childCounts(dealId: number): Promise<MergeSummary["moved"]> {
     table:
       | typeof activitiesTable
       | typeof notesTable
-      | typeof filesTable
       | typeof crmFilesTable,
     extra?: SQL,
   ) => {
@@ -113,9 +112,8 @@ async function childCounts(dealId: number): Promise<MergeSummary["moved"]> {
     // must not reveal that another user's drafts exist.
     activities: await count(activitiesTable, eq(activitiesTable.draft, false)),
     notes: await count(notesTable, eq(notesTable.draft, false)),
-    // The deal's documents and comment attachments (crm_files) plus any
-    // dormant Pipedrive file links (files).
-    files: (await count(crmFilesTable)) + (await count(filesTable)),
+    // The deal's documents and comment attachments.
+    files: await count(crmFilesTable),
     historyEvents: Number(events),
   };
 }
@@ -229,10 +227,6 @@ export async function mergeDeal(
       .update(notesTable)
       .set({ dealId: primaryId })
       .where(eq(notesTable.dealId, duplicateId));
-    await tx
-      .update(filesTable)
-      .set({ dealId: primaryId })
-      .where(eq(filesTable.dealId, duplicateId));
     // Documents and comment attachments together: an attachment keeps its
     // note_id, and the note moved above, so it stays with its comment.
     await tx

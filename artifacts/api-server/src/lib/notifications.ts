@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { db, usersTable, notificationsTable, userPreferencesTable } from "@workspace/db";
-import { appBaseUrl, sendNotificationEmail } from "./email";
+import { appBaseUrl, sendNotificationEmail, APP_NAME } from "./email";
 import { sendSlackMessage, fireSlackMessages, mrkdwnEscape } from "./slack";
 import { logger } from "./logger";
 
-// The notification controller: every event that
+// The notification controller (SAI notifications ticket): every event that
 // should reach a human goes through notify(), which resolves the recipient,
 // renders the content once, and fans out to every configured channel.
 // Channels are best-effort — notify() never throws, because a notification
@@ -21,7 +21,8 @@ export type NotificationEvent =
       userId: number;
     }
   | {
-      // @mention in a note: email + in-app only, never the channel.
+      // @mention in a note (CS ask: "Slack for announcements, CRM for
+      // tagging") — so this one is email + in-app only, never the channel.
       type: "mentioned";
       userId: number;
       actorName: string;
@@ -39,13 +40,13 @@ export type NotificationEvent =
       actorName: string;
     };
 
-// The preference categories a user can toggle per channel. `mention` covers
-// the `mentioned` event's EMAIL only — its in-app row is written by
-// mentions.ts, not by render()'s `inApp`, so a "mention" category has no
-// effect on the in-app channel at all.
+// The four preference categories a CS member can toggle per channel (see
+// task-4-brief.md). `mention` covers the `mentioned` event's EMAIL only — its
+// in-app row is written by mentions.ts, not by render()'s `inApp` (Constraint
+// 2), so a "mention" category has no effect on the in-app channel at all.
 // `deal_won` has no category: it's a team announcement with no recipient, so
 // per-user preferences don't apply to it.
-export type NotificationCategory = "assignment" | "mention";
+export type NotificationCategory = "reminder" | "overdue" | "assignment" | "mention";
 
 interface Rendered {
   recipientId: number | null;
@@ -73,7 +74,7 @@ interface Rendered {
   inApp?: {
     type: string;
     message: string;
-    entityType: "deal" | null;
+    entityType: "deal" | "account" | null;
     entityId: number | null;
   };
 }
@@ -106,7 +107,7 @@ function render(event: NotificationEvent): Rendered {
       return {
         recipientId: event.userId,
         category: "mention",
-        subject: `${event.actorName} mentioned you on Revenue Engine`,
+        subject: `${event.actorName} mentioned you on ${APP_NAME}`,
         heading: `${event.actorName} mentioned you`,
         bodyLines: [
           `${event.actorName} mentioned you in a note on ${event.entityLabel}.`,
@@ -200,12 +201,12 @@ export function plannedChannelsFor(
 }
 
 /**
- * The delivery verdict, as a pure function so it is testable without a DB or
- * a Slack stub.
+ * The retry verdict, as a pure function so the scheduler's loop condition is
+ * testable without a DB or a Slack stub.
  *
- * WHY only the personal channels count: notify()'s boolean tells a caller
- * whether the recipient's own notification got out, so it can retry. That is
- * about the RECIPIENT's inbox,
+ * WHY only the personal channels count: notify()'s boolean exists for exactly
+ * one purpose — telling the reminder scheduler whether to keep its claim stamp
+ * or release it for another attempt. Retrying is about the RECIPIENT's inbox,
  * so the shared announcements-channel post (a team pulse, sent for everyone,
  * ungated by preferences, and a no-op whenever Slack is simply unconfigured)
  * must not by itself count as "delivered" — that conflation made an
@@ -214,8 +215,8 @@ export function plannedChannelsFor(
  *
  * WHY an empty personal set is delivered: no enabled channel means there is
  * nothing left to attempt, so a retry could never do better. A genuine failure
- * of an ENABLED channel still yields false, so a caller can retry rather than
- * silently drop it.
+ * of an ENABLED channel still yields false, so failed reminders are still
+ * retried rather than silently dropped.
  */
 export function deliveryVerdict(
   personal: PromiseSettledResult<boolean>[],
@@ -267,8 +268,9 @@ const claimDealAssignedEmail = createBurstLimiter(DEAL_ASSIGNED_EMAIL_CAP, 60 * 
 
 /**
  * Fan a notification out to every configured channel. Never throws. Returns
- * whether the recipient's own notification was **delivered**, so a caller can
- * retry when nothing personal got out instead of silently dropping it. Events with
+ * whether the recipient's own notification was **delivered** — the reminder
+ * scheduler uses this to keep a reminder un-stamped (and retry it next scan)
+ * when nothing personal got out, instead of silently dropping it. Events with
  * no enabled personal channel (no recipient, or every channel toggled off)
  * count as delivered (there is nothing to retry).
  *

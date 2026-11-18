@@ -366,7 +366,7 @@ router.post("/deals", async (req, res): Promise<void> => {
       .values({
         title: d.title,
         value: d.value ?? 0,
-        currency: d.currency ?? user.defaultCurrency ?? "SAR",
+        currency: d.currency ?? user.defaultCurrency ?? "USD",
         pipelineId: d.pipelineId,
         stageId: d.stageId,
         ownerId,
@@ -872,7 +872,6 @@ router.patch("/deals/:id", async (req, res): Promise<void> => {
     req.body != null &&
     Object.prototype.hasOwnProperty.call(req.body, "ownerId");
 
-
   // Lock the deal row for the lifetime of the transaction so the audit diff is
   // computed against a snapshot that cannot change underneath us — a concurrent
   // write can't produce a torn oldValue or a wrong no-op decision in the log.
@@ -961,9 +960,9 @@ router.patch("/deals/:id", async (req, res): Promise<void> => {
     }
 
     // Marking a deal as won is blocked while the pipeline's won-required
-    // fields are empty — same modal-and-retry contract as stage moves (action:
-    // "won" adjusts the dialog). Checked against the deal as it will be after
-    // this PATCH, so a value sent alongside status counts.
+    // fields are empty — same modal-and-retry contract as stage moves
+    // (action: "won" adjusts the dialog). Checked against the deal as it will
+    // be after this PATCH, so a value sent alongside status counts.
     if (d.status === "won" && existing.status !== "won") {
       const pipelineId = d.pipelineId ?? existing.pipelineId;
       const missing = await computeMissingWonFields(
@@ -1021,7 +1020,7 @@ router.patch("/deals/:id", async (req, res): Promise<void> => {
     // actually changed, and never when the client is setting the owner itself
     // in this same PATCH. Unowned deals may be routed by any matching rule;
     // an OWNED deal is only re-routed by a rule that explicitly opted into
-    // "may take over owned deals".
+    // "may take over owned deals" (e.g. a handover from one team to another).
     const pipelineOrStageChanged =
       (d.pipelineId != null && d.pipelineId !== existing.pipelineId) ||
       (d.stageId != null && d.stageId !== existing.stageId);
@@ -1111,7 +1110,6 @@ router.patch("/deals/:id", async (req, res): Promise<void> => {
     void fireSlackMessages(slackMessages);
   }
 
-
   if (result.status === 200 && result.autoAssignedOwner != null) {
     void notify({
       type: "deal_assigned",
@@ -1126,8 +1124,7 @@ router.patch("/deals/:id", async (req, res): Promise<void> => {
       error: result.error,
       // 409s carry a machine-readable code: DEAL_ARCHIVED (read-only) or the
       // required-fields block with its field payload.
-      ...("code" in result &&
-      result.code === "DEAL_ARCHIVED"
+      ...("code" in result && result.code === "DEAL_ARCHIVED"
         ? { code: result.code }
         : result.status === 409
           ? {
@@ -1140,7 +1137,6 @@ router.patch("/deals/:id", async (req, res): Promise<void> => {
     });
     return;
   }
-
 
   const deal = await loadDealById(id);
   // Required fields are enforced BEFORE the move commits (409 above), so a
@@ -1227,5 +1223,6 @@ router.get("/deals/:id/history", async (req, res): Promise<void> => {
 
   res.json(GetDealHistoryResponse.parse({ events, stageDurations }));
 });
+
 
 export default router;

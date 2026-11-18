@@ -7,6 +7,5 @@
   },
   "devDependencies": {
     "orval": "^8.9.1"
-  },
-  "license": "AGPL-3.0-only"
+  }
 }

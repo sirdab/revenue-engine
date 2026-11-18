@@ -1,7 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { evaluate, type DealFacts } from "./evaluate";
-import { EMPTY_FILTER, type FilterGroup } from "./index";
+import type { DealFacts } from "./evaluate";
+import type { FilterGroup } from "./index";
+
+// The date tests pin a UTC+3 zone so a rollover is visible; the evaluator reads
+// APP_TIMEZONE once at load, so it is set before the dynamic import.
+process.env.APP_TIMEZONE = "Europe/Istanbul";
+const { evaluate } = await import("./evaluate");
+const { EMPTY_FILTER } = await import("./index");
 
 // These tests are the characterization of the SQL compiler's semantics
 // (artifacts/api-server/src/lib/queries.ts `compileCondition`). The in-memory
@@ -20,7 +26,7 @@ function facts(overrides: Partial<DealFacts> = {}): DealFacts {
     pipelineId: 1,
     stageId: 3,
     ownerId: 7,
-    // 2026-07-05 21:00 UTC = 2026-07-06 00:00 Riyadh (UTC+3): local date rolls over.
+    // 2026-07-05 21:00 UTC = 2026-07-06 00:00 Istanbul (UTC+3): local date rolls over.
     createdDate: new Date("2026-07-05T09:00:00Z"),
     wonTime: null,
     status: "open",
@@ -138,24 +144,24 @@ test("is_not on text is NULL-safe (is distinct from): null field is distinct", (
   assert.equal(evaluate(g, facts({ title: null })), true);
 });
 
-// --- Date semantics (Asia/Riyadh truncation) -------------------------------
+// --- Date semantics (app-time-zone truncation, here UTC+3) -------------------------------
 
-test("date is matches the Riyadh-local date of the timestamp", () => {
+test("date is matches the Istanbul-local date of the timestamp", () => {
   const g = group("and", [
     { field: "createdDate", operator: "is", value: "2026-07-05" },
   ]);
-  // 2026-07-05T09:00:00Z => 12:00 Riyadh, same local date.
+  // 2026-07-05T09:00:00Z => 12:00 Istanbul, same local date.
   assert.equal(
     evaluate(g, facts({ createdDate: new Date("2026-07-05T09:00:00Z") })),
     true,
   );
 });
 
-test("date truncation rolls over at Riyadh midnight, not UTC", () => {
+test("date truncation rolls over at Istanbul midnight, not UTC", () => {
   const g = group("and", [
     { field: "createdDate", operator: "is", value: "2026-07-06" },
   ]);
-  // 2026-07-05T21:30:00Z => 2026-07-06 00:30 Riyadh (UTC+3): local date is the 6th.
+  // 2026-07-05T21:30:00Z => 2026-07-06 00:30 Istanbul (UTC+3): local date is the 6th.
   assert.equal(
     evaluate(g, facts({ createdDate: new Date("2026-07-05T21:30:00Z") })),
     true,
@@ -349,4 +355,3 @@ test("throws for a list-only presence check (labels is_empty)", () => {
   const g = group("and", [{ field: "labels", operator: "is_empty" }]);
   assert.throws(() => evaluate(g, facts()), /only available in deals-list/);
 });
-

@@ -2,7 +2,13 @@ import { randomBytes, scrypt, timingSafeEqual, createHash } from "node:crypto";
 import { promisify } from "node:util";
 import type { Request, Response, NextFunction, CookieOptions } from "express";
 import { eq } from "drizzle-orm";
-import { db, usersTable, type User } from "@workspace/db";
+import {
+  db,
+  usersTable,
+  runAsSystem,
+  runWithTenant,
+  type User,
+} from "@workspace/db";
 
 const scryptAsync = promisify(scrypt);
 const KEY_LENGTH = 64;
@@ -198,7 +204,9 @@ export async function requireAuth(
     res.status(401).json({ error: "Not authenticated" });
     return;
   }
-  const user = await loadUser(session.id);
+  // The tenant is not known until the user is, so this one lookup runs in the
+  // system scope. Everything after it runs bound to the user's tenant.
+  const user = await runAsSystem(() => loadUser(session.id));
   if (!user || !user.activeFlag) {
     clearSessionCookie(res);
     res.status(401).json({ error: "Not authenticated" });
@@ -211,7 +219,9 @@ export async function requireAuth(
     return;
   }
   res.locals.user = toSafeUser(user);
-  next();
+  // Every query made while handling the rest of this request — including
+  // work it starts and does not await — is bound to this tenant.
+  runWithTenant(user.tenantId, () => next());
 }
 
 export function requireAdmin(

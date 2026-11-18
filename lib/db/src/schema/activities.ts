@@ -18,10 +18,10 @@ import { usersTable } from "./users";
 import { personsTable } from "./persons";
 import { organizationsTable } from "./organizations";
 import { dealsTable } from "./deals";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
-// How a completed activity went: "successful" (they replied, or the work was
-// ticked done) or "no_reply" (a call nobody picked up). Null means no outcome
-// was recorded.
+// How a done activity went: only the "No reply" action writes "no_reply",
+// ticking done writes "successful", and null on a done row predates outcomes.
 export const ACTIVITY_OUTCOMES = ["successful", "no_reply"] as const;
 export type ActivityOutcome = (typeof ACTIVITY_OUTCOMES)[number];
 
@@ -36,6 +36,7 @@ export const activityTypeEnum = pgEnum("activity_type", [
 
 export const activitiesTable = pgTable("activities", {
   id: serial("id").primaryKey(),
+  tenantId: tenantIdColumn(),
   subject: text("subject").notNull(),
   type: activityTypeEnum("type").notNull().default("task"),
   note: text("note"),
@@ -45,8 +46,6 @@ export const activitiesTable = pgTable("activities", {
   dueTime: text("due_time"),
   duration: text("duration"),
   markedAsDoneTime: timestamp("marked_as_done_time", { withTimezone: true }),
-  // Only the "No reply" action writes "no_reply", ticking done writes
-  // "successful", and null on a done row predates outcomes (not counted).
   outcome: text("outcome").$type<ActivityOutcome>(),
   dealId: integer("deal_id").references(() => dealsTable.id),
   personId: integer("person_id").references(() => personsTable.id),
@@ -60,9 +59,8 @@ export const activitiesTable = pgTable("activities", {
     .defaultNow()
     .$onUpdate(() => new Date()),
   leadId: integer("lead_id"),
-  pipedriveId: integer("pipedrive_id").unique(),
-  pipedriveData: jsonb("pipedrive_data"),
 }, (table) => [
+    tenantPolicy(),
   index("activities_deal_add_time_idx").on(table.dealId, table.addTime),
   index("activities_person_idx").on(table.personId),
   index("activities_org_idx").on(table.orgId),

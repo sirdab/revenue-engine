@@ -1,95 +1,127 @@
-# Run the whole stack locally: `docker compose up --build`, then open
-# http://localhost:8080 and sign in with BOOTSTRAP_ADMIN_EMAIL /
-# BOOTSTRAP_ADMIN_PASSWORD from your .env (see .env.example).
+# Local services for development:
 #
-# Services:
-#   postgres  the database
-#   minio     S3-compatible storage for file attachments (console on :9001)
-#   mailpit   catches outgoing email (web UI on :8025)
-#   migrate   applies the Drizzle migrations, then exits
-#   app       the API server, serving the built frontend on the same origin
-
+#   docker compose up -d
+#
+# starts Postgres, S3-compatible file storage (RustFS) for deal attachments and
+# Mailpit, which catches every outgoing email. `.env.example` points `pnpm dev`
+# at all three, so attachments and emails work with no extra setup:
+#
+#   storage console  http://localhost:9001/rustfs/console/   (rustfsadmin / rustfsadmin)
+#   mailpit inbox    http://localhost:8025
+#
+# To run the whole app from the production image (self-hosting / a quick
+# try-out), also:
+#
+#   docker compose --profile app up -d --build
+#   open http://localhost:8080
+#
+# The database is created with an ordinary `crm_app` role (docker/postgres-init.sql);
+# the app must never connect as a superuser, see README → Tenant isolation.
 services:
-  postgres:
+  db:
     image: postgres:16
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: revenue_engine
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d crm"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
+  # S3-compatible object storage for deal attachments (console on :9001 at
+  # /rustfs/console/). RustFS speaks the S3 API
+  # (MinIO no longer publishes container images); any S3 store works in its place.
+  storage:
+    image: rustfs/rustfs:1.0.4
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      RUSTFS_ACCESS_KEY: rustfsadmin
+      RUSTFS_SECRET_KEY: rustfsadmin
+      RUSTFS_CONSOLE_ENABLE: "true"
+    ports:
+      - "127.0.0.1:${STORAGE_PORT:-9000}:9000"
+      - "127.0.0.1:${STORAGE_CONSOLE_PORT:-9001}:9001"
     volumes:
-      - minio-data:/data
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+      - storage-data:/data
 
-  # Creates the attachments bucket once MinIO is up.
-  minio-init:
-    image: minio/mc:latest
+  # Creates the attachments bucket once storage answers, then idles and reports
+  # healthy. It stays up rather than exiting because `docker compose up --wait`
+  # (pnpm db:up) treats a container that exits as a failure, even with code 0.
+  storage-init:
+    image: amazon/aws-cli:2.39.6
     depends_on:
-      - minio
-    entrypoint: >
-      sh -c "until mc alias set local http://minio:9000 minioadmin minioadmin; do sleep 1; done;
-             mc mb --ignore-existing local/crm-files"
-
-  mailpit:
-    image: axllent/mailpit:latest
-    ports:
-      - "8025:8025"
-
-  migrate:
-    build:
-      context: .
-      target: deps
+      - storage
     environment:
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/revenue_engine
-    command: ["pnpm", "--filter", "@workspace/db", "run", "migrate"]
-    depends_on:
-      postgres:
-        condition: service_healthy
+      AWS_ACCESS_KEY_ID: rustfsadmin
+      AWS_SECRET_ACCESS_KEY: rustfsadmin
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint: ["sh", "-c"]
+    command:
+      - >
+        trap 'exit 0' TERM INT;
+        until aws --endpoint-url http://storage:9000 s3api head-bucket --bucket crm-files 2>/dev/null ||
+        aws --endpoint-url http://storage:9000 s3api create-bucket --bucket crm-files >/dev/null 2>&1;
+        do sleep 1; done;
+        touch /tmp/ready; echo "bucket crm-files ready";
+        sleep infinity & wait
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/ready"]
+      interval: 2s
+      timeout: 2s
+      retries: 60
+
+  # Catches outgoing email (SMTP on 1025); read it at http://localhost:8025.
+  mailpit:
+    image: axllent/mailpit:v1.33
+    ports:
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
 
   app:
+    profiles: ["app"]
     build: .
-    env_file: .env
+    # The image is linux/amd64 only (see Dockerfile). On Apple silicon Docker
+    # emulates it, which is slow and can crash esbuild mid-build; build on an
+    # amd64 machine instead.
+    platform: linux/amd64
+    depends_on:
+      db:
+        condition: service_healthy
+      storage-init:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    # Compose reads .env in this folder for these ${...} values. Storage and
+    # email always use the services above: this profile is a local try-out,
+    # never a deployment (mail goes to Mailpit's open inbox). See DEPLOY.md.
     environment:
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/revenue_engine
+      DATABASE_URL: postgres://crm_app:crm_app@db:5432/crm
+      SESSION_SECRET: ${SESSION_SECRET:-}   # required by the app; set it in .env
       PORT: "8080"
-      APP_BASE_URL: http://localhost:8080
-      S3_ENDPOINT: http://minio:9000
-      S3_REGION: us-east-1
-      S3_ACCESS_KEY_ID: minioadmin
-      S3_SECRET_ACCESS_KEY: minioadmin
-      S3_BUCKET_NAME: crm-files
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
+      APP_NAME: ${APP_NAME:-Sirdab Revenue Engine}
+      APP_TIMEZONE: ${APP_TIMEZONE:-UTC}
+      PHONE_COUNTRY_CODE: ${PHONE_COUNTRY_CODE:-}
+      MAIL_FROM: ${MAIL_FROM:-}
       SMTP_HOST: mailpit
       SMTP_PORT: "1025"
       SMTP_REQUIRE_TLS: "false"
-    # bootstrap is idempotent: it ensures the admin from BOOTSTRAP_ADMIN_* exists.
-    command: ["sh", "-c", "node dist/bootstrap.mjs && node --enable-source-maps dist/index.mjs"]
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      S3_ENDPOINT: http://storage:9000
+      S3_REGION: us-east-1
+      S3_BUCKET_NAME: crm-files
+      S3_ACCESS_KEY_ID: rustfsadmin
+      S3_SECRET_ACCESS_KEY: rustfsadmin
+      SENTRY_DSN: ${SENTRY_DSN:-}
     ports:
-      - "8080:8080"
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-      minio-init:
-        condition: service_completed_successfully
-      mailpit:
-        condition: service_started
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
+    command: ["sh", "-c", "node dist/migrate.mjs && exec node --enable-source-maps dist/index.mjs"]
 
 volumes:
-  postgres-data:
-  minio-data:
+  db-data:
+  storage-data:

@@ -52,6 +52,7 @@ before(() => {
   mock.module("./email.ts", {
     namedExports: {
       appBaseUrl: () => "https://app.test",
+      APP_NAME: "CRM",
       sendNotificationEmail: async (p: { subject: string }) => {
         emailed.push(p.subject);
         return true;

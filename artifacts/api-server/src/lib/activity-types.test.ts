@@ -52,7 +52,7 @@ test("the Insights compiler allowlist covers every activity type", () => {
 
 test("the activities page filter chips cover every activity type", () => {
   assert.deepEqual(
-    literalsInArray("artifacts/login/src/pages/activities.tsx", "const TYPE_OPTIONS =").sort(),
+    literalsInArray("artifacts/web/src/pages/activities.tsx", "const TYPE_OPTIONS =").sort(),
     ENUM_VALUES,
   );
 });
@@ -60,7 +60,7 @@ test("the activities page filter chips cover every activity type", () => {
 test("the automation wizard offers every activity type", () => {
   assert.deepEqual(
     literalsInArray(
-      "artifacts/login/src/components/settings/automation-wizard.tsx",
+      "artifacts/web/src/components/settings/automation-wizard.tsx",
       "const ACTIVITY_TYPES = [",
     )
       .filter((v) => v !== "value" && v !== "label")

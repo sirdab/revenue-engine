@@ -9,11 +9,11 @@
 export type GetPipelineFunnelParams = {
 pipelineId: number;
 /**
- * Inclusive start date (YYYY-MM-DD, Asia/Riyadh) scoping deal entry
+ * Inclusive start date (YYYY-MM-DD, workspace time zone) scoping deal entry
  */
 from?: string;
 /**
- * Inclusive end date (YYYY-MM-DD, Asia/Riyadh) scoping deal entry
+ * Inclusive end date (YYYY-MM-DD, workspace time zone) scoping deal entry
  */
 to?: string;
 ownerId?: number;

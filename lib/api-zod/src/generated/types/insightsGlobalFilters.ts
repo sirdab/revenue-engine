@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { InsightsGlobalFiltersDateRange } from './insightsGlobalFiltersDateRange';
+import type { InsightsGlobalFiltersQualification } from './insightsGlobalFiltersQualification';
 import type { InsightsGlobalFiltersStatusesItem } from './insightsGlobalFiltersStatusesItem';
 
 /**
@@ -17,6 +18,7 @@ export interface InsightsGlobalFilters {
   ownerIds?: number[];
   pipelineIds?: number[];
   statuses?: InsightsGlobalFiltersStatusesItem[];
+  qualification?: InsightsGlobalFiltersQualification;
   /** @nullable */
   filters?: string | null;
 }

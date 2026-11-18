@@ -38,7 +38,7 @@ export interface MailMessage {
 
 export class MailerNotConfiguredError extends Error {
   constructor() {
-    super("SMTP mailer is not configured (missing AWS_SES_SMTP_* env)");
+    super("SMTP mailer is not configured (SMTP_HOST is not set)");
     this.name = "MailerNotConfiguredError";
   }
 }

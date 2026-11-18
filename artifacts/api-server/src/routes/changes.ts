@@ -35,8 +35,7 @@ router.get("/changes/feed", async (req, res): Promise<void> => {
   const limit = parsed.data.limit ?? 15;
   const user = currentUser(res);
 
-  // Owner of the record the event ultimately concerns (the parent entity for
-  // notes).
+  // Owner of the record the event ultimately concerns (parent entity for notes).
   const targetOwnerId = sql<
     number | null
   >`coalesce(${dealsTable.ownerId}, ${personsTable.ownerId}, ${organizationsTable.ownerId}, ${noteDeal.ownerId}, ${notePerson.ownerId}, ${noteOrg.ownerId})`;

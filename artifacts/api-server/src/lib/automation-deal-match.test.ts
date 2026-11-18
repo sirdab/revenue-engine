@@ -10,7 +10,7 @@ process.env.DATABASE_URL ??= "postgres://automation-match-test/unused";
 const { dealAutomationMatches } = await import("./automations.ts");
 
 const facts = (over: Partial<DealFacts> = {}): DealFacts => ({
-  title: "Nakheel Foods",
+  title: "Northwind",
   organizationName: null,
   value: 1000,
   pipelineId: 1,

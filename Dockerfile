@@ -6,16 +6,18 @@
 # nodemailer — every other runtime import is bundled in by esbuild).
 #
 # MUST build for linux/amd64: pnpm-workspace.yaml strips every native binary
-# (esbuild/rollup/lightningcss/tailwind-oxide) except linux-x64 and
-# darwin-arm64. On an Apple-silicon Mac, docker compose / buildx runs it under
-# amd64 emulation automatically because of the --platform pins below.
+# (esbuild/rollup/lightningcss/tailwind-oxide) except linux-x64. Fly's remote
+# builder is amd64, so `flyctl deploy --remote-only` is correct. Building
+# locally on an Apple-silicon Mac requires `--platform linux/amd64` (buildx).
 
 # ---- Base with pnpm -------------------------------------------------------
 FROM --platform=linux/amd64 node:24-slim AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH="$PNPM_HOME:$PATH"
-# The lockfile's overrides-config hash only validates under pnpm >= 10, so pnpm 9
-# fails `--frozen-lockfile` with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. Pin pnpm 10.
+# The committed pnpm-lock.yaml is v9.0 format but was written by pnpm 10: its
+# overrides-config hash only validates under pnpm >= 10, so pnpm 9
+# fails `--frozen-lockfile` with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. No
+# packageManager field exists, so pin pnpm 10 explicitly.
 RUN corepack enable && corepack prepare pnpm@10.34.4 --activate
 WORKDIR /app
 
@@ -26,7 +28,6 @@ FROM base AS deps
 COPY pnpm-lock.yaml pnpm-workspace.yaml .npmrc package.json ./
 COPY lib ./lib
 COPY artifacts ./artifacts
-COPY scripts ./scripts
 # Frozen install: exact locked versions, no resolution -> the workspace's
 # minimumReleaseAge (1440) gate does not apply. devDependencies are installed
 # (no --prod) because Vite/esbuild/tsc live there and the build needs them.
@@ -41,9 +42,8 @@ ARG BASE_PATH=/
 ARG PORT=8080
 ENV BASE_PATH=$BASE_PATH
 ENV PORT=$PORT
-# Sentry DSN for the frontend bundle. VITE_* vars are inlined at build time, so
-# this must be a build arg, not just a runtime env var. A Sentry DSN is not a
-# secret (it's designed to be public in client code).
+# Sentry DSN for the frontend bundle. VITE_* vars are inlined at build time, so this must be a build arg, not just a Fly runtime secret. A
+# Sentry DSN is not a secret (it's designed to be public in client code).
 ARG VITE_SENTRY_DSN=""
 ENV VITE_SENTRY_DSN=$VITE_SENTRY_DSN
 # Copy the rest of the source, then build everything.
@@ -67,9 +67,13 @@ WORKDIR /app
 # api-server bundle.
 COPY --from=build /app/artifacts/api-server/dist ./dist
 # Built frontend must sit at dist/public so import.meta.dirname + "public" hits it.
-COPY --from=build /app/artifacts/login/dist/public ./dist/public
+COPY --from=build /app/artifacts/web/dist/public ./dist/public
 # Minimal prod deps (nodemailer). pnpm deploy writes them under /prod/node_modules.
 COPY --from=prune /prod/node_modules ./node_modules
+# The committed SQL migrations, for dist/migrate.mjs (self-hosted setups run it
+# before the server: `node dist/migrate.mjs && node dist/index.mjs`).
+COPY --from=build /app/lib/db/drizzle ./dist/migrations
 EXPOSE 8080
-ENV PORT=8080
+# PORT is provided at runtime (fly.toml [env], docker-compose.yml); src/index.ts
+# throws if absent.
 CMD ["node", "--enable-source-maps", "./dist/index.mjs"]

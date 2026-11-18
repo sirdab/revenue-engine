@@ -14,6 +14,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { EMPTY_FILTER, type FilterGroup } from "@workspace/deals-filter";
 import { activityTypeEnum } from "./activities";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 // Deal automations — "when X happens → do Y" (Pipedrive workflow-automation
 // parity, small edition). Each automation matches a trigger event, filters with
@@ -141,6 +142,7 @@ export const automationsTable = pgTable(
   "automations",
   {
     id: serial("id").primaryKey(),
+    tenantId: tenantIdColumn(),
     name: text("name").notNull(),
     triggerEvent: text("trigger_event")
       .$type<AutomationTriggerEvent>()
@@ -169,6 +171,7 @@ export const automationsTable = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
+    tenantPolicy(),
     // Automations are loaded/ordered per trigger event by priority.
     index("automations_event_priority_idx").on(
       table.triggerEvent,

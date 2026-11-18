@@ -7,7 +7,6 @@ import {
   FileValidationError,
   normalizeFileName,
   validateUpload,
-  requireValidTarget,
   contentDispositionHeader,
 } from "./file-validation.ts";
 
@@ -15,7 +14,7 @@ import {
 // allowlist, magic-byte agreement, filename sanitization. No DB access — the
 // repo's `node --test` suite has no Postgres provisioning (see ci.yml), so
 // the transactional save/get/delete round-trip (R4, R8) is verified manually
-// against a real deal/account in dev, same as the router in U3.
+// against a real deal in dev, same as the router in U3.
 
 const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const JPEG_MAGIC = Buffer.from([0xff, 0xd8, 0xff]);
@@ -185,14 +184,4 @@ test("contentDispositionHeader: quote in filename is escaped in the ASCII fallba
 test("contentDispositionHeader: non-ASCII filename gets an RFC 5987 filename* fallback", () => {
   const header = contentDispositionHeader("inline", "عقد.pdf");
   assert.match(header, /filename\*=UTF-8''%D8%B9%D9%82%D8%AF\.pdf/);
-});
-
-// requireValidTarget — every file belongs to a deal.
-test("requireValidTarget: accepts a deal", () => {
-  assert.doesNotThrow(() => requireValidTarget(1));
-});
-
-test("requireValidTarget: rejects a missing deal", () => {
-  assert.throws(() => requireValidTarget(null), FileValidationError);
-  assert.throws(() => requireValidTarget(undefined), FileValidationError);
 });

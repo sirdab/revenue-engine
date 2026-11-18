@@ -10,6 +10,7 @@ import {
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 // Label registry — the admin-curated taxonomy behind the label chips.
 //
@@ -48,6 +49,7 @@ export const labelsTable = pgTable(
   "labels",
   {
     id: serial("id").primaryKey(),
+    tenantId: tenantIdColumn(),
     entity: text("entity").$type<LabelEntity>().notNull(),
     name: text("name").notNull(),
     color: text("color").notNull().default("teal"),
@@ -61,8 +63,10 @@ export const labelsTable = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
+    tenantPolicy(),
     // One spelling per entity, case-insensitively ("Hot" and "hot" are one label).
     uniqueIndex("labels_entity_name_uq").on(
+      table.tenantId,
       table.entity,
       sql`lower(${table.name})`,
     ),

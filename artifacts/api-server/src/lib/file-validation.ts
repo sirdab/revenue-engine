@@ -12,6 +12,7 @@ import { z } from "zod";
 export const FILE_CATEGORIES = z.enum([
   "contract",
   "expansion_contract",
+  "sfda_contract",
   "cr_certificate",
   "vat_certificate",
   "invoice",
@@ -20,9 +21,11 @@ export const FILE_CATEGORIES = z.enum([
 ]);
 export type FileCategory = z.infer<typeof FILE_CATEGORIES>;
 
-// 40 MB: real signed contracts (high-resolution scans) routinely land in the
-// tens of MB. Storage headroom isn't the constraint; this purely reflects
-// realistic contract sizes.
+// R5 originally set this at 10 MB; raised to 25 MB, then to 40 MB after a
+// bulk import found real signed contracts (high-resolution scans) landing
+// just over each threshold, including one 33 MB outlier. Storage
+// headroom isn't the constraint (Fly/R2 sit at a few GB total at this
+// scale) -- this purely reflects realistic contract sizes.
 export const MAX_FILE_SIZE_BYTES = 40 * 1024 * 1024;
 
 export const MAX_FILE_NAME_LENGTH = 255;
@@ -73,9 +76,9 @@ function isZipMagic(buffer: Buffer): boolean {
   );
 }
 
-/** Exported so callers outside the HTTP upload path (e.g. a data-migration
- * script's extension-correction step) can sniff real file type from bytes
- * without re-declaring these magic-number literals. */
+/** Exported so callers outside the HTTP upload path (e.g. an import
+ * script's extension-correction step) can sniff real file type
+ * from bytes without re-declaring these magic-number literals. */
 export function isJpegMagic(buffer: Buffer): boolean {
   return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
 }
@@ -193,14 +196,4 @@ export function validateUpload(
   }
 
   return { fileName, mimeType: allowed.mimeType };
-}
-
-/**
- * Every crm_files row belongs to a deal (a comment attachment also carries
- * noteId). This is the app-layer guard; the NOT NULL column is the backstop.
- */
-export function requireValidTarget(dealId: number | null | undefined): void {
-  if (dealId == null) {
-    throw new FileValidationError("Invalid file target: dealId is required.");
-  }
 }

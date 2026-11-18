@@ -19,7 +19,7 @@ if (!SESSION_SECRET) {
 
 const app: Express = express();
 
-// One hop behind a reverse proxy / load balancer — required so req.ip reflects the real client
+// One hop behind the hosting proxy — required so req.ip reflects the real client
 // for rate limiting. A numeric value (not `true`) keeps express-rate-limit happy.
 app.set("trust proxy", 1);
 
@@ -42,7 +42,7 @@ app.use(
     },
   }),
 );
-// Compress responses (gzip/brotli). Most load balancers do not compress for
+// Compress responses (gzip/brotli). The hosting proxy does not compress for
 // us, so without this the JS/CSS bundles ship uncompressed.
 // Placed early so it covers both /api responses and the static frontend below.
 //
@@ -72,7 +72,8 @@ app.use(cookieParser(SESSION_SECRET));
 app.use("/api", router);
 
 // --- Serve the built frontend (single-process, same-origin) ----------------
-// The api-server serves both the API and the frontend, same-origin. The server is esbuild-bundled
+// There is no separate frontend server or proxy routing /api to us, so the
+// api-server serves both. The server is esbuild-bundled
 // to dist/index.mjs and the build banner sets import.meta.dirname to that dist/
 // directory; the Docker image copies the Vite build output to dist/public, so it
 // sits right next to the bundle. CLIENT_DIST overrides for other layouts. The

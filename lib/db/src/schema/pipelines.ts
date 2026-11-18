@@ -1,6 +1,7 @@
 import {
   pgTable,
   integer,
+  serial,
   text,
   jsonb,
   boolean,
@@ -9,11 +10,13 @@ import {
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 export const pipelinesTable = pgTable(
   "pipelines",
   {
-    id: integer("id").primaryKey(),
+    id: serial("id").primaryKey(),
+    tenantId: tenantIdColumn(),
     name: text("name").notNull(),
     // Exactly one pipeline is the default (used for new deals / board / funnel).
     isDefault: boolean("is_default").notNull().default(false),
@@ -30,13 +33,12 @@ export const pipelinesTable = pgTable(
     // into or out of) this pipeline. Everywhere else any user may reassign. Moving a deal between pipelines
     // stays open to everyone, and assignment rules still assign.
     adminOnlyReassign: boolean("admin_only_reassign").notNull().default(false),
-    pipedriveId: integer("pipedrive_id").unique(),
-    pipedriveData: jsonb("pipedrive_data"),
   },
   (table) => [
+    tenantPolicy(),
     // At most one default pipeline (partial unique on the true value).
     uniqueIndex("pipelines_single_default_idx")
-      .on(table.isDefault)
+      .on(table.tenantId, table.isDefault)
       .where(sql`${table.isDefault}`),
   ],
 );

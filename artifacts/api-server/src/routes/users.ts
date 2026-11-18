@@ -21,6 +21,7 @@ import {
   generateTempPassword,
   currentUser,
 } from "../lib/auth";
+import { APP_TIMEZONE } from "../lib/assistant-dates";
 import { sendAccountCredentialsEmail, appBaseUrl } from "../lib/email";
 import { isMailerConfigured } from "../lib/mailer";
 import { logger } from "../lib/logger";
@@ -63,8 +64,8 @@ router.get("/users/options", async (_req, res): Promise<void> => {
 // All user-management routes are admin-only. Scope the guard to the `/users`
 // path: this router is mounted at the root (`router.use(usersRouter)`), so a
 // path-less `router.use(requireAdmin)` would run for EVERY request that flows
-// through it — including routers mounted after this one (search, warehouses,
-// quotes, bidding-deals, import) — and 403 non-admins out of those features.
+// through it — including routers mounted after this one (search,
+// import, …) — and 403 non-admins out of those features.
 router.use("/users", requireAdmin);
 
 router.get("/users", async (_req, res): Promise<void> => {
@@ -112,8 +113,8 @@ router.post("/users", async (req, res): Promise<void> => {
       roleId: d.roleId ?? null,
       isAdmin: d.isAdmin ?? false,
       activeFlag: d.activeFlag ?? true,
-      defaultCurrency: d.defaultCurrency ?? "SAR",
-      timezoneName: d.timezoneName ?? "Asia/Riyadh",
+      defaultCurrency: d.defaultCurrency ?? "USD",
+      timezoneName: d.timezoneName ?? APP_TIMEZONE,
     })
     .returning();
 

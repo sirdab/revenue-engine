@@ -99,6 +99,15 @@ export interface ResetTokenValidity {
   valid: boolean;
 }
 
+/**
+ * A tenant — one customer's isolated CRM workspace.
+ */
+export interface Workspace {
+  id: number;
+  name: string;
+  slug: string;
+}
+
 export interface User {
   id: number;
   name: string;
@@ -118,6 +127,34 @@ export interface User {
   teamId?: number | null;
   /** @nullable */
   teamName?: string | null;
+  /** The workspace this user belongs to. */
+  tenantId?: number;
+  workspace?: Workspace;
+}
+
+export interface WorkspaceUpdate {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+}
+
+export interface SignupInput {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  workspaceName: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  /** @minLength 3 */
+  email: string;
+  /** @minLength 1 */
+  password: string;
 }
 
 export interface UserOption {
@@ -355,6 +392,10 @@ export interface Deal {
   /** @nullable */
   fbclid?: string | null;
   /** @nullable */
+  wbraid?: string | null;
+  /** @nullable */
+  gbraid?: string | null;
+  /** @nullable */
   labels?: string[] | null;
   addTime: string;
   updateTime: string;
@@ -518,7 +559,6 @@ export type ChangesFeedItemNewValue = {
 
 /**
  * Where the change is rendered and linked.
-
  */
 export type ChangesFeedItemTargetType = typeof ChangesFeedItemTargetType[keyof typeof ChangesFeedItemTargetType];
 
@@ -547,8 +587,7 @@ export interface ChangesFeedItem {
   oldValue?: ChangesFeedItemOldValue;
   /** @nullable */
   newValue?: ChangesFeedItemNewValue;
-  /** Where the change is rendered and linked.
-   */
+  /** Where the change is rendered and linked. */
   targetType: ChangesFeedItemTargetType;
   targetId: number;
   /** @nullable */
@@ -882,12 +921,25 @@ export interface UserPreferencesNotificationChannels {
 }
 
 /**
- * Per-category notification channel preferences. Categories are fixed (assignment/mention); each is optional and defaults to all-on when absent. mention.inApp is stored but inert — that row is written by mentions.ts, not notify().
+ * Per-category notification channel preferences. Categories are fixed (reminder/overdue/assignment/mention); each is optional and defaults to all-on when absent. mention.inApp is stored but inert — that row is written by mentions.ts, not notify().
 
  */
 export interface UserPreferencesNotifications {
+  reminder?: UserPreferencesNotificationChannels;
+  overdue?: UserPreferencesNotificationChannels;
   assignment?: UserPreferencesNotificationChannels;
   mention?: UserPreferencesNotificationChannels;
+}
+
+/**
+ * Task-list filter state, stored at csTasks.* so the chosen owner scope and done-toggle survive navigating away and back. Not read or written by the current web app; the activities page keeps its layout under `tables.activities`.
+
+ */
+export interface UserPreferencesCsTasks {
+  /** The signed-in user's numeric id to scope to just their own tasks, the literal "all" to include every member's tasks, or absent/null for the default (the signed-in user).
+   */
+  ownerId?: number | 'all' | null;
+  showDone?: boolean;
 }
 
 /**
@@ -896,12 +948,12 @@ export interface UserPreferencesNotifications {
 export type UserPreferencesFilterPanels = {[key: string]: boolean};
 
 /**
- * Current view mode per surface, e.g. deals "pipeline" | "list".
+ * Current view mode per surface, e.g. deals "table" | "board".
  */
 export type UserPreferencesViewModes = {[key: string]: string};
 
 /**
- * Saved live filter state per surface, e.g. "persons", "organizations".
+ * Saved live filter state per surface, e.g. "deals", "persons".
  */
 export type UserPreferencesFilters = {[key: string]: UserPreferencesLooseObject};
 
@@ -926,7 +978,7 @@ Namespace conventions (no separate schema version field — the shape below IS t
   on deploy.
 - A `Record<string, T>` namespace (filterPanels/viewModes/tables) is
   keyed by a short semantic surface id (e.g. "deals",
-  "persons") chosen once and then stable — renaming a key
+  "dealsActive") chosen once and then stable — renaming a key
   orphans whatever data was stored under the old one.
 - PATCH deep-merges (see UserPreferencesPatch): objects merge
   recursively, arrays/scalars replace, `null` deletes a key. New
@@ -938,9 +990,9 @@ export interface UserPreferences {
   layout?: UserPreferencesLayout;
   /** Filter-panel collapsed state per surface, e.g. "persons", "organizations". */
   filterPanels?: UserPreferencesFilterPanels;
-  /** Current view mode per surface, e.g. deals "pipeline" | "list". */
+  /** Current view mode per surface, e.g. deals "table" | "board". */
   viewModes?: UserPreferencesViewModes;
-  /** Saved live filter state per surface, e.g. "persons", "organizations". */
+  /** Saved live filter state per surface, e.g. "deals", "persons". */
   filters?: UserPreferencesFilters;
   /** Saved kanban/card sort mode per surface. */
   kanbanSorts?: UserPreferencesKanbanSorts;
@@ -948,6 +1000,7 @@ export interface UserPreferences {
   tables?: UserPreferencesTables;
   deals?: UserPreferencesDeals;
   notifications?: UserPreferencesNotifications;
+  csTasks?: UserPreferencesCsTasks;
   /**
      * Most-recently-viewed deal/organization/person records, most recent first.
      * @maxItems 15
@@ -981,6 +1034,7 @@ export interface UserPreferencesPatch {
   tables?: UserPreferencesPatchTables;
   deals?: UserPreferencesDeals | null;
   notifications?: UserPreferencesNotifications | null;
+  csTasks?: UserPreferencesCsTasks | null;
   recentlyViewed?: UserPreferencesRecentlyViewedItem[] | null;
 }
 
@@ -1014,7 +1068,7 @@ export const ActivityType = {
 } as const;
 
 /**
- * How a completed activity went; "no_reply" is written only by the no-reply action.
+ * How a completed activity went. "no_reply" is written only by the no-reply action.
  * @nullable
  */
 export type ActivityOutcome = typeof ActivityOutcome[keyof typeof ActivityOutcome] | null;
@@ -1042,7 +1096,7 @@ export interface Activity {
   /** @nullable */
   markedAsDoneTime?: string | null;
   /**
-     * How a completed activity went; "no_reply" is written only by the no-reply action.
+     * How a completed activity went. "no_reply" is written only by the no-reply action.
      * @nullable
      */
   outcome?: ActivityOutcome;
@@ -1543,8 +1597,6 @@ export interface TeamOption {
   name: string;
   active: boolean;
   orderIndex: number;
-  /** @nullable */
-  pipedriveId?: number | null;
   memberCount: number;
 }
 
@@ -1553,11 +1605,6 @@ export interface Team {
   name: string;
   active: boolean;
   orderIndex: number;
-  /**
-     * Set when the team was imported from Pipedrive; null for native teams.
-     * @nullable
-     */
-  pipedriveId?: number | null;
   memberCount: number;
   members: TeamMember[];
 }
@@ -2254,6 +2301,14 @@ export const InsightsGlobalFiltersStatusesItem = {
   lost: 'lost',
 } as const;
 
+export type InsightsGlobalFiltersQualification = typeof InsightsGlobalFiltersQualification[keyof typeof InsightsGlobalFiltersQualification];
+
+
+export const InsightsGlobalFiltersQualification = {
+  qualified: 'qualified',
+  unqualified: 'unqualified',
+} as const;
+
 /**
  * Board-level filter state. Composes with each widget's own filters by intersection server-side. `filters` carries the Add-filter condition group, base64url-encoded with the shared deals-filter codec.
 
@@ -2263,6 +2318,7 @@ export interface InsightsGlobalFilters {
   ownerIds?: number[];
   pipelineIds?: number[];
   statuses?: InsightsGlobalFiltersStatusesItem[];
+  qualification?: InsightsGlobalFiltersQualification;
   /** @nullable */
   filters?: string | null;
 }
@@ -2630,11 +2686,11 @@ limit?: number;
 export type GetPipelineFunnelParams = {
 pipelineId: number;
 /**
- * Inclusive start date (YYYY-MM-DD, Asia/Riyadh) scoping deal entry
+ * Inclusive start date (YYYY-MM-DD, workspace time zone) scoping deal entry
  */
 from?: string;
 /**
- * Inclusive end date (YYYY-MM-DD, Asia/Riyadh) scoping deal entry
+ * Inclusive end date (YYYY-MM-DD, workspace time zone) scoping deal entry
  */
 to?: string;
 ownerId?: number;

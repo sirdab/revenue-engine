@@ -88,7 +88,7 @@ test("invalid activity type values are rejected", () => {
   );
 });
 
-test("date fields: dueDate compares the raw date column; timestamps convert to Riyadh", () => {
+test("date fields: dueDate compares the raw date column; timestamps convert to the app time zone", () => {
   const { where } = compileActivitiesGroup({
     combinator: "and",
     conditions: [
@@ -100,18 +100,18 @@ test("date fields: dueDate compares the raw date column; timestamps convert to R
   const { sql } = render(where);
   assert.match(sql, /"due_date" between /);
   assert.doesNotMatch(sql, /"due_date"[^b]*AT TIME ZONE/);
-  assert.match(sql, /"add_time" AT TIME ZONE 'Asia\/Riyadh'/);
+  assert.match(sql, /"add_time" AT TIME ZONE 'UTC'/);
 });
 
 test("organization conditions flag the join; cf: refs and unknown fields are rejected", () => {
   const { where, needsOrgJoin } = compileActivitiesGroup({
     combinator: "and",
-    conditions: [{ field: "organization", operator: "contains", value: "Noon" }],
+    conditions: [{ field: "organization", operator: "contains", value: "Acme" }],
   });
   assert.ok(where);
   assert.equal(needsOrgJoin, true);
 
-  for (const field of ["cf:qualification", "palletCount", "dropTables"]) {
+  for (const field of ["cf:qualification", "seatCount", "dropTables"]) {
     assert.throws(
       () =>
         compileActivitiesGroup({
@@ -139,7 +139,7 @@ test("board owner + date range apply to the activity itself", () => {
   assert.match(owner.sql, /"activities"\."owner_id" in /);
   assert.deepEqual(owner.params, [7]);
   const from = render(conditions[1]);
-  assert.match(from.sql, /"marked_as_done_time" AT TIME ZONE 'Asia\/Riyadh'/);
+  assert.match(from.sql, /"marked_as_done_time" AT TIME ZONE 'UTC'/);
   assert.equal(applied.length, 2);
 });
 
@@ -149,18 +149,20 @@ test("deal-shaped board filters compile to an EXISTS on the linked deal", () => 
     {
       statuses: ["won", "deleted"], // deleted is not a board status; dropped
       pipelineIds: [2],
+      qualification: "qualified",
     },
     spec,
-    catalogWith(),
+    catalogWith(QUALIFICATION),
   );
-  // pipeline + status fold into ONE exists condition.
+  // pipeline + status + qualification fold into ONE exists condition.
   assert.equal(conditions.length, 1);
   const { sql, params } = render(conditions[0]);
   assert.match(sql, /exists \(select 1 from "deals"/);
   assert.match(sql, /"deals"\."id" = "activities"\."deal_id"/);
   assert.match(sql, /"deals"\."archived" = false/);
-  assert.deepEqual(params, [2, "won"]);
-  assert.equal(applied.length, 2);
+  assert.match(sql, /"custom_fields" ->> 'qualification'/);
+  assert.deepEqual(params, [2, "won", "qualified"]);
+  assert.equal(applied.length, 3);
 });
 
 test("the board Add-filter group (deals vocabulary) rides the linked-deal EXISTS", () => {
@@ -202,6 +204,13 @@ test("non-count aggregations and bad date bases are rejected before any DB work"
         ...BASE_SPEC,
         measure: { field: "id", agg: "sum" },
       }),
+      null,
+    ),
+    InsightsQueryError,
+  );
+  await assert.rejects(
+    runActivitiesPerformance(
+      widgetSpecSchema.parse({ ...BASE_SPEC, dateBasis: "wonAt" }),
       null,
     ),
     InsightsQueryError,

@@ -1,8 +1,9 @@
 import { randomBytes, timingSafeEqual } from "crypto";
-import { eq } from "drizzle-orm";
-import { db, appSettingsTable } from "@workspace/db";
+import { and, eq } from "drizzle-orm";
+import { db, appSettingsTable, runAsSystem } from "@workspace/db";
 
-// Key/value helpers over the `app_settings` table (portal-managed config).
+// Key/value helpers over the `app_settings` table (per-tenant config). Every
+// read and write is scoped to the current tenant by row-level security.
 
 export async function getSetting(key: string): Promise<string | null> {
   const [row] = await db
@@ -21,7 +22,7 @@ export async function setSetting(key: string, value: string): Promise<void> {
     .insert(appSettingsTable)
     .values({ key, value })
     .onConflictDoUpdate({
-      target: appSettingsTable.key,
+      target: [appSettingsTable.tenantId, appSettingsTable.key],
       set: { value, updatedAt: new Date() },
     });
 }
@@ -46,6 +47,30 @@ export async function getWebhookSecret(): Promise<string | null> {
   return getSetting(WEBHOOK_SECRET_KEY);
 }
 
+/**
+ * The tenant whose inbound-webhook secret this is, or null. Inbound webhooks
+ * carry no session, so the secret is what identifies the workspace; the
+ * lookup runs in the system scope because no tenant is bound yet. Secrets are
+ * 24 random bytes, so two workspaces can never share one.
+ */
+export async function tenantIdForWebhookSecret(
+  presented: string,
+): Promise<number | null> {
+  const rows = await runAsSystem(() =>
+    db
+      .select({ tenantId: appSettingsTable.tenantId, value: appSettingsTable.value })
+      .from(appSettingsTable)
+      .where(
+        and(
+          eq(appSettingsTable.key, WEBHOOK_SECRET_KEY),
+          eq(appSettingsTable.value, presented),
+        ),
+      ),
+  );
+  const match = rows.find((r) => secretsMatch(presented, r.value));
+  return match?.tenantId ?? null;
+}
+
 export async function rotateWebhookSecret(): Promise<string> {
   const secret = generateSecret();
   await setSetting(WEBHOOK_SECRET_KEY, secret);
@@ -55,9 +80,9 @@ export async function rotateWebhookSecret(): Promise<string> {
 /**
  * The shared secret an inbound webhook presented, from either header form.
  *
- * Shared by every unauthenticated-but-secret-checked receiver (the n8n lead
- * webhook in routes/webhooks.ts, the WhatsApp mirror in
- * routes/whatsapp-webhook.ts) so they cannot drift on which headers they honour.
+ * Shared by every unauthenticated-but-secret-checked receiver (the inbound
+ * lead webhook in routes/webhooks.ts) so they cannot drift on which headers
+ * they honour.
  */
 export function presentedSecret(req: {
   headers: Record<string, unknown>;

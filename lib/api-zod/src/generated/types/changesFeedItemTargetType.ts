@@ -8,7 +8,6 @@
 
 /**
  * Where the change is rendered and linked.
-
  */
 export type ChangesFeedItemTargetType = typeof ChangesFeedItemTargetType[keyof typeof ChangesFeedItemTargetType];
 

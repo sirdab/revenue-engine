@@ -1,15 +1,8 @@
-// Shaping an inbound webhook value for a `set` deal field.
-//
-// `set` values live in custom_fields as a JSON ARRAY. The webhook writes
-// straight into the jsonb via coerceCustomValue and never passes through the
-// registry's normalize(), so an inbound scalar "LSC" would land as the bare
-// string "LSC". The deal detail renders a set with
-// `Array.isArray(v) ? v : []`, so that deal would silently show EMPTY and no
-// amount of clicking in the UI repairs the stored shape.
-//
-// Unknown members are kept, not dropped: SetEditor shows stored values it has
-// no option for, so an unrecognised value is a visible problem an admin can
-// correct rather than a silent deletion.
+// Shaping an inbound webhook value for a `set` deal field. `set` values live
+// in custom_fields as a JSON ARRAY, and the webhook writes straight into the
+// jsonb without the registry's normalize(), so a scalar must be wrapped or the
+// deal detail (which renders `Array.isArray(v) ? v : []`) shows it EMPTY.
+// Members are trimmed and de-duplicated; unknown ones are kept, not dropped.
 
 /** Coerce an inbound webhook value into a canonical `set` array. */
 export function coerceSetValue(v: unknown): string[] {

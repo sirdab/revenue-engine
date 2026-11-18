@@ -152,7 +152,7 @@ const SUPPORTED_CUSTOM_TYPES = new Set([
 
 function registrySourceKey(field: DealField): string | null {
   // storage=custom stores under the hashed `key`; storage=data under the
-  // Pipedrive-decoded `sourceKey`. storage=column fields are exposed through
+  // `sourceKey`. storage=column fields are exposed through
   // the native list above instead, so they are skipped here.
   if (field.storage === "custom") return field.key;
   if (field.storage === "data") return field.sourceKey;

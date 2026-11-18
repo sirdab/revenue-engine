@@ -378,7 +378,7 @@ export async function globalSearch(
   const personItems: GlobalSearchItem[] = persons.rows.map((p) => {
     // Identify the matched field. Name/email match the raw term; phone is
     // compared on its normalized form (the raw value won't literally contain a
-    // reformatted query like "0500001234"). The length gate mirrors phoneMatch:
+    // reformatted query like "0540843494"). The length gate mirrors phoneMatch:
     // below it SQL never ran a phone predicate, so labeling one would lie.
     const m =
       nsn.length >= PHONE_MIN_NSN &&

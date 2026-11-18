@@ -12,11 +12,6 @@ export interface Team {
   name: string;
   active: boolean;
   orderIndex: number;
-  /**
-     * Set when the team was imported from Pipedrive; null for native teams.
-     * @nullable
-     */
-  pipedriveId?: number | null;
   memberCount: number;
   members: TeamMember[];
 }

@@ -1,18 +1,16 @@
 # Contributing
 
-Thanks for helping improve Sirdab Revenue Engine. Bug reports, fixes,
-translations and features are all welcome.
+Thanks for helping. Bug reports, fixes, translations and features are all
+welcome. For anything bigger than a small fix, open an issue first so we can
+agree on the approach before you spend time on it.
 
-## Before you start
+## Getting set up
 
-- For anything larger than a small fix, open an issue first so we can agree on
-  the approach before you spend time on it.
-- Security problems: do not open a public issue; see [SECURITY.md](SECURITY.md).
+Follow **Quick start** in the [README](README.md). In short: Node 24, pnpm,
+Docker (or your own Postgres), then `pnpm install`, `cp .env.example .env`,
+`pnpm db:setup`, `pnpm dev`.
 
-## Development
-
-Setup is in the [README](README.md#local-development). Before opening a pull
-request, make sure these pass:
+## Before you open a pull request
 
 ```bash
 pnpm run typecheck
@@ -20,26 +18,40 @@ pnpm --filter @workspace/api-server run typecheck:test
 pnpm run test
 ```
 
-Conventions worth knowing (more in [CLAUDE.md](CLAUDE.md)):
+CI runs the same checks, plus a full build and the real migrations against a
+fresh Postgres.
 
-- **API changes** start in `lib/api-spec/openapi.yaml`; run
-  `pnpm --filter @workspace/api-spec run codegen` and never edit `generated/`
-  directories by hand.
-- **Schema changes** in `lib/db/src/schema` must ship with a generated
-  migration (`pnpm --filter @workspace/db run generate`), committed together.
+## How the code is organised
+
+Read [`CLAUDE.md`](CLAUDE.md) before your first change. Despite the name it is
+the architecture guide for everyone. Shared vocabulary is in
+[`CONCEPTS.md`](CONCEPTS.md) and the database is described in
+[`SCHEMA.md`](SCHEMA.md). The rules that matter most:
+
+- **Tenant isolation is enforced by Postgres row-level security.** Query
+  through the `db` handle from `@workspace/db` inside a request and you get the
+  caller's workspace automatically. Never use `runAsSystem` in signed-in
+  request handling. New tables follow the checklist in
+  [`lib/db/MIGRATIONS.md`](lib/db/MIGRATIONS.md).
+- **The API contract is `lib/api-spec/openapi.yaml`.** Edit it, then run
+  `pnpm codegen`. Never hand-edit anything under `generated/`.
+- **Schema changes come with a migration**: edit `lib/db/src/schema/*`, run
+  `pnpm --filter @workspace/db run generate` and commit the SQL with the schema.
 - **Styling** uses [Sirdab One](https://github.com/sirdab/one) components and
   its semantic colour tokens; raw Tailwind palette classes (`slate-500`,
-  `teal-600`) do not exist in this project.
-- **User-facing text** goes through the i18n catalogs with both English and
-  Arabic strings; check layouts in RTL.
-- Add or update `*.test.ts` files next to logic you change.
+  `teal-600`) do not exist in this project (One's `gray-*` ramp does).
+- **UI strings go through i18n** (`artifacts/web/src/lib/i18n`). Add every key
+  to both `en.json` and `ar.json`; a parity test fails otherwise. If you can't
+  write the Arabic, say so in the PR and leave the English text in `ar.json`.
+- Tests use the built-in `node:test` runner and sit next to the code they cover
+  (`*.test.ts`).
 
-## Pull requests
+## Adding a language
 
-Keep each pull request to one change, describe what and why, and include
-screenshots for UI changes (both English and Arabic if layout is affected).
+Copy `artifacts/web/src/lib/i18n/en.json` to `<code>.json`, translate it and
+register the locale in `locales.ts`. See the i18n README in that folder.
 
-## License
+## Commit and PR style
 
-By contributing, you agree that your contributions are licensed under the
-[GNU AGPL v3](LICENSE), the license of this project.
+Keep pull requests focused on one change and describe what it changes and how
+you tested it. The PR template has a short checklist.

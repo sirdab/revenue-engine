@@ -20,7 +20,7 @@ import re
 import sys
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-I18N = os.path.join(REPO, "artifacts/login/src/lib/i18n")
+I18N = os.path.join(REPO, "artifacts/web/src/lib/i18n")
 
 # Long strings are sentences; two sentences differing is not glossary drift.
 MAX_LABEL = 40

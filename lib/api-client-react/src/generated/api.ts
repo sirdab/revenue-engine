@@ -130,6 +130,7 @@ import type {
   ResetTokenValidity,
   SearchParams,
   SearchResults,
+  SignupInput,
   SlackChannelList,
   Stage,
   Team,
@@ -145,7 +146,9 @@ import type {
   UserPreferences,
   UserPreferencesPatch,
   UserUpdate,
-  ValidateResetTokenParams
+  ValidateResetTokenParams,
+  Workspace,
+  WorkspaceUpdate
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -307,6 +310,225 @@ export const useLogin = <TError = ErrorType<Error>,
         TContext
       > => {
       return useMutation(getLoginMutationOptions(options));
+    }
+
+export const getSignupUrl = () => {
+
+
+
+
+  return `/api/auth/signup`
+}
+
+/**
+ * @summary Create a new workspace and its first admin, then sign in
+ */
+export const signup = async (signupInput: SignupInput, options?: RequestInit): Promise<User> => {
+
+  return customFetch<User>(getSignupUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      signupInput,)
+  }
+);}
+
+
+
+
+export const getSignupMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signup>>, TError,{data: BodyType<SignupInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof signup>>, TError,{data: BodyType<SignupInput>}, TContext> => {
+
+const mutationKey = ['signup'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof signup>>, {data: BodyType<SignupInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  signup(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SignupMutationResult = NonNullable<Awaited<ReturnType<typeof signup>>>
+    export type SignupMutationBody = BodyType<SignupInput>
+    export type SignupMutationError = ErrorType<Error>
+
+    /**
+ * @summary Create a new workspace and its first admin, then sign in
+ */
+export const useSignup = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof signup>>, TError,{data: BodyType<SignupInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof signup>>,
+        TError,
+        {data: BodyType<SignupInput>},
+        TContext
+      > => {
+      return useMutation(getSignupMutationOptions(options));
+    }
+
+export const getGetWorkspaceUrl = () => {
+
+
+
+
+  return `/api/workspace`
+}
+
+/**
+ * @summary The signed-in user's workspace
+ */
+export const getWorkspace = async ( options?: RequestInit): Promise<Workspace> => {
+
+  return customFetch<Workspace>(getGetWorkspaceUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWorkspaceQueryKey = () => {
+    return [
+    `/api/workspace`
+    ] as const;
+    }
+
+
+export const getGetWorkspaceQueryOptions = <TData = Awaited<ReturnType<typeof getWorkspace>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWorkspace>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWorkspaceQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWorkspace>>> = ({ signal }) => getWorkspace({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWorkspace>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWorkspaceQueryResult = NonNullable<Awaited<ReturnType<typeof getWorkspace>>>
+export type GetWorkspaceQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary The signed-in user's workspace
+ */
+
+export function useGetWorkspace<TData = Awaited<ReturnType<typeof getWorkspace>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWorkspace>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWorkspaceQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateWorkspaceUrl = () => {
+
+
+
+
+  return `/api/workspace`
+}
+
+/**
+ * @summary Rename the workspace (admin)
+ */
+export const updateWorkspace = async (workspaceUpdate: WorkspaceUpdate, options?: RequestInit): Promise<Workspace> => {
+
+  return customFetch<Workspace>(getUpdateWorkspaceUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      workspaceUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateWorkspaceMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWorkspace>>, TError,{data: BodyType<WorkspaceUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateWorkspace>>, TError,{data: BodyType<WorkspaceUpdate>}, TContext> => {
+
+const mutationKey = ['updateWorkspace'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWorkspace>>, {data: BodyType<WorkspaceUpdate>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateWorkspace(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateWorkspaceMutationResult = NonNullable<Awaited<ReturnType<typeof updateWorkspace>>>
+    export type UpdateWorkspaceMutationBody = BodyType<WorkspaceUpdate>
+    export type UpdateWorkspaceMutationError = ErrorType<Error>
+
+    /**
+ * @summary Rename the workspace (admin)
+ */
+export const useUpdateWorkspace = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWorkspace>>, TError,{data: BodyType<WorkspaceUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateWorkspace>>,
+        TError,
+        {data: BodyType<WorkspaceUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateWorkspaceMutationOptions(options));
     }
 
 export const getLogoutUrl = () => {
@@ -1401,7 +1623,7 @@ export const getForecastDealsUrl = (params?: ForecastDealsParams,) => {
 }
 
 /**
- * @summary Forecast deals grouped by expected close month (Asia/Riyadh)
+ * @summary Forecast deals grouped by expected close month (workspace time zone)
  */
 export const forecastDeals = async (params?: ForecastDealsParams, options?: RequestInit): Promise<DealForecast> => {
 
@@ -1448,7 +1670,7 @@ export type ForecastDealsQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Forecast deals grouped by expected close month (Asia/Riyadh)
+ * @summary Forecast deals grouped by expected close month (workspace time zone)
  */
 
 export function useForecastDeals<TData = Awaited<ReturnType<typeof forecastDeals>>, TError = ErrorType<unknown>>(
@@ -4991,7 +5213,7 @@ export const getDismissNotificationUrl = (id: number,) => {
 }
 
 /**
- * Explicit dismissal, distinct from marking read. A dismissed notification leaves both the bell and the home card.
+ * Explicit dismissal, distinct from marking read. A time-based notification stays on both surfaces until the recipient dismisses it here.
 
  * @summary Clear one notification from the bell and the home card
  */

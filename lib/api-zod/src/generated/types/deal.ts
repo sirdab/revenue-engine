@@ -66,6 +66,10 @@ export interface Deal {
   /** @nullable */
   fbclid?: string | null;
   /** @nullable */
+  wbraid?: string | null;
+  /** @nullable */
+  gbraid?: string | null;
+  /** @nullable */
   labels?: string[] | null;
   addTime: Date;
   updateTime: Date;

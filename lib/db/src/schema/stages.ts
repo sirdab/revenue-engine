@@ -1,6 +1,7 @@
 import {
   pgTable,
   integer,
+  serial,
   text,
   jsonb,
   boolean,
@@ -10,11 +11,13 @@ import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { pipelinesTable } from "./pipelines";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 export const stagesTable = pgTable(
   "stages",
   {
-    id: integer("id").primaryKey(),
+    id: serial("id").primaryKey(),
+    tenantId: tenantIdColumn(),
     name: text("name").notNull(),
     pipelineId: integer("pipeline_id")
       .notNull()
@@ -34,10 +37,9 @@ export const stagesTable = pgTable(
       .array()
       .notNull()
       .default(sql`'{}'`),
-    pipedriveId: integer("pipedrive_id").unique(),
-    pipedriveData: jsonb("pipedrive_data"),
   },
-  (table) => [index("stages_pipeline_idx").on(table.pipelineId)],
+  (table) => [
+    tenantPolicy(),index("stages_pipeline_idx").on(table.pipelineId)],
 );
 
 export const insertStageSchema = createInsertSchema(stagesTable);

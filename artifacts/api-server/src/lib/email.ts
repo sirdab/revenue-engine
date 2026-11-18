@@ -4,7 +4,7 @@ import { sendMail, MailerNotConfiguredError } from "./mailer";
 /**
  * Public base URL of the front-end app, used to build links inside emails.
  * In production set APP_BASE_URL to the deployed domain (e.g.
- * https://crm.example.com). Falls back to http://localhost.
+ * https://crm.example.com). In development we fall back to localhost.
  */
 export function appBaseUrl(): string {
   const explicit = process.env.APP_BASE_URL;
@@ -30,9 +30,10 @@ export function htmlEscape(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-/** Chrome options. The defaults are the engine's own (internal) emails; the
- *  partner SLA report overrides them because it goes to people outside Sirdab
- *  who have never heard of the Revenue Engine. */
+/** The product name shown in emails. APP_NAME overrides the default. */
+export const APP_NAME = process.env.APP_NAME?.trim() || "Sirdab Revenue Engine";
+
+/** Chrome options for the shared email shell. */
 export interface ShellOptions {
   maxWidthPx?: number;
   title?: string;
@@ -43,8 +44,8 @@ export function shell(
   innerHtml: string,
   {
     maxWidthPx = 520,
-    title = "Revenue Engine",
-    footer = "Sent by Sirdab Revenue Engine",
+    title = APP_NAME,
+    footer = `Sent by ${APP_NAME}`,
   }: ShellOptions = {},
 ): string {
   return `<!doctype html>
@@ -52,7 +53,7 @@ export function shell(
   <body style="margin:0;background:#eef2f4;font-family:'DM Sans',Inter,Arial,sans-serif;color:#1A212D;">
     <div style="max-width:${maxWidthPx}px;margin:0 auto;padding:40px 24px;">
       <div style="background:linear-gradient(135deg,#039BA0,#0c7d80);border-radius:20px 20px 0 0;padding:28px 32px;">
-        <div style="font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);">Sirdab</div>
+        <div style="font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);">${htmlEscape(APP_NAME)}</div>
         <div style="font-size:22px;font-weight:700;color:#ffffff;margin-top:4px;">${htmlEscape(title)}</div>
       </div>
       <div style="background:#ffffff;border-radius:0 0 20px 20px;padding:32px;border:1px solid #e5e7eb;border-top:none;">
@@ -84,24 +85,24 @@ function buildResetEmail(
   name: string,
   resetUrl: string,
 ): { subject: string; text: string; html: string } {
-  const subject = "Reset your Sirdab Revenue Engine password";
+  const subject = `Reset your ${APP_NAME} password`;
   const text = [
     `Hi ${name},`,
     "",
-    "We received a request to reset the password for your Sirdab Revenue Engine account.",
+    `We received a request to reset the password for your ${APP_NAME} account.`,
     "Use the link below within the next hour to choose a new password:",
     "",
     resetUrl,
     "",
     "Didn't request this? You can safely ignore this email and your password stays the same.",
     "",
-    "The Sirdab Revenue Engine team",
+    `The ${APP_NAME} team`,
   ].join("\n");
 
   const html = shell(`
     <h1 style="font-size:20px;margin:0 0 16px;color:#1A212D;">Reset your password</h1>
     <p style="font-size:15px;line-height:1.6;color:#3f4756;margin:0 0 24px;">
-      Hi ${htmlEscape(name)}, we received a request to reset the password for your Sirdab Revenue Engine account.
+      Hi ${htmlEscape(name)}, we received a request to reset the password for your ${APP_NAME} account.
       Click the button below within the next hour to choose a new password.
     </p>
     ${button(resetUrl, "Reset password")}
@@ -222,11 +223,11 @@ function buildAccountEmail(p: AccountCredentialsEmail): {
   html: string;
 } {
   const subject = p.isNew
-    ? "Welcome to Sirdab Revenue Engine"
-    : "Your Sirdab Revenue Engine login details";
+    ? `Welcome to ${APP_NAME}`
+    : `Your ${APP_NAME} login details`;
   const intro = p.isNew
-    ? "Your account on Sirdab Revenue Engine is ready. Here is everything you need to jump in."
-    : "Here are your fresh Sirdab Revenue Engine login details. We reset your password to a new temporary one.";
+    ? `Your account on ${APP_NAME} is ready. Here is everything you need to jump in.`
+    : `Here are your fresh ${APP_NAME} login details. We reset your password to a new temporary one.`;
 
   const text = [
     `Hi ${p.name},`,
@@ -241,7 +242,7 @@ function buildAccountEmail(p: AccountCredentialsEmail): {
     "Tip: change your password once you're in to keep your account secure.",
     "",
     "See you inside,",
-    "The Sirdab Revenue Engine team",
+    `The ${APP_NAME} team`,
   ].join("\n");
 
   const html = shell(`

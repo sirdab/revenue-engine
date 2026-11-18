@@ -11,6 +11,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
 import { notesTable } from "./notes";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 // Emoji reactions on posted comments (standalone notes). One row per
 // (note, user, emoji) — the unique constraint makes add idempotent
@@ -27,6 +28,7 @@ export const noteReactionsTable = pgTable(
   "note_reactions",
   {
     id: serial("id").primaryKey(),
+    tenantId: tenantIdColumn(),
     noteId: integer("note_id")
       .notNull()
       .references(() => notesTable.id, { onDelete: "cascade" }),
@@ -39,6 +41,7 @@ export const noteReactionsTable = pgTable(
       .defaultNow(),
   },
   (table) => [
+    tenantPolicy(),
     // Reactions are fetched batched per deal, keyed by note.
     index("note_reactions_note_idx").on(table.noteId),
     unique("note_reactions_note_user_emoji_uq").on(

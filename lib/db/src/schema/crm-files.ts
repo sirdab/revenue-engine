@@ -13,18 +13,22 @@ import { z } from "zod/v4";
 import { usersTable } from "./users";
 import { dealsTable } from "./deals";
 import { notesTable } from "./notes";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
-// CRM file attachments (contracts, payment proofs, …) for deals.
+// CRM file attachments (contracts, proposals, …) for deals.
 // Metadata only — the binary lives in S3-compatible object storage
-// (e.g. Cloudflare R2, AWS S3 or MinIO), keyed by this row's id. Not the dormant
+// (Cloudflare R2 in production), keyed by this row's id. Not the dormant
 // Pipedrive `files` table — that one is link-only sync metadata with no
 // binary.
 //
-// Every file belongs to a deal; a comment attachment also carries noteId. Both the deal and note FKs are bare (NO ACTION) like
+// Attach target is a deal (dealId), optionally a comment attachment on that
+// deal (dealId + noteId). Both the deal and note FKs are bare (NO ACTION) like
 // notes/activities — a hard deal/note delete must never silently destroy
 // attachment metadata before the app-side path in api-server has cleaned up
 // the matching R2 blobs; the seed script wipes crm_files first.
-// The deal Documents card filters out rows with note_id set.
+// Comment attachments keep dealId set so deal-scoped queries
+// and change-event conventions still apply; the deal Documents card filters
+// out rows with note_id set.
 //
 // `category` is plain text validated by a zod enum in the API layer
 // (api-server/src/lib/crm-files.ts) so the set can grow without a migration.
@@ -35,6 +39,7 @@ export const crmFilesTable = pgTable(
   "crm_files",
   {
     id: serial("id").primaryKey(),
+    tenantId: tenantIdColumn(),
     fileName: text("file_name").notNull(),
     mimeType: text("mime_type").notNull(),
     sizeBytes: integer("size_bytes").notNull(),
@@ -55,6 +60,7 @@ export const crmFilesTable = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
+    tenantPolicy(),
     index("crm_files_deal_idx").on(table.dealId),
     index("crm_files_note_idx").on(table.noteId),
   ],

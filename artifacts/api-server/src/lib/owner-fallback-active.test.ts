@@ -24,13 +24,14 @@ function userQueries(body: string): string[] {
 
 const ACTIVE = /eq\(usersTable\.activeFlag, true\)/;
 
-// A long-deactivated admin can still be the lowest-id admin, so a "first
-// admin" fallback would hand work to someone who no longer signs in. These
+// A long-deactivated admin can still be the lowest-id admin, and an owner
+// fallback that ignores the flag hands them work nobody will see. These
 // fallbacks run where nobody is looking at the result, so each one must refuse
-// an inactive user. They are DB queries with no seam to inject rows, hence a source-level pin.
+// an inactive user.
+// Both are DB queries with no seam to inject rows, hence a source-level pin.
 describe("owner fallbacks only pick active users", () => {
   it("webhook owner resolution never returns a deactivated user", () => {
-    const body = functionBody(read("./webhook-owner.ts"), "resolveOwner");
+    const body = functionBody(read("../routes/webhooks.ts"), "resolveOwner");
     const queries = userQueries(body);
     // The by-email lookup (payload ownerEmail and WEBHOOK_DEFAULT_OWNER_EMAIL
     // both go through it) and the last-resort admin.

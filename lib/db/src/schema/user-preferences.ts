@@ -2,12 +2,14 @@ import { pgTable, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 // Per-user default/working-state preferences (sidebar collapsed, table column
 // layout, filter panel state, view modes, deals default view, etc.) as a single
 // namespaced JSON document, deep-merged on PATCH. Distinct from `deal_views`,
 // which stores named reusable saved views rather than a user's current defaults.
 export const userPreferencesTable = pgTable("user_preferences", {
+  tenantId: tenantIdColumn(),
   userId: integer("user_id")
     .primaryKey()
     .references(() => usersTable.id, { onDelete: "cascade" }),
@@ -24,7 +26,7 @@ export const userPreferencesTable = pgTable("user_preferences", {
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
-});
+}, () => [tenantPolicy()]);
 
 export const insertUserPreferencesSchema = createInsertSchema(
   userPreferencesTable,

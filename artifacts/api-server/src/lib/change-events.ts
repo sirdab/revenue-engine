@@ -55,13 +55,10 @@ interface TrackedField<T = Record<string, unknown>> {
   ref: RefKind;
 }
 
-// Every editable deal field whose changes we record — the same breadth
-// Pipedrive's deal "flow" tracks, so a deal managed here has a history as
-// complete as an imported one. Derived timestamps (wonTime, stageChangeTime,
-// updateTime, …), the creator, and Pipedrive import internals are intentionally
+// Every editable deal field whose changes we record. Derived timestamps
+// (wonTime, stageChangeTime, updateTime, …) and the creator are intentionally
 // excluded: they are computed side effects, not user edits. The `fieldKey`
-// strings are the canonical (snake_case) names shared with the import backfill
-// so app-authored and imported events line up in one timeline.
+// strings are the canonical (snake_case) column names.
 const TRACKED_DEAL_FIELDS: readonly TrackedField<Deal>[] = [
   // Core pipeline fields.
   { key: "stageId", fieldKey: "stage_id", ref: "stage" },
@@ -372,10 +369,7 @@ type ConfigEntityType =
   | "activity"
   | "note"
   | "label"
-  | "deal"
-  // The WhatsApp support session: any signed-in user can unpair the
-  // number, so the disconnect is recorded as a self-labelling marker event.
-  | "whatsapp_session";
+  | "deal";
 
 function configSnapshot(v: unknown): ChangeValueSnapshot | null {
   if (v == null || v === "" || (Array.isArray(v) && v.length === 0)) return null;

@@ -11,7 +11,9 @@ tags:
   - name: health
     description: Health operations
   - name: auth
-    description: Authentication
+    description: Authentication and sign-up
+  - name: workspace
+    description: The current tenant workspace
   - name: pipelines
     description: Pipelines and board
   - name: stages
@@ -75,6 +77,73 @@ paths:
                 $ref: "#/components/schemas/User"
         "401":
           description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/signup:
+    post:
+      operationId: signup
+      tags: [auth]
+      summary: Create a new workspace and its first admin, then sign in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupInput"
+      responses:
+        "201":
+          description: Workspace created; the new admin is signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid input or weak password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /workspace:
+    get:
+      operationId: getWorkspace
+      tags: [workspace]
+      summary: The signed-in user's workspace
+      responses:
+        "200":
+          description: Workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+    patch:
+      operationId: updateWorkspace
+      tags: [workspace]
+      summary: Rename the workspace (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceUpdate"
+      responses:
+        "200":
+          description: Updated workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        "403":
+          description: Admin access required
           content:
             application/json:
               schema:
@@ -274,7 +343,9 @@ paths:
           in: query
           required: false
           description: >
-            Status lens. Omitted defaults to open-only in the working views. `all` drops the status filter entirely (archived deals are still excluded unless the `archived` lens is on).
+            Status lens. Omitted defaults to open-only in the working views.
+            `all` drops the status filter entirely (archived deals are still
+            excluded unless the `archived` lens is on).
           schema:
             type: string
             enum: [open, won, lost, deleted, all]
@@ -472,7 +543,9 @@ paths:
           in: query
           required: false
           description: >
-            Status lens. Omitted defaults to open-only in the working views. `all` drops the status filter entirely (archived deals are still excluded unless the `archived` lens is on).
+            Status lens. Omitted defaults to open-only in the working views.
+            `all` drops the status filter entirely (archived deals are still
+            excluded unless the `archived` lens is on).
           schema:
             type: string
             enum: [open, won, lost, deleted, all]
@@ -526,7 +599,7 @@ paths:
     get:
       operationId: forecastDeals
       tags: [deals]
-      summary: Forecast deals grouped by expected close month (Asia/Riyadh)
+      summary: Forecast deals grouped by expected close month (workspace time zone)
       parameters:
         - name: pipelineId
           in: query
@@ -623,7 +696,11 @@ paths:
       tags: [deals]
       summary: Merge this (duplicate) deal into another deal
       description: >
-        Moves the duplicate's activities, notes, files and audit history to the primary, fills the primary's empty fields from the duplicate, unions labels, then archives the duplicate with a pointer to the survivor. Pass preview=true to see what would happen without changing anything.
+        Moves the duplicate's activities, notes, files and audit history to
+        the primary, fills the primary's empty fields from the duplicate,
+        unions labels, then archives the duplicate with a pointer to the
+        survivor. Pass preview=true to see what would happen without changing
+        anything.
       parameters:
         - name: id
           in: path
@@ -741,13 +818,13 @@ paths:
         - name: from
           in: query
           required: false
-          description: Inclusive start date (YYYY-MM-DD, Asia/Riyadh) scoping deal entry
+          description: Inclusive start date (YYYY-MM-DD, workspace time zone) scoping deal entry
           schema:
             type: string
         - name: to
           in: query
           required: false
-          description: Inclusive end date (YYYY-MM-DD, Asia/Riyadh) scoping deal entry
+          description: Inclusive end date (YYYY-MM-DD, workspace time zone) scoping deal entry
           schema:
             type: string
         - name: ownerId
@@ -1225,7 +1302,9 @@ paths:
           in: query
           required: false
           description: >-
-            Return only the caller's own drafts (excludes all posted activities). Use for a dedicated drafts list; unlike includeDrafts, drafts are not buried under the posted-activity window.
+            Return only the caller's own drafts (excludes all posted activities).
+            Use for a dedicated drafts list; unlike includeDrafts, drafts are not
+            buried under the posted-activity window.
           schema:
             type: boolean
         - name: limit
@@ -1741,7 +1820,9 @@ paths:
       tags: [notifications]
       summary: Clear one notification from the bell and the home card
       description: >
-        Explicit dismissal, distinct from marking read. A dismissed notification leaves both the bell and the home card.
+        Explicit dismissal, distinct from marking read. A time-based
+        notification stays on both surfaces until the recipient dismisses it
+        here.
       parameters:
         - name: id
           in: path
@@ -1764,7 +1845,10 @@ paths:
       tags: [notifications]
       summary: Notification rules an admin has authored, with my subscription state
       description: >
-        Every active automation whose action posts an in-app notification, each merged with the CURRENT user's subscription so the settings page renders from one call. Readable by any authenticated user — authoring stays on the admin automations endpoints.
+        Every active automation whose action posts an in-app notification, each
+        merged with the CURRENT user's subscription so the settings page renders
+        from one call. Readable by any authenticated user — authoring stays on
+        the admin automations endpoints.
       responses:
         "200":
           description: Rules with my subscription state
@@ -1779,9 +1863,15 @@ paths:
       tags: [notifications]
       summary: One on/off for every automation that posts an in-app notification
       description: >
-        Subscribes or unsubscribes the CURRENT user to every active notification-posting automation at once.
+        Subscribes or unsubscribes the CURRENT user to every active
+        notification-posting automation at once.
 
-        This replaces the per-rule subscription list. That list was the single worst piece of this feature's design: creating a rule in Settings looked like finishing, and a second identical-looking toggle on a different page was what actually made it deliver — with nothing on the first page saying so. One switch, and the lead time belongs to the automation rather than to each subscriber.
+        This replaces the per-rule subscription list. That list was the single
+        worst piece of this feature's design: creating a rule in Settings looked
+        like finishing, and a second identical-looking toggle on a different page
+        was what actually made it deliver — with nothing on the first page saying
+        so. One switch, and the lead time belongs to the automation rather than to
+        each subscriber.
       requestBody:
         required: true
         content:
@@ -1802,7 +1892,10 @@ paths:
       tags: [notifications]
       summary: Subscribe, unsubscribe, or retune one rule for the current user
       description: >
-        Idempotent upsert keyed on (current user, rule) — calling it twice is the same as calling it once. The recipient is always the session user; there is no way to set a subscription for someone else. Setting active=false keeps the row so the user's tuning survives being switched off.
+        Idempotent upsert keyed on (current user, rule) — calling it twice is the
+        same as calling it once. The recipient is always the session user; there
+        is no way to set a subscription for someone else. Setting active=false
+        keeps the row so the user's tuning survives being switched off.
       parameters:
         - name: id
           in: path
@@ -1961,7 +2054,9 @@ paths:
                 $ref: "#/components/schemas/Error"
         "409":
           description: >
-            Deactivation blocked — a self-lockout guard, the last-active-admin guard, or (when needsReassign is true) the target user still owns open deals and reassignOwnerId is required.
+            Deactivation blocked — a self-lockout guard, the last-active-admin
+            guard, or (when needsReassign is true) the target user still owns
+            open deals and reassignOwnerId is required.
           content:
             application/json:
               schema:
@@ -2115,7 +2210,9 @@ paths:
       tags: [labels]
       summary: Rename or recolor a label (admin)
       description: >
-        Renaming rewrites the stored label on every record that carries it. Renaming onto an existing label's name merges the two: records are rewritten to the surviving label and this label is removed.
+        Renaming rewrites the stored label on every record that carries it.
+        Renaming onto an existing label's name merges the two: records are
+        rewritten to the surviving label and this label is removed.
       parameters:
         - name: id
           in: path
@@ -2678,7 +2775,9 @@ paths:
       tags: [automations]
       summary: List the workspace's Slack channels for the channel picker (admin)
       description: >
-        Returns available=false with an empty list when the Slack bot token is missing the channels:read/groups:read scope or Slack can't be reached, so the wizard falls back to a free-text channel field.
+        Returns available=false with an empty list when the Slack bot token is
+        missing the channels:read/groups:read scope or Slack can't be reached,
+        so the wizard falls back to a free-text channel field.
       responses:
         "200":
           description: Channel list (or a graceful unavailable result)
@@ -2729,7 +2828,9 @@ paths:
       tags: [automations]
       summary: Send a private test of a Slack-message automation to yourself (admin)
       description: >
-        Renders the message against sample data and delivers it privately to the requesting user (never to the real channel), so setup can be verified without notifying anyone else.
+        Renders the message against sample data and delivers it privately to
+        the requesting user (never to the real channel), so setup can be
+        verified without notifying anyone else.
       requestBody:
         required: true
         content:
@@ -2896,7 +2997,8 @@ paths:
                 $ref: "#/components/schemas/Error"
         "409":
           description: >
-            Stale write rejected: `expectedUpdatedAt` was sent and no longer matches (the dashboard changed elsewhere). Reload and retry.
+            Stale write rejected: `expectedUpdatedAt` was sent and no longer
+            matches (the dashboard changed elsewhere). Reload and retry.
           content:
             application/json:
               schema:
@@ -2958,7 +3060,8 @@ paths:
       tags: [insights]
       summary: Seed the starter dashboard (one transaction, server-owned content)
       description: >
-        Creates the example "Overview" board — dashboard, widgets and packed layout land atomically, so a failure never strands a half-built board.
+        Creates the example "Overview" board — dashboard, widgets and packed
+        layout land atomically, so a failure never strands a half-built board.
       responses:
         "201":
           description: The seeded dashboard with its widgets
@@ -3099,7 +3202,10 @@ paths:
       tags: [insights]
       summary: Run a widget query spec (board filters intersected server-side)
       description: >
-        Widgets are pure config: this one generic endpoint executes any widget spec, so user-built widgets need no API changes. The spec's field names are validated against the per-scope allow-list; board filters compose with the spec's own filters by intersection (narrow, never widen).
+        Widgets are pure config: this one generic endpoint executes any widget
+        spec, so user-built widgets need no API changes. The spec's field names
+        are validated against the per-scope allow-list; board filters compose
+        with the spec's own filters by intersection (narrow, never widen).
       requestBody:
         required: true
         content:
@@ -3132,7 +3238,9 @@ paths:
       tags: [insights]
       summary: Run several widget queries in one round trip
       description: >
-        One request per board load instead of one per widget. Items succeed or fail independently; `results` aligns to `items` by index, each entry carrying either `result` or `error`.
+        One request per board load instead of one per widget. Items succeed or
+        fail independently; `results` aligns to `items` by index, each entry
+        carrying either `result` or `error`.
       requestBody:
         required: true
         content:
@@ -3164,7 +3272,12 @@ paths:
           required: true
           schema:
             type: string
-            enum: [deals, activities, organizations]
+            enum:
+              [
+                deals,
+                activities,
+                organizations,
+              ]
       responses:
         "200":
           description: Field catalog for the scope
@@ -3196,10 +3309,6 @@ components:
         error:
           type: string
 
-    # ---- Bulk import -------------------------------------------------------
-    # Row shapes for the importer. These are intentionally separate from the
-    # create-form *Input schemas so the importer can carry extra fields (e.g.
-    # ownerId on persons/organizations) and evolve independently.
     OrganizationImportRow:
       type: object
       required: [name]
@@ -3406,6 +3515,51 @@ components:
           type: ["integer", "null"]
         teamName:
           type: ["string", "null"]
+        tenantId:
+          type: integer
+          description: The workspace this user belongs to.
+        workspace:
+          $ref: "#/components/schemas/Workspace"
+
+    Workspace:
+      type: object
+      description: A tenant — one customer's isolated CRM workspace.
+      required: [id, name, slug]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+
+    WorkspaceUpdate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+
+    SignupInput:
+      type: object
+      required: [workspaceName, name, email, password]
+      properties:
+        workspaceName:
+          type: string
+          minLength: 1
+          maxLength: 120
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        email:
+          type: string
+          minLength: 3
+        password:
+          type: string
+          minLength: 1
 
     UserOption:
       type: object
@@ -3476,7 +3630,9 @@ components:
         reassignOwnerId:
           type: integer
           description: >
-            When deactivating a user who still owns open deals, the id of the active user to reassign those deals to. Required only after the server responds 409 needsReassign on a first attempt.
+            When deactivating a user who still owns open deals, the id of the
+            active user to reassign those deals to. Required only after the
+            server responds 409 needsReassign on a first attempt.
 
     UserDeactivateConflict:
       type: object
@@ -3500,7 +3656,9 @@ components:
         adminOnlyReassign:
           type: boolean
           description: >-
-            Only an admin may change the owner of a deal in this pipeline (moving a deal into or out of it with an owner change included). Moving deals between pipelines stays open to everyone.
+            Only an admin may change the owner of a deal in this pipeline
+            (moving a deal into or out of it with an owner change included).
+            Moving deals between pipelines stays open to everyone.
 
     Stage:
       type: object
@@ -3720,7 +3878,10 @@ components:
         mergedIntoDealId:
           type: ["integer", "null"]
           description: >-
-            Set when this deal was merged into another one, pointing at the surviving deal. Its activities, notes and files now live there. A deal carrying this can never be merged again, so the UI must surface it rather than let a merge attempt discover it.
+            Set when this deal was merged into another one, pointing at the
+            surviving deal. Its activities, notes and files now live there.
+            A deal carrying this can never be merged again, so the UI must
+            surface it rather than let a merge attempt discover it.
         comments:
           type: ["string", "null"]
         expectedCloseDate:
@@ -3738,6 +3899,10 @@ components:
         gclid:
           type: ["string", "null"]
         fbclid:
+          type: ["string", "null"]
+        wbraid:
+          type: ["string", "null"]
+        gbraid:
           type: ["string", "null"]
         labels:
           type: ["array", "null"]
@@ -3768,11 +3933,15 @@ components:
           format: date-time
         nextActivityDueDate:
           description: >-
-            Earliest due date (YYYY-MM-DD) among the deal's open, non-draft activities — its next action item. Null when nothing is scheduled. A plain calendar date (no time); the client derives the overdue/today/scheduled/none priority colour from it.
+            Earliest due date (YYYY-MM-DD) among the deal's open, non-draft
+            activities — its next action item. Null when nothing is scheduled.
+            A plain calendar date (no time); the client derives the
+            overdue/today/scheduled/none priority colour from it.
           type: ["string", "null"]
         customFields:
           description: >-
-            Resolved values for the custom-field columns requested via the `columns` query param, keyed by field key. Absent unless requested.
+            Resolved values for the custom-field columns requested via the
+            `columns` query param, keyed by field key. Absent unless requested.
           type: ["object", "null"]
           additionalProperties: true
 
@@ -3814,7 +3983,9 @@ components:
         archived:
           type: boolean
           description: >-
-            true archives the deal (read-only, hidden from working views); false restores it to its previous state. The only field accepted on an already-archived deal is archived=false.
+            true archives the deal (read-only, hidden from working views);
+            false restores it to its previous state. The only field accepted
+            on an already-archived deal is archived=false.
         title:
           type: string
           minLength: 1
@@ -3957,8 +4128,7 @@ components:
             label:
               type: ["string", "null"]
         targetType:
-          description: >
-            Where the change is rendered and linked.
+          description: Where the change is rendered and linked.
           type: string
           enum: [deal, person, organization]
         targetId:
@@ -4047,7 +4217,9 @@ components:
         blocked:
           type: array
           description: >
-            set_stage only — deals that were NOT moved because the target stage's required fields are still empty on them. The client prompts for the fields per deal and retries.
+            set_stage only — deals that were NOT moved because the target
+            stage's required fields are still empty on them. The client
+            prompts for the fields per deal and retries.
           items:
             $ref: "#/components/schemas/DealBulkBlocked"
 
@@ -4255,7 +4427,8 @@ components:
     TableLayoutPreference:
       type: object
       description: >
-        Column visibility/order/sizing (and page size, where the table paginates client-side) for a single table.
+        Column visibility/order/sizing (and page size, where the table paginates
+        client-side) for a single table.
       properties:
         visibility:
           type: object
@@ -4299,7 +4472,8 @@ components:
     UserPreferencesRecentlyViewedItem:
       type: object
       description: >
-        One visited deal/organization/person, keyed for de-dup by `href` (the record's detail-page path).
+        One visited deal/organization/person, keyed for de-dup by `href`
+        (the record's detail-page path).
       required: [type, href, title, viewedAt]
       properties:
         type:
@@ -4324,12 +4498,16 @@ components:
           type: string
           enum: [en, ar]
           description: >
-            UI language. Absent means the user has never chosen, which reads as English -- there is no OS-preference fallback the way there is for `theme`, because a browser's Accept-Language says nothing about which language someone wants to do their job in.
+            UI language. Absent means the user has never chosen, which reads
+            as English -- there is no OS-preference fallback the way there is
+            for `theme`, because a browser's Accept-Language says nothing
+            about which language someone wants to do their job in.
 
     UserPreferencesDealsState:
       type: object
       description: >
-        Snapshot of the Deals workspace URL state (see DealsUrlState), restored when /deals is opened with no explicit query params.
+        Snapshot of the Deals workspace URL state (see DealsUrlState), restored
+        when /deals is opened with no explicit query params.
       properties:
         view:
           type: ["string", "null"]
@@ -4358,7 +4536,8 @@ components:
           $ref: "#/components/schemas/UserPreferencesDealsState"
         openMode:
           description: >
-            Whether clicking into a deal opens the full `/deal/:id` page or a right-side drawer over the current view.
+            Whether clicking into a deal opens the full `/deal/:id` page or a
+            right-side drawer over the current view.
           type: string
           enum: ["page", "drawer"]
 
@@ -4374,19 +4553,51 @@ components:
     UserPreferencesNotifications:
       type: object
       description: >
-        Per-category notification channel preferences. Categories are fixed (assignment/mention); each is optional and defaults to all-on when absent. mention.inApp is stored but inert — that row is written by mentions.ts, not notify().
+        Per-category notification channel preferences. Categories are fixed
+        (reminder/overdue/assignment/mention); each is optional and defaults
+        to all-on when absent. mention.inApp is stored but inert — that row
+        is written by mentions.ts, not notify().
       properties:
+        reminder:
+          $ref: "#/components/schemas/UserPreferencesNotificationChannels"
+        overdue:
+          $ref: "#/components/schemas/UserPreferencesNotificationChannels"
         assignment:
           $ref: "#/components/schemas/UserPreferencesNotificationChannels"
         mention:
           $ref: "#/components/schemas/UserPreferencesNotificationChannels"
 
+    UserPreferencesCsTasks:
+      type: object
+      description: >
+        Task-list filter state, stored at csTasks.* so the chosen owner
+        scope and done-toggle survive navigating away and back. Not read or
+        written by the current web app; the activities page keeps its
+        layout under `tables.activities`.
+      properties:
+        ownerId:
+          description: >
+            The signed-in user's numeric id to scope to just their own
+            tasks, the literal "all" to include every member's tasks, or
+            absent/null for the default (the signed-in user).
+          oneOf:
+            - type: integer
+            - type: string
+              enum: ["all"]
+            - type: "null"
+        showDone:
+          type: boolean
+
     UserPreferences:
       type: object
       description: >
-        Namespaced per-user preferences document. Every property is optional; a user with nothing saved yet gets back an empty object.
+        Namespaced per-user preferences document. Every property is optional;
+        a user with nothing saved yet gets back an empty object.
 
-        Namespace conventions (no separate schema version field — the shape below IS the version, and jsonb storage means every change here is additive-safe by construction): - Add a new namespace or leaf field as OPTIONAL. Existing documents
+        Namespace conventions (no separate schema version field — the shape
+        below IS the version, and jsonb storage means every change here is
+        additive-safe by construction):
+        - Add a new namespace or leaf field as OPTIONAL. Existing documents
           simply lack it until the client writes one; never add `required`.
         - Never change an existing field's meaning or type in place — add a
           new field/namespace instead and leave the old one alone (or have
@@ -4395,7 +4606,7 @@ components:
           on deploy.
         - A `Record<string, T>` namespace (filterPanels/viewModes/tables) is
           keyed by a short semantic surface id (e.g. "deals",
-          "persons") chosen once and then stable — renaming a key
+          "dealsActive") chosen once and then stable — renaming a key
           orphans whatever data was stored under the old one.
         - PATCH deep-merges (see UserPreferencesPatch): objects merge
           recursively, arrays/scalars replace, `null` deletes a key. New
@@ -4411,12 +4622,12 @@ components:
             type: boolean
         viewModes:
           type: object
-          description: Current view mode per surface, e.g. deals "pipeline" | "list".
+          description: Current view mode per surface, e.g. deals "table" | "board".
           additionalProperties:
             type: string
         filters:
           type: object
-          description: Saved live filter state per surface, e.g. "persons", "organizations".
+          description: Saved live filter state per surface, e.g. "deals", "persons".
           additionalProperties:
             $ref: "#/components/schemas/UserPreferencesLooseObject"
         kanbanSorts:
@@ -4433,6 +4644,8 @@ components:
           $ref: "#/components/schemas/UserPreferencesDeals"
         notifications:
           $ref: "#/components/schemas/UserPreferencesNotifications"
+        csTasks:
+          $ref: "#/components/schemas/UserPreferencesCsTasks"
         recentlyViewed:
           type: array
           maxItems: 15
@@ -4442,12 +4655,20 @@ components:
         resetEpoch:
           type: integer
           description: >
-            Server-managed, read-only. Bumped only by DELETE /user-preferences (never by an ordinary PATCH). A PATCH sent with the X-Preferences-Reset-Epoch header set to a stale value (i.e. a write computed before a reset that has since happened elsewhere) is rejected with 409 instead of being applied — see UpdateUserPreferences. Not settable via PATCH; any value sent in the body is ignored.
+            Server-managed, read-only. Bumped only by DELETE /user-preferences
+            (never by an ordinary PATCH). A PATCH sent with the
+            X-Preferences-Reset-Epoch header set to a stale value (i.e. a
+            write computed before a reset that has since happened elsewhere)
+            is rejected with 409 instead of being applied — see
+            UpdateUserPreferences. Not settable via PATCH; any value sent in
+            the body is ignored.
 
     UserPreferencesPatch:
       type: object
       description: >
-        Partial update, deep-merged into the stored document: objects merge recursively, arrays/scalars replace, and null removes the key (a whole namespace, or a single entry of a map like `tables`/`filterPanels`).
+        Partial update, deep-merged into the stored document: objects merge
+        recursively, arrays/scalars replace, and null removes the key (a whole
+        namespace, or a single entry of a map like `tables`/`filterPanels`).
       properties:
         layout:
           oneOf:
@@ -4489,6 +4710,10 @@ components:
         notifications:
           oneOf:
             - $ref: "#/components/schemas/UserPreferencesNotifications"
+            - type: "null"
+        csTasks:
+          oneOf:
+            - $ref: "#/components/schemas/UserPreferencesCsTasks"
             - type: "null"
         recentlyViewed:
           oneOf:
@@ -4564,7 +4789,8 @@ components:
           type: ["string", "null"]
           enum: [successful, no_reply, null]
           description: >-
-            How a completed activity went; "no_reply" is written only by the no-reply action.
+            How a completed activity went. "no_reply" is written only by the
+            no-reply action.
         dealId:
           type: ["integer", "null"]
         dealTitle:
@@ -4578,7 +4804,8 @@ components:
         dealOrganizationId:
           type: ["integer", "null"]
           description: >-
-            CRM organization of this activity's deal (deals.organizationId). Distinct from `orgId` above, which is the activity's own org link.
+            CRM organization of this activity's deal (deals.organizationId).
+            Distinct from `orgId` above, which is the activity's own org link.
         dealOrganizationName:
           type: ["string", "null"]
         ownerId:
@@ -4641,7 +4868,10 @@ components:
           type: string
           enum: [successful, no_reply]
           description: >-
-            Log something that already happened, closed on creation: "successful" (they replied; `note` must hold their response) or "no_reply". Only for contact types (call, meeting, email, whatsapp). Omitted means planned work, created open.
+            Log something that already happened, closed on creation:
+            "successful" (they replied; `note` must hold their response) or
+            "no_reply". Only for contact types (call, meeting, email,
+            whatsapp). Omitted means planned work, created open.
 
     ActivityUpdate:
       type: object
@@ -4691,7 +4921,9 @@ components:
         updatedCount:
           type: integer
           description: >
-            Rows actually changed — already-done rows are skipped by mark_done (and already-open ones by mark_open), and drafts are never touched by any bulk action.
+            Rows actually changed — already-done rows are skipped by
+            mark_done (and already-open ones by mark_open), and drafts are
+            never touched by any bulk action.
 
     Note:
       type: object
@@ -4731,13 +4963,15 @@ components:
         reactions:
           type: array
           description: >-
-            Per-emoji reaction aggregate for posted comments. Populated on the list response; absent/empty on single-note responses.
+            Per-emoji reaction aggregate for posted comments. Populated on the
+            list response; absent/empty on single-note responses.
           items:
             $ref: "#/components/schemas/NoteReactionSummary"
         previews:
           type: array
           description: >-
-            Cached link-preview cards for http(s) URLs in this comment (list response only). Only successfully-unfurled URLs appear.
+            Cached link-preview cards for http(s) URLs in this comment (list
+            response only). Only successfully-unfurled URLs appear.
           items:
             $ref: "#/components/schemas/LinkPreviewCard"
 
@@ -4897,7 +5131,8 @@ components:
           type: boolean
         params:
           description: >
-            The current user's own tuning. Null when unsubscribed or untuned. Only keys listed in `tunable` are ever present.
+            The current user's own tuning. Null when unsubscribed or untuned.
+            Only keys listed in `tunable` are ever present.
           type: ["object", "null"]
           additionalProperties: true
 
@@ -4913,7 +5148,8 @@ components:
           type: boolean
         params:
           description: >
-            Tuning for this user only. Keys must be declared in the rule's `tunable` list or the request is rejected.
+            Tuning for this user only. Keys must be declared in the rule's
+            `tunable` list or the request is rejected.
           type: ["object", "null"]
           additionalProperties: true
 
@@ -5152,7 +5388,9 @@ components:
       type: object
       required: [id, name, active, orderIndex, memberCount]
       description: >
-        A team for pickers and assignment rules — no member list (which would expose member emails to every authenticated user). The full member list is admin-only, via GET /admin/teams.
+        A team for pickers and assignment rules — no member list (which would
+        expose member emails to every authenticated user). The full member list
+        is admin-only, via GET /admin/teams.
       properties:
         id:
           type: integer
@@ -5162,8 +5400,6 @@ components:
           type: boolean
         orderIndex:
           type: integer
-        pipedriveId:
-          type: ["integer", "null"]
         memberCount:
           type: integer
 
@@ -5179,9 +5415,6 @@ components:
           type: boolean
         orderIndex:
           type: integer
-        pipedriveId:
-          type: ["integer", "null"]
-          description: Set when the team was imported from Pipedrive; null for native teams.
         memberCount:
           type: integer
         members:
@@ -5230,7 +5463,9 @@ components:
           type: string
         value:
           description: >
-            Scalar (string/number/boolean/null) or a two-element array for range operators; absent for presence operators. The server re-validates the whole tree with the shared deals-filter schema.
+            Scalar (string/number/boolean/null) or a two-element array for
+            range operators; absent for presence operators. The server
+            re-validates the whole tree with the shared deals-filter schema.
       additionalProperties: false
 
     AssignmentRuleConditionGroup:
@@ -5250,7 +5485,20 @@ components:
 
     AssignmentRule:
       type: object
-      required: [id, name, triggerEvent, conditions, targetTeamId, targetTeamName, targetAssigneeId, targetAssigneeName, takeoverOwned, priority, active]
+      required:
+        [
+          id,
+          name,
+          triggerEvent,
+          conditions,
+          targetTeamId,
+          targetTeamName,
+          targetAssigneeId,
+          targetAssigneeName,
+          takeoverOwned,
+          priority,
+          active,
+        ]
       properties:
         id:
           type: integer
@@ -5273,7 +5521,9 @@ components:
         takeoverOwned:
           type: boolean
           description: >
-            Deal-updated rules only — when true this rule may reassign a deal that already has an owner (still only on a real pipeline/stage change, never when the request sets the owner itself).
+            Deal-updated rules only — when true this rule may reassign a deal
+            that already has an owner (still only on a real pipeline/stage
+            change, never when the request sets the owner itself).
         priority:
           type: integer
         active:
@@ -5345,7 +5595,9 @@ components:
     AutomationAssignee:
       type: object
       description: >
-        Who receives the automation's output. kind=deal_owner uses the deal's owner; kind=user targets userId; kind=auto (create_deal owner only) leaves the new deal to the deal_added assignment rules.
+        Who receives the automation's output. kind=deal_owner uses the deal's
+        owner; kind=user targets userId; kind=auto (create_deal owner only)
+        leaves the new deal to the deal_added assignment rules.
       required: [kind]
       properties:
         kind:
@@ -5358,7 +5610,12 @@ components:
     AutomationActionConfig:
       type: object
       description: >
-        Shape is discriminated by the automation's actionType — create_activity uses subject/activityType/dueInDays/assignee; create_deal uses pipelineId/stageId/titleTemplate/owner; call_webhook uses url/method/includeDeal/secretHeaderName. The server re-validates the config strictly against the actionType at write time (same loose-here, strict-there pattern as assignment-rule conditions).
+        Shape is discriminated by the automation's actionType — create_activity
+        uses subject/activityType/dueInDays/assignee; create_deal uses
+        pipelineId/stageId/titleTemplate/owner; call_webhook uses
+        url/method/includeDeal/secretHeaderName. The server re-validates the
+        config strictly against the actionType at write time (same loose-here,
+        strict-there pattern as assignment-rule conditions).
       properties:
         subject:
           type: string
@@ -5392,17 +5649,22 @@ components:
         secretHeaderName:
           type: ["string", "null"]
           description: >
-            call_webhook — header to send the integration webhook secret under; null = no auth header.
+            call_webhook — header to send the integration webhook secret under;
+            null = no auth header.
         destination:
           $ref: "#/components/schemas/SlackDestination"
           description: send_slack_message — where the message goes.
         message:
           type: string
           description: >
-            send_slack_message and post_notification — body, with {{deal.*}} placeholders interpolated at run time. post_notification also resolves {{params.*}} per subscriber.
+            send_slack_message and post_notification — body, with {{deal.*}}
+            placeholders interpolated at run time.
+            post_notification also resolves {{params.*}} per subscriber.
         tunable:
           description: >
-            post_notification — knobs each subscriber may override on their own subscription. Absent/empty = every subscriber gets the rule identically.
+            post_notification — knobs each subscriber may override on their own
+            subscription. Absent/empty = every subscriber gets the rule
+            identically.
           type: array
           items:
             type: string
@@ -5411,7 +5673,9 @@ components:
     SlackDestination:
       type: object
       description: >
-        send_slack_message destination, discriminated by `kind`: channel (channel name/id, blank = the webhook's fixed channel), deal_owner (DM the triggering deal's owner), or user (DM a specific CRM user).
+        send_slack_message destination, discriminated by `kind`: channel
+        (channel name/id, blank = the webhook's fixed channel), deal_owner (DM
+        the triggering deal's owner), or user (DM a specific CRM user).
       properties:
         kind:
           type: string
@@ -5424,7 +5688,17 @@ components:
 
     Automation:
       type: object
-      required: [id, name, triggerEvent, conditions, actionType, actionConfig, priority, active]
+      required:
+        [
+          id,
+          name,
+          triggerEvent,
+          conditions,
+          actionType,
+          actionConfig,
+          priority,
+          active,
+        ]
       properties:
         id:
           type: integer
@@ -5437,7 +5711,8 @@ components:
           $ref: "#/components/schemas/AssignmentRuleConditionGroup"
         actionType:
           type: string
-          enum: [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
+          enum:
+            [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
         actionConfig:
           $ref: "#/components/schemas/AutomationActionConfig"
         priority:
@@ -5460,14 +5735,16 @@ components:
           $ref: "#/components/schemas/AssignmentRuleConditionGroup"
         actionType:
           type: string
-          enum: [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
+          enum:
+            [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
         actionConfig:
           $ref: "#/components/schemas/AutomationActionConfig"
 
     AutomationUpdate:
       type: object
       description: >
-        All fields optional; only supplied fields are changed. actionType and actionConfig must be supplied together when the type changes.
+        All fields optional; only supplied fields are changed. actionType and
+        actionConfig must be supplied together when the type changes.
       properties:
         name:
           type: string
@@ -5480,7 +5757,8 @@ components:
           $ref: "#/components/schemas/AssignmentRuleConditionGroup"
         actionType:
           type: string
-          enum: [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
+          enum:
+            [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
         actionConfig:
           $ref: "#/components/schemas/AutomationActionConfig"
         active:
@@ -5510,8 +5788,10 @@ components:
     AutomationTemplate:
       type: object
       description: >
-        A saved, org-wide automation template. Prefills the wizard with the same conditions/action shape as a real automation.
-      required: [id, name, description, triggerEvent, conditions, actionType, actionConfig]
+        A saved, org-wide automation template. Prefills the wizard with the
+        same conditions/action shape as a real automation.
+      required:
+        [id, name, description, triggerEvent, conditions, actionType, actionConfig]
       properties:
         id:
           type: integer
@@ -5528,7 +5808,8 @@ components:
           $ref: "#/components/schemas/AssignmentRuleConditionGroup"
         actionType:
           type: string
-          enum: [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
+          enum:
+            [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
         actionConfig:
           $ref: "#/components/schemas/AutomationActionConfig"
         createdByName:
@@ -5556,7 +5837,8 @@ components:
           $ref: "#/components/schemas/AssignmentRuleConditionGroup"
         actionType:
           type: string
-          enum: [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
+          enum:
+            [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
         actionConfig:
           $ref: "#/components/schemas/AutomationActionConfig"
 
@@ -5589,7 +5871,8 @@ components:
         available:
           type: boolean
           description: >
-            false when the bot token lacks the channels:read scope or Slack is unreachable — the wizard then falls back to a free-text field.
+            false when the bot token lacks the channels:read scope or Slack is
+            unreachable — the wizard then falls back to a free-text field.
         channels:
           type: array
           items:
@@ -5598,7 +5881,10 @@ components:
     MessageChip:
       type: object
       description: >
-        One clickable field button in the wizard's message editor. `insert` is what clicking adds to the message — either a data placeholder like {{deal.title}} (validated against the server whitelist) or a plain text snippet (e.g. an emoji phrase).
+        One clickable field button in the wizard's message editor. `insert` is
+        what clicking adds to the message — either a data placeholder like
+        {{deal.title}} (validated against the server whitelist) or a plain
+        text snippet (e.g. an emoji phrase).
       required: [insert, label]
       properties:
         insert:
@@ -5632,7 +5918,8 @@ components:
           enum: [deal_added, deal_updated]
         actionType:
           type: string
-          enum: [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
+          enum:
+            [create_activity, create_deal, call_webhook, send_slack_message, post_notification]
         actionConfig:
           $ref: "#/components/schemas/AutomationActionConfig"
 
@@ -5654,17 +5941,34 @@ components:
     InsightsWidgetSpec:
       type: object
       description: >
-        Widget query spec (version, scope, reportType, measure, viewBy, segmentBy, filters, dateBasis, options, limit, sort). Validated server-side against @workspace/insights-spec.
+        Widget query spec (version, scope, reportType, measure, viewBy,
+        segmentBy, filters, dateBasis, options, limit, sort). Validated
+        server-side against @workspace/insights-spec.
       required: [version, scope, reportType, measure, filters]
       properties:
         version:
           type: integer
         scope:
           type: string
-          enum: [deals, activities, organizations]
+          enum:
+            [
+              deals,
+              activities,
+              organizations,
+            ]
         reportType:
           type: string
-          enum: [performance, conversionFunnel, conversionWinLoss, duration, progress, timeToFirstActivity, table, pivot]
+          enum:
+            [
+              performance,
+              conversionFunnel,
+              conversionWinLoss,
+              duration,
+              progress,
+              timeToFirstActivity,
+              table,
+              pivot,
+            ]
         measure:
           type: object
           required: [field, agg]
@@ -5695,7 +5999,15 @@ components:
           additionalProperties: true
         dateBasis:
           type: string
-          enum: [createdAt, closedAt, wonAt, lostAt, enteredStageAt, activityDoneAt]
+          enum:
+            [
+              createdAt,
+              closedAt,
+              wonAt,
+              lostAt,
+              enteredStageAt,
+              activityDoneAt,
+            ]
         options:
           type: object
           additionalProperties: true
@@ -5717,7 +6029,20 @@ components:
       properties:
         type:
           type: string
-          enum: [bar, horizontalBar, line, area, pie, funnel, waterfall, gauge, singleNumber, table, pivot]
+          enum:
+            [
+              bar,
+              horizontalBar,
+              line,
+              area,
+              pie,
+              funnel,
+              waterfall,
+              gauge,
+              singleNumber,
+              table,
+              pivot,
+            ]
         options:
           type: object
           additionalProperties: true
@@ -5741,7 +6066,9 @@ components:
     InsightsGlobalFilters:
       type: object
       description: >
-        Board-level filter state. Composes with each widget's own filters by intersection server-side. `filters` carries the Add-filter condition group, base64url-encoded with the shared deals-filter codec.
+        Board-level filter state. Composes with each widget's own filters by
+        intersection server-side. `filters` carries the Add-filter condition
+        group, base64url-encoded with the shared deals-filter codec.
       properties:
         dateRange:
           type: object
@@ -5756,7 +6083,15 @@ components:
               format: date
             basis:
               type: string
-              enum: [createdAt, closedAt, wonAt, lostAt, enteredStageAt, activityDoneAt]
+              enum:
+                [
+                  createdAt,
+                  closedAt,
+                  wonAt,
+                  lostAt,
+                  enteredStageAt,
+                  activityDoneAt,
+                ]
         ownerIds:
           type: array
           items:
@@ -5770,6 +6105,9 @@ components:
           items:
             type: string
             enum: [open, won, lost]
+        qualification:
+          type: string
+          enum: [qualified, unqualified]
         filters:
           type: ["string", "null"]
 
@@ -5823,7 +6161,19 @@ components:
 
     InsightsDashboard:
       type: object
-      required: [id, name, ownerId, isShared, sharedUserIds, layout, isDefault, widgets, createdAt, updatedAt]
+      required:
+        [
+          id,
+          name,
+          ownerId,
+          isShared,
+          sharedUserIds,
+          layout,
+          isDefault,
+          widgets,
+          createdAt,
+          updatedAt,
+        ]
       properties:
         id:
           type: integer
@@ -5906,7 +6256,10 @@ components:
           type: string
           format: date-time
           description: >
-            Optimistic-concurrency guard: when present, the update only applies if the dashboard's updatedAt still matches; otherwise the server answers 409 instead of letting a stale client clobber a newer layout (last-write-wins across tabs/devices).
+            Optimistic-concurrency guard: when present, the update only
+            applies if the dashboard's updatedAt still matches; otherwise the
+            server answers 409 instead of letting a stale client clobber a
+            newer layout (last-write-wins across tabs/devices).
 
     InsightsDuplicateDashboardInput:
       type: object
@@ -5964,7 +6317,9 @@ components:
     InsightsQueryResult:
       type: object
       description: >
-        Chart results carry xKey + series; table/pivot results carry columns + rows. meta always echoes what was actually applied so a number is never mysterious.
+        Chart results carry xKey + series; table/pivot results carry columns +
+        rows. meta always echoes what was actually applied so a number is
+        never mysterious.
       required: [meta]
       properties:
         xKey:

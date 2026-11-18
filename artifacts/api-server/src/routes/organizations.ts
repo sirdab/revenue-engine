@@ -7,8 +7,6 @@ import {
   dealsTable,
   activitiesTable,
   notesTable,
-  filesTable,
-  leadsTable,
 } from "@workspace/db";
 import {
   ListOrganizationsQueryParams,
@@ -221,16 +219,6 @@ router.delete("/organizations/:id", async (req, res): Promise<void> => {
       .update(notesTable)
       .set({ orgId: null })
       .where(eq(notesTable.orgId, id));
-    // Pipedrive-era file links and leads hold NO ACTION foreign keys too;
-    // left in place they fail the delete.
-    await tx
-      .update(filesTable)
-      .set({ orgId: null })
-      .where(eq(filesTable.orgId, id));
-    await tx
-      .update(leadsTable)
-      .set({ organizationId: null })
-      .where(eq(leadsTable.organizationId, id));
     await tx.delete(organizationsTable).where(eq(organizationsTable.id, id));
     await logEntityEvent(tx, "organization", id, "deleted", { id, label: existing.name }, null, {
       changedBy: user.id,

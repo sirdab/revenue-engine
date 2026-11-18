@@ -14,6 +14,7 @@ import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 // The kinds of entity whose history we track. Deals are the primary use today;
 // the others exist so the log is generic and reusable.
@@ -26,19 +27,6 @@ export const changeEntityTypeEnum = pgEnum("change_entity_type", [
   "stage",
   "note",
   "label",
-  // CS accounts (entity_id = the Sirdab platform org id): stage and account
-  // manager changes are audited here.
-  "account",
-  // Partners (entity_id = the Sirdab platform org id): partner-manager and
-  // archive changes are audited here.
-  "partner",
-  // CS account activities (entity_id = account_activities.id): reschedules and
-  // other edits are audited here.
-  "account_activity",
-  // WhatsApp sessions (entity_id = wa_sessions.id): any signed-in user can
-  // unpair the support number, so pairing and unpairing are audited here so it
-  // stays traceable who disconnected it.
-  "whatsapp_session",
 ]);
 
 // Where a change originated. Used to distinguish human edits from imports and
@@ -65,6 +53,7 @@ export const changeEventsTable = pgTable(
   "change_events",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
+    tenantId: tenantIdColumn(),
     entityType: changeEntityTypeEnum("entity_type").notNull(),
     entityId: bigint("entity_id", { mode: "number" }).notNull(),
     fieldKey: text("field_key").notNull(),
@@ -77,6 +66,7 @@ export const changeEventsTable = pgTable(
     source: changeSourceEnum("source").notNull().default("ui"),
   },
   (table) => [
+    tenantPolicy(),
     // Primary access path: a single entity's history in chronological order.
     index("change_events_entity_idx").on(
       table.entityType,

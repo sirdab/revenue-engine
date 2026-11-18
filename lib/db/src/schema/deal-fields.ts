@@ -15,6 +15,7 @@ import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 // The control plane for deal fields. A single registry describes every field
 // shown on a deal and — critically — WHERE its value lives, so the same UI can
@@ -68,6 +69,7 @@ export const dealFieldsTable = pgTable(
   "deal_field",
   {
     id: serial("id").primaryKey(),
+    tenantId: tenantIdColumn(),
     // Immutable public slug / API key. For `custom` fields this is also the
     // custom_fields json key; for `data`/`column` see `source_key`.
     key: text("key").notNull(),
@@ -93,10 +95,11 @@ export const dealFieldsTable = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
-    uniqueIndex("deal_field_key_uq").on(table.key),
+    tenantPolicy(),
+    uniqueIndex("deal_field_key_uq").on(table.tenantId, table.key),
     // A value lives at exactly one place.
     uniqueIndex("deal_field_storage_source_uq")
-      .on(table.storage, table.sourceKey)
+      .on(table.tenantId, table.storage, table.sourceKey)
       .where(sql`${table.sourceKey} is not null`),
     index("deal_field_active_idx").on(table.active, table.orderIndex),
     check(
@@ -113,6 +116,7 @@ export const dealFieldOptionsTable = pgTable(
   "deal_field_option",
   {
     id: serial("id").primaryKey(),
+    tenantId: tenantIdColumn(),
     fieldId: integer("field_id")
       .notNull()
       .references(() => dealFieldsTable.id, { onDelete: "cascade" }),
@@ -123,6 +127,7 @@ export const dealFieldOptionsTable = pgTable(
     active: boolean("active").notNull().default(true),
   },
   (table) => [
+    tenantPolicy(),
     uniqueIndex("deal_field_option_uq").on(table.fieldId, table.value),
     index("deal_field_option_field_idx").on(table.fieldId),
   ],

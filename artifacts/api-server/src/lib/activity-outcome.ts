@@ -1,9 +1,10 @@
 import type { ActivityOutcome } from "@workspace/db";
 
-// Replied / no reply on deal activities.
+// Replied / no reply. One set of rules so a response can't be skipped from one
+// surface that another enforces.
 //
 //   - Logging something that already happened carries an outcome and is
-//     written closed: "successful" (they replied: the response is required,
+//     written closed: "successful" (they replied — the response is required,
 //     in the note or the subject, since some log the whole reply as a title)
 //     or "no_reply" (one click, nothing to write).
 //   - Ticking planned work done writes "successful"; reopening clears it.
@@ -12,7 +13,7 @@ import type { ActivityOutcome } from "@workspace/db";
 //   - Null on a done row predates outcomes. Metrics count "successful" only.
 //   - Bulk "mark done" skips contact types: it has no "did they reply?" step.
 
-/** The activity types where someone is reached, so "did they reply?" has an answer. */
+/** The activity types that reach a person, and so can go unanswered. */
 export const DEAL_ACTIVITY_CONTACT_TYPES = [
   "call",
   "meeting",
@@ -50,8 +51,8 @@ export function outcomeForDone(done: boolean): ActivityOutcome | null {
 
 /**
  * Why an activity cannot be marked no reply, or null when it can. Only open,
- * posted contact work can: a finished activity already has its answer, and a
- * task or a deadline has nobody to reply. Exported for tests.
+ * hand-written contact work can: a finished activity already has its answer,
+ * and a task has nobody to reply. Exported for tests.
  */
 export function noReplyRefusal(
   row: { done: boolean; type: string; draft?: boolean },

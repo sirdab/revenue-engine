@@ -26,12 +26,12 @@ import { notesTable } from "@workspace/db";
 import { fileUpload as upload } from "../lib/file-upload-config";
 
 // Spec-less router (no OpenAPI/Orval — the generated client can't carry
-// multipart) for deal file attachments. Mounted below
+// multipart) for deal file attachments (R1-R7). Mounted below
 // requireAuth in routes/index.ts.
 
 const router: IRouter = Router();
 
-// Upload target: a deal's documents, or a comment attachment (deal + note).
+// Upload target: a deal, or a comment attachment on it (deal + note).
 const TargetBody = z.object({
   dealId: z.coerce.number().int().positive(),
   noteId: z.coerce.number().int().positive().optional(),
@@ -182,7 +182,7 @@ router.get("/files/:id/content", async (req, res): Promise<void> => {
         ? "default-src 'none'; sandbox"
         : "default-src 'none'";
 
-  // Inline images on POSTED comments (and deal files) get a bounded
+  // Inline images on POSTED comments (and deal/account files) get a bounded
   // private cache so long threads don't refetch every image on every mount.
   // Bytes are immutable per id, but AUTHORIZATION isn't — a deleted comment's
   // screenshot must not live on for a year — so the TTL is short (1 day). Draft

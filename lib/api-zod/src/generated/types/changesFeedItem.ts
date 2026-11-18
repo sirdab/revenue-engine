@@ -19,8 +19,7 @@ export interface ChangesFeedItem {
   oldValue?: ChangesFeedItemOldValue;
   /** @nullable */
   newValue?: ChangesFeedItemNewValue;
-  /** Where the change is rendered and linked.
-   */
+  /** Where the change is rendered and linked. */
   targetType: ChangesFeedItemTargetType;
   targetId: number;
   /** @nullable */

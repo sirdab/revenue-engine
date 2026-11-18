@@ -1,142 +1,169 @@
 # Sirdab Revenue Engine
 
-An open-source, self-hosted sales CRM in the spirit of Pipedrive, built on
-Sirdab's [One](https://github.com/sirdab/one) design system: pipelines and
-a drag-and-drop board, deals, people and organizations, activities, notes with
-@mentions, file attachments, automations, assignment rules, saved views,
-insights dashboards, a full audit history, and a Pipedrive importer. English and
-Arabic (RTL) out of the box.
+An open-source, multi-tenant sales CRM in the spirit of Pipedrive, built on
+Sirdab's [One](https://github.com/sirdab/one) design system. Track deals
+through pipelines on a Kanban board, keep people and organizations with their
+activities and notes, automate the busywork and see how the pipeline is doing.
 
-Built and maintained by [Sirdab](https://sirdab.co). Licensed under the
-[GNU AGPL v3](LICENSE).
+Built and maintained by [Sirdab](https://sirdab.co). Licensed under
+[MIT](LICENSE); the Sirdab name and logos are [trademarks](TRADEMARKS.md).
 
-## Features
+**Features**
 
-- **Pipelines & board**: multiple pipelines, Kanban board with drag and drop,
-  stage probabilities, rotting deals, required fields per stage and for "won".
-- **Deals**: list, board and forecast views; a filter builder with saved views;
-  bulk edit; labels; lost reasons; merge duplicates; archive and restore.
-- **Contacts**: people and organizations with their deals, activities and notes.
-- **Activities**: calls, meetings, emails, tasks, deadlines and WhatsApp;
-  planned vs. logged, replied / no reply outcomes, drafts.
-- **Notes & comments**: rich text, @mentions, emoji reactions, link previews,
+- **Pipelines and deals**: multiple pipelines, a drag-and-drop board, win
+  probabilities, "rotting" deals, required fields per stage, won/lost reasons,
+  deal merge, archive and restore.
+- **Contacts**: people and organizations, linked to deals, with activities
+  (calls, meetings, tasks), notes with @mentions and comments, and file
   attachments.
-- **Custom fields**: a field registry for deals (text, number, money, date,
-  single/multi select, …), editable from the deal page.
-- **Automations**: when a deal is added or updated and matches conditions,
-  create an activity or deal, call a webhook, post to Slack, or notify
-  subscribers.
-- **Assignment rules**: route new deals to a person or round-robin a team.
-- **Insights**: dashboards of widgets (performance, funnels, win/loss,
-  duration, tables, pivots) with drill-through.
-- **Audit history**: every change to a deal, contact, activity or note is
-  recorded, with a "recent changes" feed.
-- **Notifications**: in-app, email and Slack, with per-user preferences.
-- **Import**: CSV import for organizations, people and deals, plus a
-  [Pipedrive sync](migrations/pipedrive-api-sync/CONTINUOUS-SYNC.md).
-- **Inbound webhooks**: create and update deals from n8n, Zapier or your site.
+- **Custom fields and saved views**: your own deal fields, a filter builder,
+  saved list views, CSV/XLSX export.
+- **Automation**: assignment rules that pick a deal's owner, and "when a deal
+  matches, do this" automations (create an activity, create a deal, call a
+  webhook, post to Slack, notify people).
+- **Insights**: configurable dashboards over deals, activities and
+  organizations.
+- **Search and import**: global search (phone numbers too) and a guided CSV
+  import with duplicate detection that recognises Pipedrive exports of
+  organizations, people and deals.
+- **Ask AI** (optional): a read-only assistant that answers questions about
+  your pipeline using the Claude API.
+- **Workspaces**: anyone can sign up and get an isolated workspace, enforced by
+  Postgres row-level security. Admins manage users, teams, labels, pipelines
+  and integrations.
+- **English and Arabic** UI, including right-to-left layout.
 
-## Quick start (Docker)
+Stack: TypeScript everywhere. Express 5 + Drizzle ORM + PostgreSQL on the
+server, React 19 + Vite + Tailwind + [Sirdab One](https://github.com/sirdab/one)
+on the client, an OpenAPI contract with generated clients.
 
-```bash
-cp .env.example .env      # set SESSION_SECRET and BOOTSTRAP_ADMIN_* at least
-docker compose up --build
-```
+## Quick start
 
-Open http://localhost:8080 and sign in with `BOOTSTRAP_ADMIN_EMAIL` /
-`BOOTSTRAP_ADMIN_PASSWORD`. Compose also starts MinIO (file attachments,
-console on http://localhost:9001) and Mailpit (outgoing email, UI on
-http://localhost:8025).
-
-## Local development
-
-Prerequisites: **Node 24** (`mise install` reads `mise.toml`), **pnpm 10**
-(the repo refuses npm/yarn), and **Postgres 16**.
+You need **Node 24** (`mise.toml` pins it), **pnpm 10** and **Docker** (or a
+Postgres 13+ of your own, see below).
 
 ```bash
 pnpm install
-
-createdb revenue_engine
-export DATABASE_URL=postgres://$USER@localhost:5432/revenue_engine
-pnpm --filter @workspace/db run migrate
-
-# Demo data (WIPES every table, local databases only)…
-pnpm --filter @workspace/api-server run seed
-# …or just an admin user:
-BOOTSTRAP_ADMIN_EMAIL=you@example.com BOOTSTRAP_ADMIN_PASSWORD='a strong password' \
-  pnpm --filter @workspace/api-server run bootstrap
+cp .env.example .env          # then set SESSION_SECRET (openssl rand -hex 32)
+pnpm db:setup                 # starts Postgres, file storage and Mailpit in Docker, migrates, loads demo data
+pnpm dev                      # API on :5001, web app on :3210
 ```
 
-The demo seed creates `admin@example.com` (admin), `omar@example.com` and
-`sara@example.com`, all with password `demo-password-2026`.
+Open **http://localhost:3210**. The demo data has two workspaces:
 
-Run the API and the frontend in two terminals. Environment comes from the
-shell; nothing loads `.env` automatically (`set -a; source .env; set +a` works).
+| Workspace | Users | Password |
+|---|---|---|
+| Acme Demo | `admin@acme.test`, `jordan@acme.test`, `sam@acme.test` | `demo2026` |
+| Globex Demo | `admin@globex.test`, `riley@globex.test`, `casey@globex.test` | `demo2026` |
+
+Signing in as either admin shows only that workspace. You can also skip the
+demo data (`pnpm db:up && pnpm db:migrate`) and create a workspace from the
+sign-up page.
+
+`pnpm db:up` (part of `db:setup`) starts everything in
+[`docker-compose.yml`](docker-compose.yml), and `.env.example` points the app
+at it, so file attachments and email work out of the box:
+
+| Service | What | Open |
+|---|---|---|
+| Postgres | the database | `localhost:5432` |
+| RustFS | S3-compatible storage for attachments | http://localhost:9001/rustfs/console/ (`rustfsadmin` / `rustfsadmin`) |
+| Mailpit | catches every outgoing email | http://localhost:8025 |
+
+> ⚠️ `pnpm seed` (part of `db:setup`) **deletes every workspace** before
+> loading the demo. Only point it at a local database.
+
+### Using your own Postgres
+
+Tenant isolation is enforced by row-level security, which **superusers and
+BYPASSRLS roles skip**. Connect as an ordinary role, even locally, or you are
+not testing isolation at all:
 
 ```bash
-# Terminal 1: API server (no watch mode, restart after backend changes)
-export DATABASE_URL=postgres://$USER@localhost:5432/revenue_engine
-export SESSION_SECRET=local-dev-secret
-export PORT=5001
-pnpm --filter @workspace/api-server run dev
-
-# Terminal 2: frontend, proxies /api to the API server
-PORT=3000 BASE_PATH=/ VITE_API_PROXY=http://localhost:5001 \
-  pnpm --filter @workspace/login run dev
+psql -d postgres -c "CREATE ROLE crm_app LOGIN PASSWORD 'crm_app' NOSUPERUSER NOBYPASSRLS;"
+psql -d postgres -c "CREATE DATABASE crm OWNER crm_app;"
+# DATABASE_URL=postgres://crm_app:crm_app@localhost:5432/crm in .env
+pnpm db:migrate && pnpm seed
 ```
 
-Open http://localhost:3000. Outside production the session cookie is
-`SameSite=none; Secure`; Chrome and Firefox accept that on `localhost`, Safari
-may not.
+### Good to know
 
-### Everyday commands
+- `.env` at the repo root is read by `pnpm dev`, `pnpm db:migrate`, `pnpm seed`
+  and `pnpm bootstrap`. Variables set in your shell win. Production never reads
+  it.
+- The API server has no watch mode (`dev` builds, then runs). Restart
+  `pnpm dev` after backend changes; the frontend hot-reloads.
+- Outside production the session cookie is `SameSite=none; Secure`. Chrome and
+  Firefox keep it on `localhost`; Safari may not.
+- Optional integrations switch themselves off when not configured: email
+  without `SMTP_HOST`, Ask AI without `ANTHROPIC_API_KEY`. File attachments
+  need S3-compatible storage (the S3 variables); without it, uploads fail.
+  Slack is connected per workspace in Settings → Integrations. All variables
+  are listed in [`.env.example`](.env.example).
+- If port 5432 is taken (say, by a Postgres you already run), start the
+  services with `DB_PORT=5433 pnpm db:up` and use port 5433 in `DATABASE_URL`.
+
+## Self-hosting
+
+The `Dockerfile` builds one image that serves both the API and the web app on
+one port. To try it locally:
 
 ```bash
-pnpm run typecheck                               # the main correctness gate
-pnpm run test                                    # node:test suites (Node >= 23.6)
-pnpm --filter @workspace/api-spec run codegen    # after editing openapi.yaml
-pnpm --filter @workspace/db run generate         # schema change -> migration file
+docker compose --profile app up -d --build     # http://localhost:8080
 ```
 
-## Configuration
+The container uses the Compose database, file storage and Mailpit, so it is a
+try-out rather than a deployment.
 
-Every variable is documented in [`.env.example`](.env.example). Only
-`DATABASE_URL` and `SESSION_SECRET` are required; file attachments (any
-S3-compatible store), email (any SMTP provider), Slack and Sentry each switch
-themselves off when their variables are unset.
+> **Apple silicon:** the image is linux/amd64 only (the workspace ships only
+> linux-x64 native build tools), and esbuild tends to crash under Docker's
+> amd64 emulation during `vite build`. Build the image on an amd64 machine or in
+> CI, or use `pnpm dev` locally.
 
-## Deploying
+The container runs `node dist/migrate.mjs` (the committed migrations, safe to
+run on every start) and then the server. To create the first admin without the
+sign-up page, set the `BOOTSTRAP_*` variables and run `pnpm bootstrap`.
 
-The [`Dockerfile`](Dockerfile) builds one image: the API server serves `/api`
-and the built frontend on the same origin, port 8080. Run
-`pnpm --filter @workspace/db run migrate` against your database before starting
-a new version (the compose file's `migrate` service shows how). The app is
-stateless and safe to run on several instances behind a load balancer.
+For production, see [`DEPLOY.md`](DEPLOY.md). It covers Fly.io (including
+optional auto-deploy from GitHub Actions); any container host with Postgres
+works the same way. In short: run as a non-superuser database role, set a long
+random `SESSION_SECRET`, serve over HTTPS and set `APP_BASE_URL`.
 
-## Repository layout
+## Project layout
+
+A pnpm-workspace monorepo:
 
 | Path | What |
 |---|---|
-| `artifacts/api-server` | Express 5 API, bundled with esbuild |
-| `artifacts/login` | React frontend (Vite, React Query, [Sirdab One](https://github.com/sirdab/one) design system) |
-| `lib/db` | Drizzle schema, migrations and the Postgres client |
-| `lib/api-spec` | OpenAPI contract; generates `lib/api-zod` and `lib/api-client-react` |
-| `lib/deals-filter` | The filter DSL shared by the server (SQL) and the client (UI) |
-| `lib/insights-spec` | The insights widget spec |
-| `lib/automation-placeholders` | Automation message placeholders |
-| `migrations/` | Pipedrive import and sync tools |
+| `artifacts/api-server` | Express 5 API (esbuild bundle) |
+| `artifacts/web` | React web app (Vite, React Query, [Sirdab One](https://github.com/sirdab/one)) |
+| `lib/db` | Drizzle schema, migrations and the tenant-scoped `db` handle |
+| `lib/api-spec` | `openapi.yaml`, the API contract; generates `lib/api-zod` and `lib/api-client-react` |
+| `lib/deals-filter`, `lib/insights-spec`, `lib/automation-placeholders` | Shared between server and client |
+| `scripts` | Dev runner and i18n tooling |
 
-[`CLAUDE.md`](CLAUDE.md) covers architecture and conventions;
-[`SCHEMA.md`](SCHEMA.md) documents the database for data mapping and import.
+Architecture, tenancy and conventions: [`CLAUDE.md`](CLAUDE.md). Domain
+vocabulary: [`CONCEPTS.md`](CONCEPTS.md). Database: [`SCHEMA.md`](SCHEMA.md).
+Schema changes: [`lib/db/MIGRATIONS.md`](lib/db/MIGRATIONS.md).
+
+## Everyday commands
+
+```bash
+pnpm dev                                          # API + web app
+pnpm run typecheck                                # libs + every package
+pnpm run test                                     # node:test suites (Node ≥ 23.6)
+pnpm codegen                                      # after editing openapi.yaml
+pnpm --filter @workspace/db run generate          # schema change → migration file
+pnpm db:migrate                                   # apply migrations
+```
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: see
-[SECURITY.md](SECURITY.md).
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). Report security issues privately, as
+described in [`SECURITY.md`](SECURITY.md).
 
 ## License
 
-Copyright (C) 2026 Sirdab. Licensed under the
-[GNU Affero General Public License v3.0](LICENSE). If you run a modified
-version as a network service, the AGPL requires you to offer its users the
-source of your version.
+The code is [MIT](LICENSE), copyright Sirdab. The Sirdab name, logos and brand
+images are not covered by the licence: forks that are distributed or hosted
+replace them, as described in [`TRADEMARKS.md`](TRADEMARKS.md).

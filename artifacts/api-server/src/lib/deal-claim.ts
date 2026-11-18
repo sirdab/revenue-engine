@@ -10,8 +10,7 @@ import { logDealChanges, type Tx } from "./change-events";
 //
 // "Nobody has touched it" means no person has logged a (posted) activity or a
 // (posted) note on it. Automation-created activities have no creator and do not
-// count; Pipedrive-imported ones carry a pipedrive_id and DO count, since a
-// person wrote them there. Only logging an activity claims — a note marks the
+// count. Only logging an activity claims — a note marks the
 // deal as touched but does not move it.
 
 export interface ClaimableDeal {
@@ -61,10 +60,7 @@ export async function claimUntouchedDeal(
       and(
         eq(activitiesTable.dealId, dealId),
         eq(activitiesTable.draft, false),
-        or(
-          isNotNull(activitiesTable.creatorUserId),
-          isNotNull(activitiesTable.pipedriveId),
-        ),
+        isNotNull(activitiesTable.creatorUserId),
         postingActivityId != null
           ? ne(activitiesTable.id, postingActivityId)
           : undefined,
@@ -80,7 +76,7 @@ export async function claimUntouchedDeal(
           and(
             eq(notesTable.dealId, dealId),
             eq(notesTable.draft, false),
-            or(isNotNull(notesTable.userId), isNotNull(notesTable.pipedriveId)),
+            isNotNull(notesTable.userId),
           ),
         )
         .limit(1);

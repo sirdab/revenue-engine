@@ -11,6 +11,7 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
+import { tenantIdColumn, tenantPolicy } from "./tenants";
 
 // Insights (self-serve analytics) storage. Dashboards are per-user documents:
 // default boards are lazy-seeded copies per user (tracked via defaultKey), so
@@ -21,6 +22,7 @@ export const insightsDashboardsTable = pgTable(
   "insights_dashboards",
   {
     id: serial("id").primaryKey(),
+    tenantId: tenantIdColumn(),
     name: text("name").notNull(),
     // Optional grouping header in the dashboard switcher (e.g. "Reviews").
     section: text("section"),
@@ -47,6 +49,7 @@ export const insightsDashboardsTable = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
+    tenantPolicy(),
     index("insights_dashboards_owner_idx").on(table.ownerId),
     index("insights_dashboards_default_idx").on(table.ownerId, table.defaultKey),
     // Every dashboard list runs `shared_user_ids @> [userId]` — GIN serves
@@ -59,6 +62,7 @@ export const insightsWidgetsTable = pgTable(
   "insights_dashboard_widgets",
   {
     id: serial("id").primaryKey(),
+    tenantId: tenantIdColumn(),
     // Null = library-only widget (saved without a dashboard placement).
     dashboardId: integer("dashboard_id").references(
       () => insightsDashboardsTable.id,
@@ -80,6 +84,7 @@ export const insightsWidgetsTable = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => [
+    tenantPolicy(),
     index("insights_widgets_dashboard_idx").on(table.dashboardId),
     index("insights_widgets_owner_idx").on(table.ownerId),
   ],

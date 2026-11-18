@@ -34,38 +34,54 @@ import {
   type FilterFieldName,
   groupReferencesField,
 } from "@workspace/deals-filter";
+import { APP_TIMEZONE } from "./assistant-dates";
 
 // ---------------------------------------------------------------------------
 // Phone normalization — make search format-insensitive.
 //
-// A phone is matched on its "national significant number" (NSN): the digits
-// that identify the subscriber, with formatting and the interchangeable
-// country/trunk prefixes removed. For Saudi numbers `+966 50 000 1234`,
-// `+966500001234`, `966500001234` and `0500001234` all reduce to `500001234`,
-// so any of them finds the same contact.
+// Stored numbers are compared on their digits with leading zeros dropped
+// (`phoneDigits`), which removes formatting, an international `00` and a trunk
+// `0`: `+44 7700 900123`, `0044 7700900123` and `447700900123` all become
+// `447700900123`. `phoneDigitsSql` is its SQL mirror, kept byte-for-byte
+// aligned with the functional index `persons_phone_digits_trgm` (migration
+// 0002) so the planner can use it instead of scanning.
 //
-// Transform (applied to both the stored value and the query): keep digits only,
-// drop a leading international `00`, drop the `966` country code, then drop the
-// trunk `0`. `phoneNsnSql` is the SQL mirror of `phoneNsn` and is kept
-// byte-for-byte aligned with the functional index `persons_phone_nsn_trgm`
-// (migration 0002) so the planner can use it instead of scanning.
+// A search term is reduced further (`phoneNsn`): when PHONE_COUNTRY_CODE is
+// set (e.g. `44`), a leading country code is dropped too, giving the national
+// number `7700900123`. A substring match of that against the stored digits
+// finds the contact whether it was saved as `07700 900123` or `+44 7700 900123`.
+// Without PHONE_COUNTRY_CODE nothing is assumed about the country, so a
+// national-format search still finds international-format numbers, but not
+// the other way round.
 // ---------------------------------------------------------------------------
 
-export function phoneNsn(raw: string | null | undefined): string {
+const PHONE_COUNTRY_CODE = (process.env.PHONE_COUNTRY_CODE ?? "").replace(/[^0-9]/g, "");
+
+export function phoneDigits(raw: string | null | undefined): string {
   if (!raw) return "";
-  // Keep digits → drop intl `00` + `966` country code → drop trunk `0`.
-  return raw
-    .replace(/[^0-9]/g, "")
-    .replace(/^(00)?966/, "")
-    .replace(/^0+/, "");
+  return raw.replace(/[^0-9]/g, "").replace(/^0+/, "");
+}
+
+/** `phoneDigits` with the configured country code (if any) dropped. */
+export function phoneNsn(raw: string | null | undefined): string {
+  const digits = phoneDigits(raw);
+  if (PHONE_COUNTRY_CODE && digits.startsWith(PHONE_COUNTRY_CODE)) {
+    return digits.slice(PHONE_COUNTRY_CODE.length).replace(/^0+/, "");
+  }
+  return digits;
+}
+
+/** The forms `nsn` is stored under: national, and with the country code. */
+export function phoneDigitsVariants(nsn: string): string[] {
+  return PHONE_COUNTRY_CODE ? [nsn, PHONE_COUNTRY_CODE + nsn] : [nsn];
 }
 
 /**
- * SQL expression computing `phoneNsn(col)`; the literal mirror of the JS above.
- * Kept byte-for-byte identical to the functional index in migration 0002.
+ * SQL expression computing `phoneDigits(col)`; the literal mirror of the JS
+ * above. Kept byte-for-byte identical to the functional index in migration 0002.
  */
-export function phoneNsnSql(col: AnyColumn): SQL<string> {
-  return sql<string>`ltrim(regexp_replace(regexp_replace(coalesce(${col}, ''), '[^0-9]', '', 'g'), '^(00)?966', ''), '0')`;
+export function phoneDigitsSql(col: AnyColumn): SQL<string> {
+  return sql<string>`ltrim(regexp_replace(coalesce(${col}, ''), '[^0-9]', '', 'g'), '0')`;
 }
 
 // A query is treated as a phone lookup once its NSN has at least this many
@@ -81,7 +97,7 @@ export const PHONE_MIN_NSN = 3;
 export function phoneMatch(col: AnyColumn, term: string): SQL | null {
   const nsn = phoneNsn(term);
   if (nsn.length < PHONE_MIN_NSN) return null;
-  return sql`${phoneNsnSql(col)} ilike ${"%" + nsn + "%"}`;
+  return sql`${phoneDigitsSql(col)} ilike ${"%" + nsn + "%"}`;
 }
 
 /**
@@ -198,7 +214,7 @@ const dealOwner = alias(usersTable, "deal_owner");
 // Most-recent activity timestamp for a deal (correlated subquery). Used both as
 // a returned column and inside the rotting computation. Drafts are excluded so
 // saving a draft never refreshes a deal's freshness or un-rots it.
-export const lastActivityExpr = sql<Date | null>`(select max(${activitiesTable.addTime}) from ${activitiesTable} where ${activitiesTable.dealId} = ${dealsTable.id} and ${activitiesTable.draft} = false)`;
+const lastActivityExpr = sql<Date | null>`(select max(${activitiesTable.addTime}) from ${activitiesTable} where ${activitiesTable.dealId} = ${dealsTable.id} and ${activitiesTable.draft} = false)`;
 
 // Earliest DUE date among a deal's OPEN activities: the deal's next
 // action item. Open = not done, not draft, and dated. An overdue open activity
@@ -290,6 +306,237 @@ export function dealSummaryTotals(where: SQL | undefined) {
 export async function loadDealById(id: number) {
   const [deal] = await dealQuery().where(eq(dealsTable.id, id));
   return deal ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Curated deal analytics for Ask AI. A single, correct aggregate the
+// assistant calls instead of writing ad-hoc SQL, so counts/totals are right by
+// construction: deleted+archived deals are excluded by default, value is summed
+// per currency (never mixed), and date ranges use app-time-zone calendar days on the
+// chosen timestamp. Answers "how many deals added in the last 7 days", "won
+// value by owner this quarter", "open pipeline value by stage", etc.
+// ---------------------------------------------------------------------------
+
+export type DealStatDimension = "none" | "owner" | "stage" | "status" | "month";
+
+export interface DealStatFilters {
+  status?: "open" | "won" | "lost";
+  ownerId?: number;
+  pipelineId?: number;
+  /** Which timestamp the date range applies to: 'created' = add_time, 'won' = won_time. */
+  dateField?: "created" | "won";
+  /** Inclusive app-time-zone calendar day (YYYY-MM-DD). */
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface DealStatRow {
+  key: string | null;
+  label: string | null;
+  currency: string;
+  count: number;
+  value: number;
+}
+
+export async function dealStats(
+  filters: DealStatFilters,
+  groupBy: DealStatDimension,
+): Promise<DealStatRow[]> {
+  const dateCol = filters.dateField === "won" ? sql`d.won_time` : sql`d.add_time`;
+  // Default lens: exclude deleted + archived unless a specific status is asked for.
+  const statusFilter = filters.status
+    ? sql` and d.status = ${filters.status}`
+    : sql` and d.status <> 'deleted'`;
+  const ownerFilter =
+    filters.ownerId != null ? sql` and d.owner_id = ${filters.ownerId}` : sql``;
+  const pipelineFilter =
+    filters.pipelineId != null ? sql` and d.pipeline_id = ${filters.pipelineId}` : sql``;
+  const fromFilter = filters.dateFrom
+    ? sql` and (${dateCol} at time zone ${APP_TZ_SQL})::date >= ${filters.dateFrom}::date`
+    : sql``;
+  const toFilter = filters.dateTo
+    ? sql` and (${dateCol} at time zone ${APP_TZ_SQL})::date <= ${filters.dateTo}::date`
+    : sql``;
+
+  const dim =
+    groupBy === "owner"
+      ? { key: sql`d.owner_id::text`, label: sql`coalesce(u.name, 'Unassigned')` }
+      : groupBy === "stage"
+        ? { key: sql`d.stage_id::text`, label: sql`coalesce(s.name, 'Unknown')` }
+        : groupBy === "status"
+          ? { key: sql`d.status::text`, label: sql`d.status::text` }
+          : groupBy === "month"
+            ? {
+                key: sql`to_char((${dateCol} at time zone ${APP_TZ_SQL}), 'YYYY-MM')`,
+                label: sql`to_char((${dateCol} at time zone ${APP_TZ_SQL}), 'YYYY-MM')`,
+              }
+            : null;
+
+  const dimSelect = dim
+    ? sql`${dim.key} as key, ${dim.label} as label,`
+    : sql`null::text as key, null::text as label,`;
+  const dimGroup = dim ? sql`${dim.key}, ${dim.label},` : sql``;
+
+  const result = await db.execute(sql`
+    select ${dimSelect} d.currency as currency,
+           count(*)::int as count,
+           coalesce(sum(d.value), 0)::float8 as value
+    from deals d
+    left join users u on u.id = d.owner_id
+    left join stages s on s.id = d.stage_id
+    where d.archived = false${statusFilter}${ownerFilter}${pipelineFilter}${fromFilter}${toFilter}
+    group by ${dimGroup} d.currency
+    order by count(*) desc
+    limit 200
+  `);
+  return result.rows as unknown as DealStatRow[];
+}
+
+// --- Ask AI deal drill-down + owner lookup -----------------------------------
+// These let the assistant LIST the specific deals behind a deal_stats count and
+// resolve an internal team member (deal owner) by name. All read-only.
+
+/**
+ * A created/won date-range condition on the deals table, using the SAME
+ * app-time-zone calendar-day bounds as `dealStats`, so a count and a list over the
+ * same filter agree. Returns undefined when no bounds are given.
+ */
+export function dealDateRangeCondition(
+  dateField: "created" | "won" | undefined,
+  dateFrom?: string,
+  dateTo?: string,
+): SQL | undefined {
+  const col = dateField === "won" ? dealsTable.wonTime : dealsTable.addTime;
+  const parts: SQL[] = [];
+  if (dateFrom) parts.push(sql`(${col} at time zone ${APP_TZ_SQL})::date >= ${dateFrom}::date`);
+  if (dateTo) parts.push(sql`(${col} at time zone ${APP_TZ_SQL})::date <= ${dateTo}::date`);
+  return parts.length ? and(...parts) : undefined;
+}
+
+/**
+ * Resolve a pipeline-stage name (trimmed, case-insensitive, substring-tolerant)
+ * to the matching `stages.id` values across all pipelines. Empty when nothing
+ * matches — the caller reports the valid stage names rather than a silent empty
+ * result.
+ */
+export async function resolveStageIdsByName(name: string): Promise<number[]> {
+  const term = name.trim();
+  if (!term) return [];
+  // Prefer an exact (case-insensitive) name match so "Initial Contact" resolves
+  // to that stage only, not every stage whose name merely CONTAINS the term
+  // (which would silently union "Re: Initial Contact" etc. into one count).
+  // Fall back to substring matching when nothing matches exactly, preserving
+  // fuzzy tolerance for partial names. Same-named stages across pipelines still
+  // union — callers that must disambiguate pass a pipelineId.
+  const exact = await db
+    .select({ id: stagesTable.id })
+    .from(stagesTable)
+    .where(ilike(stagesTable.name, escapeLike(term)));
+  if (exact.length > 0) return exact.map((r) => r.id);
+  const rows = await db
+    .select({ id: stagesTable.id })
+    .from(stagesTable)
+    .where(ilike(stagesTable.name, `%${escapeLike(term)}%`));
+  return rows.map((r) => r.id);
+}
+
+/** Distinct pipeline-stage names, for a helpful "no such stage" message. */
+export async function listStageNames(): Promise<string[]> {
+  const rows = await db
+    .selectDistinct({ name: stagesTable.name })
+    .from(stagesTable)
+    .orderBy(asc(stagesTable.name));
+  return rows.map((r) => r.name).filter((n): n is string => Boolean(n));
+}
+
+/**
+ * A deal condition (correlated `EXISTS`) that is true when the deal MOVED INTO
+ * any of the given stages within the date window, read from the append-only
+ * `change_events` log (`field_key = 'stage_id'`, `new_value.id` = the stage
+ * entered). This is a stage-TRANSITION predicate — fundamentally different from
+ * filtering on a deal's CURRENT stage: a deal that entered the stage in the
+ * window and has since moved on still matches.
+ *
+ * Returned as a condition (not an id list) so callers apply it to `dealQuery()`
+ * / `dealCountQuery()` and let the SQL `limit`/`offset` bound the work in one
+ * statement — no unbounded intermediate id array. The correlation on
+ * `entity_id = deals.id` lets Postgres seek the partial index
+ * `change_events_stage_idx` (`(entity_id, changed_at) WHERE field_key='stage_id'`)
+ * per deal. `EXISTS` is inherently distinct-by-deal (multiple entries in the
+ * window still match once). Date bounds use the shared app-time-zone calendar-day
+ * helper (`localDate`) so a "moved into" window agrees with `deal_stats`.
+ * Precondition: `stageIds` is non-empty (resolve the name first).
+ */
+export function movedIntoStageCondition(opts: {
+  stageIds: number[];
+  dateFrom?: string;
+  dateTo?: string;
+}): SQL {
+  const inner: SQL[] = [
+    eq(changeEventsTable.entityType, "deal"),
+    eq(changeEventsTable.entityId, dealsTable.id),
+    eq(changeEventsTable.fieldKey, "stage_id"),
+    inArray(sql`(${changeEventsTable.newValue}->>'id')::int`, opts.stageIds),
+  ];
+  if (opts.dateFrom) {
+    inner.push(sql`${localDate(changeEventsTable.changedAt)} >= ${opts.dateFrom}::date`);
+  }
+  if (opts.dateTo) {
+    inner.push(sql`${localDate(changeEventsTable.changedAt)} <= ${opts.dateTo}::date`);
+  }
+  return exists(
+    db.select({ one: sql`1` }).from(changeEventsTable).where(and(...inner)),
+  );
+}
+
+export interface OwnerMatch {
+  id: number;
+  name: string;
+  email: string;
+  openDealCount: number;
+}
+
+/**
+ * Resolve an internal team member (deal owner) by name → the matching users
+ * plus their open-deal count, most deals first. Only active users are returned
+ * (deactivated accounts never resolve as an owner). Exposes name + email only —
+ * never password hashes, reset tokens, or other secret columns.
+ */
+export async function findOwnersByName(name: string, limit = 10): Promise<OwnerMatch[]> {
+  const term = name.trim();
+  if (!term) return [];
+  const openDeals = db
+    .select({
+      ownerId: dealsTable.ownerId,
+      openDealCount: sql<number>`count(*)::int`.as("open_deal_count"),
+    })
+    .from(dealsTable)
+    .where(and(eq(dealsTable.archived, false), eq(dealsTable.status, "open")))
+    .groupBy(dealsTable.ownerId)
+    .as("open_deals");
+  const rows = await db
+    .select({
+      id: usersTable.id,
+      name: usersTable.name,
+      email: usersTable.email,
+      openDealCount: sql<number>`coalesce(${openDeals.openDealCount}, 0)::int`,
+    })
+    .from(usersTable)
+    .leftJoin(openDeals, eq(openDeals.ownerId, usersTable.id))
+    .where(
+      and(
+        ilike(usersTable.name, `%${escapeLike(term)}%`),
+        eq(usersTable.activeFlag, true),
+      ),
+    )
+    .orderBy(desc(sql`coalesce(${openDeals.openDealCount}, 0)`), asc(usersTable.id))
+    .limit(limit);
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    email: r.email,
+    openDealCount: r.openDealCount ?? 0,
+  }));
 }
 
 // Denormalized deal for outbound webhook payloads: the full flat deal row plus
@@ -435,7 +682,7 @@ export async function loadNoteById(id: number) {
 
 export class DealFilterError extends Error {}
 
-// "date" = timestamptz compared as a Riyadh-local calendar date; "dateonly" =
+// "date" = timestamptz compared as an app-time-zone calendar date; "dateonly" =
 // a plain `date` column compared as-is (AT TIME ZONE would shift it); "list" =
 // text[] (labels); "bool" = boolean column or SQL boolean expression.
 type FilterColKind =
@@ -493,6 +740,8 @@ const FILTER_COLUMNS: Record<
   adName: { col: dealsTable.adName, kind: "text" },
   gclid: { col: dealsTable.gclid, kind: "text" },
   fbclid: { col: dealsTable.fbclid, kind: "text" },
+  wbraid: { col: dealsTable.wbraid, kind: "text" },
+  gbraid: { col: dealsTable.gbraid, kind: "text" },
 };
 
 const DEAL_STATUSES = ["open", "won", "lost", "deleted"];
@@ -533,12 +782,16 @@ function reqBool(v: unknown): boolean {
   if (v === "false") return false;
   throw new DealFilterError("Expected a boolean value");
 }
-/** The business runs on Riyadh wall-clock time: every date bucket and date
- *  filter resolves against this zone. One constant — the literals must never
- *  drift apart across compilers. */
-export const APP_TZ = "Asia/Riyadh";
+/** Every date bucket and date filter resolves against the app time zone
+ *  (APP_TIMEZONE, default UTC). One constant — the literals must never drift
+ *  apart across compilers. */
+export const APP_TZ = APP_TIMEZONE;
+if (!/^[A-Za-z0-9_+\-/]+$/.test(APP_TZ)) {
+  throw new Error(`APP_TIMEZONE is not a valid time zone name: ${APP_TZ}`);
+}
 /** Escaped SQL literal (not a bind param) so expressions stay
- *  index-matchable; the value is a compile-time constant, never user input. */
+ *  index-matchable; the value comes from configuration (validated above),
+ *  never from user input. */
 export const APP_TZ_SQL: SQL = sql.raw(`'${APP_TZ}'`);
 
 /** Exported for the Insights compilers, which bucket on the same calendar. */
@@ -607,7 +860,7 @@ export function compileCondition(c: FilterCondition): SQL {
       break;
     case "date":
     case "dateonly": {
-      // timestamptz columns compare as a Riyadh-local calendar date; plain
+      // timestamptz columns compare as an app-time-zone calendar date; plain
       // `date` columns compare directly (AT TIME ZONE would shift them).
       const expr = kind === "date" ? localDate(col) : sql`${col}`;
       if (op === "is") return sql`${expr} = ${reqDate(v)}::date`;
@@ -758,6 +1011,8 @@ const SORT_COLUMNS: Record<string, AnyColumn | SQL> = {
   adName: dealsTable.adName,
   gclid: dealsTable.gclid,
   fbclid: dealsTable.fbclid,
+  wbraid: dealsTable.wbraid,
+  gbraid: dealsTable.gbraid,
 };
 
 export function buildDealOrderBy(sort: string | undefined | null): SQL[] {
