@@ -1,7 +1,7 @@
 # Consolidate crm-1 and revenue-engine into one open-source CRM
 
 Date: 2026-11-18
-Status: draft, awaiting approval
+Status: approved 2026-11-18; implemented on branch `consolidate/revenue-engine` (see "As built")
 
 ## Why
 
@@ -275,3 +275,39 @@ issue and PR templates.
 - Calls made during review (correct if wrong): app image stays amd64-only;
   both repos frozen until landing, with a guard; generic `SMTP_*` env names
   replace `AWS_SES_*`; `gray-*` classes allowed under One.
+
+## As built (deviations from the plan, and why)
+
+- **RustFS instead of MinIO.** `minio/minio` and `minio/mc` are no longer on
+  Docker Hub ("object not found"; MinIO stopped publishing community images),
+  so revenue-engine's compose file would not start. The `storage` service is
+  RustFS 1.0.4 (S3 API, console at `:9001/rustfs/console/`), and the bucket is
+  created by an `amazon/aws-cli` sidecar.
+- **The bucket sidecar stays up.** `docker compose up --wait` (`pnpm db:up`)
+  fails intermittently when a one-shot container exits, even with code 0. The
+  sidecar creates the bucket, then idles and reports healthy; `--wait` passed
+  5/5 from a clean state. `pnpm db:up` now starts every default service.
+- **Trademark note in `TRADEMARKS.md`, not `LICENSE`.** Extra text in
+  `LICENSE` stops GitHub from detecting MIT. `LICENSE` is the plain MIT text
+  (copyright Sirdab); README links `TRADEMARKS.md`.
+- **Pipedrive import never maps ID fields.** Pipedrive's `Organization ID`
+  already matched the local `organizationId` field by key, which would link
+  people to whatever local organization shares that number. Detected
+  Pipedrive files now skip every ID field; the mapping step says so.
+- **Forecast tooltip colours.** `hsl(var(--card))` was valid for crm-1's HSL
+  triplets but not for One's full colour values (an empty tooltip). It now
+  uses `var(--card)` / `var(--border)`. revenue-engine has the same bug.
+- **Brand mark.** crm-1's `BrandMark` (mark + workspace name) is kept on the
+  sidebar, loading screen and auth pages, with the Sirdab tile as the mark,
+  rather than revenue-engine's fixed wordmark image.
+- **Type and shadow utilities.** One's theme removes Tailwind's `text-xs/sm/
+  base/xl` and `shadow-sm` (they compile to nothing). The 39 left in crm-1-only
+  code (Slack and Workspace settings, list view, error boundary, sign-up,
+  Ask AI…) now use One's type roles (`text-caption`, `text-body`,
+  `text-body-quiet`, `text-heading-sm`…). Verified by checking every utility
+  used in `src` against the built CSS: none is missing.
+- **Charts in dark mode.** crm-1's old `index.css` patched the forecast
+  chart's hard-coded slate/teal colours for dark mode; taking One's
+  stylesheet dropped those overrides, so the chart now uses theme tokens.
+- **Compose ports bind to 127.0.0.1**, and DEPLOY.md calls the `app` profile a
+  local try-out: it always mails to Mailpit, whose inbox has no login.

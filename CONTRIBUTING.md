@@ -37,6 +37,9 @@ the architecture guide for everyone. Shared vocabulary is in
   `pnpm codegen`. Never hand-edit anything under `generated/`.
 - **Schema changes come with a migration**: edit `lib/db/src/schema/*`, run
   `pnpm --filter @workspace/db run generate` and commit the SQL with the schema.
+- **Styling** uses [Sirdab One](https://github.com/sirdab/one) components and
+  its semantic colour tokens; raw Tailwind palette classes (`slate-500`,
+  `teal-600`) do not exist in this project (One's `gray-*` ramp does).
 - **UI strings go through i18n** (`artifacts/web/src/lib/i18n`). Add every key
   to both `en.json` and `ar.json`; a parity test fails otherwise. If you can't
   write the Arabic, say so in the PR and leave the English text in `ar.json`.

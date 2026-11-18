@@ -1,8 +1,12 @@
-# CRM
+# Sirdab Revenue Engine
 
-An open-source, multi-tenant sales CRM. Track deals through pipelines on a
-Kanban board, keep people and organizations with their activities and notes,
-automate the busywork and see how the pipeline is doing.
+An open-source, multi-tenant sales CRM in the spirit of Pipedrive, built on
+Sirdab's [One](https://github.com/sirdab/one) design system. Track deals
+through pipelines on a Kanban board, keep people and organizations with their
+activities and notes, automate the busywork and see how the pipeline is doing.
+
+Built and maintained by [Sirdab](https://sirdab.co). Licensed under
+[MIT](LICENSE); the Sirdab name and logos are [trademarks](TRADEMARKS.md).
 
 **Features**
 
@@ -20,7 +24,8 @@ automate the busywork and see how the pipeline is doing.
 - **Insights**: configurable dashboards over deals, activities and
   organizations.
 - **Search and import**: global search (phone numbers too) and a guided CSV
-  import with duplicate detection.
+  import with duplicate detection that recognises Pipedrive exports of
+  organizations, people and deals.
 - **Ask AI** (optional): a read-only assistant that answers questions about
   your pipeline using the Claude API.
 - **Workspaces**: anyone can sign up and get an isolated workspace, enforced by
@@ -29,8 +34,8 @@ automate the busywork and see how the pipeline is doing.
 - **English and Arabic** UI, including right-to-left layout.
 
 Stack: TypeScript everywhere. Express 5 + Drizzle ORM + PostgreSQL on the
-server, React 19 + Vite + Tailwind + Radix on the client, an OpenAPI contract
-with generated clients.
+server, React 19 + Vite + Tailwind + [Sirdab One](https://github.com/sirdab/one)
+on the client, an OpenAPI contract with generated clients.
 
 ## Quick start
 
@@ -40,7 +45,7 @@ Postgres 13+ of your own, see below).
 ```bash
 pnpm install
 cp .env.example .env          # then set SESSION_SECRET (openssl rand -hex 32)
-pnpm db:setup                 # starts Postgres in Docker, migrates, loads demo data
+pnpm db:setup                 # starts Postgres, file storage and Mailpit in Docker, migrates, loads demo data
 pnpm dev                      # API on :5001, web app on :3210
 ```
 
@@ -54,6 +59,16 @@ Open **http://localhost:3210**. The demo data has two workspaces:
 Signing in as either admin shows only that workspace. You can also skip the
 demo data (`pnpm db:up && pnpm db:migrate`) and create a workspace from the
 sign-up page.
+
+`pnpm db:up` (part of `db:setup`) starts everything in
+[`docker-compose.yml`](docker-compose.yml), and `.env.example` points the app
+at it, so file attachments and email work out of the box:
+
+| Service | What | Open |
+|---|---|---|
+| Postgres | the database | `localhost:5432` |
+| RustFS | S3-compatible storage for attachments | http://localhost:9001/rustfs/console/ (`rustfsadmin` / `rustfsadmin`) |
+| Mailpit | catches every outgoing email | http://localhost:8025 |
 
 > ⚠️ `pnpm seed` (part of `db:setup`) **deletes every workspace** before
 > loading the demo. Only point it at a local database.
@@ -81,10 +96,12 @@ pnpm db:migrate && pnpm seed
 - Outside production the session cookie is `SameSite=none; Secure`. Chrome and
   Firefox keep it on `localhost`; Safari may not.
 - Optional integrations switch themselves off when not configured: email
-  without the SMTP variables, Ask AI without `ANTHROPIC_API_KEY`. File
-  attachments need S3-compatible storage (the S3 variables); without it,
-  uploads fail. Slack is connected per workspace in Settings →
-  Integrations. All variables are listed in [`.env.example`](.env.example).
+  without `SMTP_HOST`, Ask AI without `ANTHROPIC_API_KEY`. File attachments
+  need S3-compatible storage (the S3 variables); without it, uploads fail.
+  Slack is connected per workspace in Settings → Integrations. All variables
+  are listed in [`.env.example`](.env.example).
+- If port 5432 is taken (say, by a Postgres you already run), start the
+  services with `DB_PORT=5433 pnpm db:up` and use port 5433 in `DATABASE_URL`.
 
 ## Self-hosting
 
@@ -94,6 +111,9 @@ one port. To try it locally:
 ```bash
 docker compose --profile app up -d --build     # http://localhost:8080
 ```
+
+The container uses the Compose database, file storage and Mailpit, so it is a
+try-out rather than a deployment.
 
 > **Apple silicon:** the image is linux/amd64 only (the workspace ships only
 > linux-x64 native build tools), and esbuild tends to crash under Docker's
@@ -116,7 +136,7 @@ A pnpm-workspace monorepo:
 | Path | What |
 |---|---|
 | `artifacts/api-server` | Express 5 API (esbuild bundle) |
-| `artifacts/web` | React web app (Vite) |
+| `artifacts/web` | React web app (Vite, React Query, [Sirdab One](https://github.com/sirdab/one)) |
 | `lib/db` | Drizzle schema, migrations and the tenant-scoped `db` handle |
 | `lib/api-spec` | `openapi.yaml`, the API contract; generates `lib/api-zod` and `lib/api-client-react` |
 | `lib/deals-filter`, `lib/insights-spec`, `lib/automation-placeholders` | Shared between server and client |
@@ -144,4 +164,6 @@ described in [`SECURITY.md`](SECURITY.md).
 
 ## License
 
-[MIT](LICENSE)
+The code is [MIT](LICENSE), copyright Sirdab. The Sirdab name, logos and brand
+images are not covered by the licence: forks that are distributed or hosted
+replace them, as described in [`TRADEMARKS.md`](TRADEMARKS.md).

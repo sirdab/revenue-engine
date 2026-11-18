@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A **multi-tenant CRM / sales-pipeline app**: deals, contacts (people and organizations), activities, notes, a Kanban board, custom deal fields, saved views, assignment rules, automations, insights dashboards, global search, CSV import and an AI assistant. Each customer is an isolated **workspace** (tenant), created self-serve from the sign-up page. It is a **pnpm-workspace monorepo** deployed on Fly.io (Node 24; multiple machines can serve at once, so treat all state as multi-instance). In production the API server and the built frontend are served same-origin under `/api`.
+**Sirdab Revenue Engine**, an open-source (MIT) **multi-tenant CRM / sales-pipeline app**: deals, contacts (people and organizations), activities, notes, a Kanban board, custom deal fields, saved views, assignment rules, automations, insights dashboards, global search, CSV import and an AI assistant. Each customer is an isolated **workspace** (tenant), created self-serve from the sign-up page. It is a **pnpm-workspace monorepo** deployed on Fly.io (Node 24; multiple machines can serve at once, so treat all state as multi-instance). In production the API server and the built frontend are served same-origin under `/api`.
 
 ## Monorepo layout
 
@@ -20,7 +20,7 @@ A **multi-tenant CRM / sales-pipeline app**: deals, contacts (people and organiz
 | `lib/insights-spec` | `@workspace/insights-spec` | Insights widget spec (scopes: deals, activities, organizations). |
 | `lib/automation-placeholders` | `@workspace/automation-placeholders` | `{{deal.*}}` placeholder whitelist shared by server and wizard. |
 | `artifacts/api-server` | `@workspace/api-server` | Express 5 backend. esbuild-bundled. |
-| `artifacts/web` | `@workspace/web` | The React frontend — Vite, wouter routing, Tailwind v4, Radix/shadcn UI, React Query, English + Arabic. |
+| `artifacts/web` | `@workspace/web` | The React frontend — Vite, wouter routing, Tailwind v4, Sirdab One UI (on Radix/shadcn), React Query, English + Arabic. |
 | `scripts` | — (plain files) | `dev.mjs` / `with-env.mjs` (root `.env` loading, `pnpm dev`) and the i18n tooling. |
 
 ## Commands
@@ -29,7 +29,7 @@ Run from the repo root unless noted.
 
 ```bash
 pnpm dev                           # API (:5001) + web (:3210) with the root .env loaded
-pnpm db:setup                      # docker compose Postgres + migrate + ⚠️ seed
+pnpm db:setup                      # docker compose (Postgres, RustFS storage, Mailpit) + migrate + ⚠️ seed
 pnpm run typecheck                 # libs (tsc --build) + per-package typecheck
 pnpm run test                      # node --test suites (api-server, web, deals-filter); needs Node ≥23.6
 pnpm run build                     # typecheck, then build all packages
@@ -96,7 +96,10 @@ DB columns are `snake_case`; the API/app uses `camelCase`.
 
 - `src/App.tsx` is the router: `wouter` `<Switch>`, wrapped in `QueryClientProvider` + `AuthProvider`. `/`, `/signup`, `/forgot-password` and `/reset-password` are public; everything else is gated by `<AuthGuard>` (some `adminOnly`) inside `<AppLayout>`.
 - Data fetching goes through the **generated** `@workspace/api-client-react` hooks; auth is cookie-based (do **not** use `setAuthTokenGetter` in the web app).
-- UI is Tailwind v4 + Radix primitives (shadcn-style components under `src/components/ui`). Path alias: `@` → `src`. Strings go through the i18n layer (`src/lib/i18n`, English and Arabic).
+- UI is built on **Sirdab One** (`@sirdab/one`, github.com/sirdab/one), Sirdab's MIT design system on shadcn/Radix: components, semantic tokens (light/dark), fonts, Arabic/RTL. It is installed from a GitHub Release tarball URL in `artifacts/web/package.json` (to upgrade, change the URL; check the sha256 in the release notes). `src/components/ui/*` mostly re-export One's components (`export * from "@sirdab/one/components/<name>"`), so call sites import from `@/components/ui/...`; the few app-specific primitives (date/time pickers, async/multi comboboxes, emoji picker) stay local and are styled with One's tokens. Read One's `TOKENS.md` and `COLORS.md` before painting anything.
+- **Colours are semantic tokens only.** `index.css` loads One's precompiled stylesheet, then this app's Tailwind build, then One's Tailwind bridge, which REPLACES Tailwind's default palette: `text-slate-500` or `bg-teal-600` silently produce nothing. Use `text-foreground` / `text-muted-foreground` / `text-subtle`, `border-border`, `bg-card` / `bg-surface-whisper` / `bg-muted`, alpha washes (`bg-gray-alpha-50`) for hovers, `bg-primary` (ink) for THE action, `text-brand` / `bg-brand-subtle` for brand accents, and the status tones (`destructive`, `warning`, `success`, `attention`, each with `-subtle` and `-glyph`). The import order in `index.css` matters (see its comment).
+- React is pinned to 19.2.4 because One requires `^19.2.4`.
+- Path alias: `@` → `src`. Strings go through the i18n layer (`src/lib/i18n`, English and Arabic; Arabic renders RTL). See `scripts/i18n/README.md`.
 - The frontend reads `PORT` and `BASE_PATH` from env at config time and **throws if either is missing**.
 
 ## Environment variables
@@ -109,9 +112,10 @@ Optional, process-wide:
 - `APP_TIMEZONE` — IANA zone for date filters and buckets (default `UTC`).
 - `PHONE_COUNTRY_CODE` — calling code without `+` (e.g. `44`) so phone search and import dedupe treat `07700…` and `+44 7700…` as one number. Unset: no country assumed.
 - `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` / `BOOTSTRAP_ADMIN_NAME` / `BOOTSTRAP_WORKSPACE_NAME` — the bootstrap script.
-- **Email (AWS SES SMTP)**: `AWS_SES_SMTP_ENDPOINT`, `AWS_SES_SMTP_USER`, `AWS_SES_SMTP_PASSWORD` (secret), `AWS_SMTP_PORT`, `MAIL_FROM`. When absent, sends are skipped (best-effort emails log a dev fallback; "resend login details" returns 503).
+- **Email (any SMTP)**: `SMTP_HOST`, `SMTP_PORT` (default 587), optional `SMTP_USER` / `SMTP_PASSWORD` (secret), `SMTP_REQUIRE_TLS` (default true; `false` only for local Mailpit), `MAIL_FROM`. Without `SMTP_HOST`, sends are skipped (best-effort emails log a dev fallback; "resend login details" returns 503).
 - **Ask AI**: `ANTHROPIC_API_KEY`. The assistant answers from fixed tools (`search_crm`, `get_record_context`, `find_owner`, `get_deal`, `list_deals`, `deals_moved_to_stage`, `pipeline_summary`, `deal_stats`) that all run through the tenant-scoped `db`.
 - **File storage**: `S3_ENDPOINT`, `S3_BUCKET_NAME`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, optional `S3_REGION` (`lib/object-storage.ts`).
+- Locally, `docker compose up -d` (`pnpm db:up`) runs Postgres, RustFS (S3-compatible; MinIO no longer publishes images) and Mailpit, and `.env.example` points `SMTP_*` / `S3_*` at them.
 - **Sentry**: `SENTRY_DSN` (api-server) and `VITE_SENTRY_DSN` (frontend build arg); no-op when unset.
 - `SLACK_STUB=1` (local dev only) captures Slack sends into an in-memory outbox (`GET /api/dev/slack-outbox`) instead of calling Slack.
 
@@ -121,8 +125,9 @@ Slack is **not** configured by env: each workspace connects its own in Settings 
 
 - **pnpm only.** The root `preinstall` hook refuses non-pnpm installs.
 - **Supply-chain guard**: `pnpm-workspace.yaml` sets `minimumReleaseAge: 1440`. Do not disable it; use `minimumReleaseAgeExclude` only for trusted scopes.
-- **Dependency versions** are centralized in the `catalog:` block of `pnpm-workspace.yaml`. `react`/`react-dom` are pinned to exactly `19.1.0`.
+- **Dependency versions** are centralized in the `catalog:` block of `pnpm-workspace.yaml`. `react`/`react-dom` are pinned to exactly `19.2.4` (Sirdab One requires `^19.2.4`).
 - The esbuild/rollup/lightningcss native-binary `overrides` strip all platforms except linux-x64 (prod) and darwin-arm64 (local dev) — don't add other platforms back, and don't re-strip darwin-arm64.
 - TypeScript is strict (`strictNullChecks`, `noImplicitAny`, `noImplicitReturns`, `noFallthroughCasesInSwitch`); `moduleResolution: bundler` with a custom `workspace` export condition.
+- CSV import (`artifacts/web/src/lib/import-spec.ts`) auto-maps headers by key, label and aliases. It recognises Pipedrive exports (`isPipedriveExport`) and then never maps a column onto an ID field: Pipedrive's owner/org/person/pipeline/stage columns hold Pipedrive's ids and names, which would silently link to the wrong local rows. Those come from the import's bulk defaults.
 - `CONCEPTS.md` — shared domain vocabulary (workspace, tenant/system scope, deal, rotting, automation, claim, outcome).
 - Phone search compares stored numbers on `phoneDigits` (digits, leading zeros dropped; `phoneDigitsSql` in `queries.ts`, mirrored byte-for-byte by the `persons_phone_digits_trgm` index in migration `0002`, a test guards the pair). The search term additionally drops the optional process-wide `PHONE_COUNTRY_CODE` (`phoneNsn`), so national and international forms meet. Change the SQL and the index together.
