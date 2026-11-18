@@ -81,7 +81,7 @@ export function TimePicker({
       <div
         data-empty={parsed ? undefined : true}
         className={cn(
-          "relative flex h-9 w-full items-center rounded-md border border-input bg-transparent text-sm shadow-sm data-[empty=true]:text-muted-foreground",
+          "relative flex h-control-lg w-full items-center rounded-lg border border-input bg-background text-body-quiet text-foreground transition-colors hover:border-input-border-hover focus-within:border-ring focus-within:ring-input-focus data-[empty=true]:text-muted-foreground",
           disabled && "cursor-not-allowed opacity-50",
           className,
         )}
@@ -114,7 +114,7 @@ export function TimePicker({
         <div dir="ltr" className="relative flex gap-1">
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 rounded-md bg-slate-100"
+            className="pointer-events-none absolute inset-x-0 rounded-md bg-muted"
             style={{ top: PAD, height: ITEM_H }}
           />
           <Wheel
@@ -146,7 +146,7 @@ export function TimePicker({
               onChange(formatHm(draft))
               setOpen(false)
             }}
-            className="rounded-md bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-700"
+            className="rounded-lg bg-primary px-2.5 h-control-sm text-label text-primary-foreground hover:bg-primary-hover"
           >
             {t("common.done")}
           </button>
@@ -231,8 +231,8 @@ function Wheel<T extends string | number>({
             aria-selected={item === value}
             onClick={() => go(i)}
             className={cn(
-              "flex cursor-pointer snap-center items-center justify-center text-base tabular-nums transition-opacity select-none",
-              distance === 0 ? "font-semibold text-foreground" : "text-slate-500",
+              "flex cursor-pointer snap-center items-center justify-center text-body-lg tabular-nums transition-opacity select-none",
+              distance === 0 ? "font-semibold text-foreground" : "text-muted-foreground",
             )}
             style={{ height: ITEM_H, opacity: distance === 0 ? 1 : distance === 1 ? 0.6 : 0.3 }}
           >

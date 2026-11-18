@@ -66,9 +66,10 @@ catalog:
   papaparse: ^5.5.4
   '@types/papaparse': ^5.5.2
   pizzip: ^3.1.7
-  # Pinned exactly so react and react-dom never drift apart.
-  react: 19.1.0
-  react-dom: 19.1.0
+  # Pinned exactly so react and react-dom never drift apart. @sirdab/one
+  # requires ^19.2.4 and is tested with exactly 19.2.4.
+  react: 19.2.4
+  react-dom: 19.2.4
   tailwind-merge: ^3.3.1
   tailwindcss: ^4.1.14
   tsx: ^4.21.0

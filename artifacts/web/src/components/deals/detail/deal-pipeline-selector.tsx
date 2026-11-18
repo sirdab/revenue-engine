@@ -34,7 +34,7 @@ function StageChevrons({
   const { t } = useI18n();
   const selectedIndex = stages.findIndex((s) => s.id === selectedId);
   if (stages.length === 0) {
-    return <p className="text-xs text-slate-400">{t("deals.pipeline.noStages")}</p>;
+    return <p className="text-caption text-subtle">{t("deals.pipeline.noStages")}</p>;
   }
   return (
     <div className="flex items-stretch">
@@ -57,8 +57,8 @@ function StageChevrons({
             }}
             className={cn(
               "relative flex h-7 min-w-0 flex-1 items-center justify-center pe-2.5 transition-colors",
-              filled ? "bg-teal-500 text-white hover:bg-teal-600" : "bg-slate-200 text-slate-500 hover:bg-slate-300",
-              stage.id === selectedId && "bg-teal-600 font-semibold",
+              filled ? "bg-primary text-primary-foreground hover:bg-primary-hover" : "bg-gray-200 text-muted-foreground hover:bg-gray-300",
+              stage.id === selectedId && "bg-brand-600 font-semibold",
             )}
           >
             <span className="w-full truncate text-center text-[10px] leading-none">{stage.name}</span>
@@ -122,18 +122,18 @@ export function DealPipelineSelector({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-card px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:border-teal-300 hover:bg-teal-50"
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-caption font-medium text-foreground transition-colors hover:border-brand-300 hover:bg-brand-subtle"
         >
-          <span className="text-slate-500">{currentPipeline?.name ?? t("common.pipeline")}</span>
-          <ArrowRight className="h-3 w-3 text-slate-400" />
-          <span className="font-semibold text-teal-700">{currentStage?.name ?? "—"}</span>
-          <ChevronDown className="h-3 w-3 text-slate-400" />
+          <span className="text-muted-foreground">{currentPipeline?.name ?? t("common.pipeline")}</span>
+          <ArrowRight className="h-3 w-3 text-subtle" />
+          <span className="font-semibold text-brand">{currentStage?.name ?? "—"}</span>
+          <ChevronDown className="h-3 w-3 text-subtle" />
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80">
         <div className="space-y-3">
           <div>
-            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            <label className="mb-1 block text-caption font-medium text-muted-foreground">
               {t("common.pipeline")}
             </label>
             <Select value={String(pipelineId)} onValueChange={(v) => changePipeline(Number(v))}>
@@ -146,14 +146,14 @@ export function DealPipelineSelector({
             </Select>
           </div>
           <div>
-            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            <label className="mb-1 block text-caption font-medium text-muted-foreground">
               {t("deals.pipeline.stage")}
             </label>
             <StageChevrons stages={draftStages} selectedId={stageId} onSelect={setStageId} />
           </div>
           <div className="flex justify-end gap-2 pt-1">
             <Button variant="outline" size="sm" onClick={() => setOpen(false)}>{t("common.cancel")}</Button>
-            <Button size="sm" disabled={!changed || !valid} onClick={save} className="bg-teal-600 hover:bg-teal-700">
+            <Button size="sm" disabled={!changed || !valid} onClick={save}>
               {t("common.save")}
             </Button>
           </div>

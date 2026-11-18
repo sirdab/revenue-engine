@@ -130,7 +130,7 @@ function ValueEditor({
             value={typeof arr[0] === "string" ? arr[0] : ""}
             onChange={(next) => onChange([next === "" ? null : next, arr[1] ?? null])}
           />
-          <span className="text-xs text-slate-400">and</span>
+          <span className="text-caption text-subtle">and</span>
           <DatePicker
             className="h-8 w-40"
             value={typeof arr[1] === "string" ? arr[1] : ""}
@@ -148,7 +148,7 @@ function ValueEditor({
           value={arr[0] == null ? "" : String(arr[0])}
           onChange={(e) => onChange([parse(e.target.value), arr[1] ?? null])}
         />
-        <span className="text-xs text-slate-400">and</span>
+        <span className="text-caption text-subtle">and</span>
         <Input
           type="number"
           className="h-8 w-28"
@@ -374,7 +374,7 @@ function ConditionRow({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-slate-400 hover:text-red-600"
+        className="h-8 w-8 text-subtle hover:text-destructive"
         onClick={onRemove}
         aria-label={t("filter.removeCondition")}
       >
@@ -416,8 +416,8 @@ export function GroupEditor({
   return (
     <div
       className={cn(
-        "space-y-2 rounded-lg border p-3",
-        depth === 1 ? "border-slate-200 bg-card" : "border-slate-200 bg-slate-50",
+        "space-y-2 rounded-xl border border-border p-3",
+        depth === 1 ? "bg-background" : "bg-surface-whisper",
       )}
     >
       <div className="flex items-center gap-2">
@@ -435,14 +435,14 @@ export function GroupEditor({
             <SelectItem value="or">OR</SelectItem>
           </SelectContent>
         </Select>
-        <span className="text-xs text-slate-400">
+        <span className="text-caption text-subtle">
           match {group.combinator === "and" ? "all" : "any"} of
         </span>
         {onRemove && (
           <Button
             variant="ghost"
             size="icon"
-            className="ms-auto h-7 w-7 text-slate-400 hover:text-red-600"
+            className="ms-auto h-7 w-7 text-subtle hover:text-destructive"
             onClick={onRemove}
             aria-label={t("filter.removeGroup")}
           >
@@ -453,7 +453,7 @@ export function GroupEditor({
 
       <div className="space-y-2 ps-2">
         {group.conditions.length === 0 && (
-          <p className="text-xs text-slate-400">{t("filter.noConditions")}</p>
+          <p className="text-caption text-subtle">{t("filter.noConditions")}</p>
         )}
         {group.conditions.map((node, i) =>
           isFilterGroup(node) ? (
@@ -574,21 +574,25 @@ export function DealsFilterBuilder({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className={cn(activeCount > 0 && "border-teal-500 text-teal-700")}>
-          <Filter className="me-1.5 h-4 w-4" />
+        <Button
+          variant="outline"
+          size="sm"
+          data-state={activeCount > 0 ? "on" : "off"}
+        >
+          <Filter />
           {t("common.filter")}
           {activeCount > 0 && (
-            <Badge className="ms-1.5 bg-teal-600 px-1.5 hover:bg-teal-600">
+            <Badge variant="secondary" className="tabular-nums">
               {activeCount}
             </Badge>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-[560px] max-w-[92vw] p-3">
+      <PopoverContent align="start" kind="dialog" className="w-[560px] max-w-[92vw] p-3">
         <div className="max-h-[60vh] overflow-auto">
           <GroupEditor group={draft} onChange={setDraft} depth={1} ctx={ctx} />
         </div>
-        <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+        <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
           <Button variant="ghost" size="sm" onClick={clearAll}>
             {t("common.clearAll")}
           </Button>
@@ -598,7 +602,6 @@ export function DealsFilterBuilder({
             </Button>
             <Button
               size="sm"
-              className="bg-teal-600 hover:bg-teal-700"
               onClick={apply}
             >
               {t("common.apply")}

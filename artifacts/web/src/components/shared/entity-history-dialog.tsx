@@ -41,7 +41,7 @@ function describeChange(t: Translate, e: ChangeEvent): ChangeDescription {
     return {
       title: t(e.entityType === "note" ? "history.noteCreated" : "history.activityCreated"),
       icon: <Sparkles className="h-3.5 w-3.5" />,
-      accent: "bg-teal-50 text-teal-600",
+      accent: "bg-brand-subtle text-brand",
     };
   }
   return {
@@ -57,7 +57,7 @@ function describeChange(t: Translate, e: ChangeEvent): ChangeDescription {
       </span>
     ),
     icon: <PencilLine className="h-3.5 w-3.5" />,
-    accent: "bg-slate-100 text-slate-500",
+    accent: "bg-muted text-muted-foreground",
   };
 }
 

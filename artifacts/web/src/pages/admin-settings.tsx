@@ -1,4 +1,6 @@
 import { useParams } from "wouter";
+import { Settings2 } from "lucide-react";
+import { EmptyState } from "@sirdab/one/components/empty-state";
 import { useI18n } from "@/lib/i18n/i18n";
 import {
   SettingsShell,
@@ -18,13 +20,12 @@ import AdminImportPage from "@/pages/admin-import";
 
 function Stub({ label }: { label: string }) {
   return (
-    <div className="flex h-full items-center justify-center">
-      <div className="text-center">
-        <p className="text-sm font-medium text-slate-600">{label}</p>
-        <p className="mt-1 text-xs text-slate-400">
-          This settings section isn&apos;t available yet.
-        </p>
-      </div>
+    <div className="flex h-full items-center justify-center p-6">
+      <EmptyState
+        icon={Settings2}
+        title={label}
+        caption="This settings section isn't available yet."
+      />
     </div>
   );
 }

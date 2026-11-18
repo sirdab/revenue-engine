@@ -86,7 +86,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
       }}
     >
       {copied ? (
-        <Check className="h-4 w-4 text-teal-600" />
+        <Check className="h-4 w-4 text-brand" />
       ) : (
         <Copy className="h-4 w-4" />
       )}
@@ -105,25 +105,25 @@ function EndpointSection({
   const url = `${origin}${endpoint.path}`;
   const example = JSON.stringify(endpoint.example, null, 2);
   return (
-    <section className="rounded-lg border border-slate-200 bg-card p-4">
+    <section className="rounded-2xl bg-card p-5 shadow-card">
       <div className="mb-1 flex items-center gap-2">
-        <span className="rounded bg-slate-900 px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-slate-100">
+        <span className="rounded-sm bg-primary px-1.5 py-0.5 font-mono text-caption text-gray-100">
           POST
         </span>
-        <h3 className="text-sm font-semibold text-slate-900">
+        <h3 className="text-body font-semibold text-foreground">
           {endpoint.title}
         </h3>
       </div>
-      <p className="mb-3 text-xs text-slate-500">{endpoint.summary}</p>
+      <p className="mb-3 text-caption-quiet text-muted-foreground">{endpoint.summary}</p>
 
-      <label className="text-xs font-medium text-slate-500">Endpoint</label>
+      <label className="text-caption text-muted-foreground">Endpoint</label>
       <div className="mb-3 mt-1 flex items-center gap-2">
-        <Input readOnly value={url} className="font-mono text-xs" />
+        <Input readOnly value={url} className="font-mono text-caption-quiet" />
         <CopyButton value={url} label="Copy" />
       </div>
 
-      <p className="mb-2 text-xs text-slate-400">{endpoint.fields}</p>
-      <pre className="overflow-x-auto rounded-md bg-slate-900 p-3 text-xs leading-relaxed text-slate-100">
+      <p className="mb-2 text-caption-quiet text-subtle">{endpoint.fields}</p>
+      <pre className="overflow-x-auto rounded-md bg-primary p-3 text-caption-quiet leading-relaxed text-gray-100">
         {example}
       </pre>
     </section>
@@ -161,10 +161,10 @@ export function WebhookSettings() {
   return (
     <div className="mx-auto max-w-3xl p-6">
       <header className="mb-6">
-        <h1 className="text-xl font-bold tracking-tight text-slate-900">
+        <h1 className="text-heading-sm text-foreground">
           Integrations
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-body-quiet text-muted-foreground">
           Connect Slack for team notifications, and create and update deals
           from external automations (n8n, Zapier, forms) by POSTing to the
           inbound webhooks below.
@@ -172,21 +172,21 @@ export function WebhookSettings() {
       </header>
 
       {isLoading ? (
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+        <div className="flex items-center gap-2 text-body-quiet text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> Loading…
         </div>
       ) : isError ? (
-        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-md border border-destructive/30 bg-destructive-subtle p-4 text-body-quiet text-destructive">
           Couldn't load the webhook settings. Admins only.
         </div>
       ) : (
         <div className="space-y-6">
           {/* Authentication — one secret, shared by every endpoint below */}
-          <section className="rounded-lg border border-slate-200 bg-card p-4">
-            <h2 className="text-sm font-semibold text-slate-900">
+          <section className="rounded-2xl bg-card p-5 shadow-card">
+            <h2 className="text-body font-semibold text-foreground">
               Authentication
             </h2>
-            <p className="mb-3 text-xs text-slate-500">
+            <p className="mb-3 text-caption-quiet text-muted-foreground">
               Every endpoint below uses this one shared secret. Send it as an{" "}
               <code className="font-mono">
                 Authorization: Bearer &lt;secret&gt;
@@ -197,7 +197,7 @@ export function WebhookSettings() {
               <Input
                 readOnly
                 value={reveal ? secret : masked}
-                className="font-mono text-xs"
+                className="font-mono text-caption-quiet"
               />
               <Button
                 type="button"

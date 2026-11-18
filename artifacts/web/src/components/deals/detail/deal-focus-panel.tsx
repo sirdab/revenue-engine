@@ -74,7 +74,7 @@ export function DealFocusPanel({
       defaultOpen
       action={
         overdueCount > 0 ? (
-          <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600 border border-red-100">
+          <span className="rounded-full bg-destructive-subtle px-2 py-0.5 text-[11px] font-semibold text-destructive border border-destructive/30">
             {overdueCount} overdue
           </span>
         ) : undefined
@@ -87,7 +87,7 @@ export function DealFocusPanel({
           ))}
         </div>
       ) : open.length === 0 ? (
-        <div className="flex items-center gap-2 rounded-lg bg-teal-50 px-3 py-2.5 text-xs text-teal-700">
+        <div className="flex items-center gap-2 rounded-lg bg-brand-subtle px-3 py-2.5 text-caption text-brand">
           <Sparkles className="h-3.5 w-3.5 shrink-0" />
           <span>{t("deals.focus.caughtUp")}</span>
         </div>

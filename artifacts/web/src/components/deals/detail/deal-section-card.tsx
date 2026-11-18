@@ -26,12 +26,12 @@ export function DealSectionCard({
   return (
     <section
       className={cn(
-        "rounded-xl border border-slate-200 bg-card shadow-sm",
+        "rounded-2xl bg-card shadow-card",
         className,
       )}
     >
       {(title || action) && (
-        <header className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-2.5">
+        <header className="flex min-h-12 items-center justify-between gap-3 border-b border-border px-4 py-2">
           <button
             type="button"
             disabled={!collapsible}
@@ -41,16 +41,16 @@ export function DealSectionCard({
               collapsible && "cursor-pointer",
             )}
           >
-            {icon && <span className="shrink-0 text-slate-400">{icon}</span>}
+            {icon && <span className="shrink-0 text-subtle">{icon}</span>}
             {title && (
-              <h2 className="truncate text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <h2 className="truncate text-label font-semibold text-foreground">
                 {title}
               </h2>
             )}
             {collapsible && (
               <ChevronDown
                 className={cn(
-                  "h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform",
+                  "h-3.5 w-3.5 shrink-0 text-subtle transition-transform",
                   !open && "-rotate-90",
                 )}
               />
@@ -80,13 +80,13 @@ export function DealField({
     <div className={cn("min-w-0", className)}>
       <div
         dir="auto"
-        className="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+        className="text-caption text-muted-foreground"
       >
         {label}
       </div>
-      <div className="mt-0.5 break-words text-sm text-slate-800">
+      <div className="mt-1 break-words text-body text-foreground">
         {children ??
-          (hasValue ? value : <span className="text-slate-400">—</span>)}
+          (hasValue ? value : <span className="text-subtle">—</span>)}
       </div>
     </div>
   );

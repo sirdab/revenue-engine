@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
           </Link>
         }
       >
-        <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
+        <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-body text-foreground">
           <MailCheck className="h-5 w-5 shrink-0 text-primary" />
           <span>
             {t("auth.forgot.noEmail")}
@@ -106,7 +106,7 @@ export default function ForgotPasswordPage() {
                     type="email"
                     autoComplete="email"
                     autoFocus
-                    className="h-12 bg-card px-4 border-slate-200 transition-colors focus-visible:ring-primary/20 focus-visible:border-primary"
+                    size="touch"
                     {...field}
                   />
                 </FormControl>
@@ -117,7 +117,8 @@ export default function ForgotPasswordPage() {
 
           <Button
             type="submit"
-            className="w-full h-12 text-base font-medium shadow-sm hover:shadow transition-all bg-primary hover:bg-primary/90 text-primary-foreground"
+            size="touch"
+                className="w-full"
             disabled={forgot.isPending}
           >
             {forgot.isPending ? (

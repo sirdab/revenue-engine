@@ -73,12 +73,12 @@ function DraggableHeader<T>({
     <div
       ref={setNodeRef}
       style={style}
-      className="relative flex shrink-0 items-center border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500"
+      className="relative flex shrink-0 items-center border-b border-border bg-surface-whisper px-3 py-2 text-caption font-semibold uppercase tracking-wide text-muted-foreground"
     >
       <span
         {...attributes}
         {...listeners}
-        className="cursor-grab text-slate-300 hover:text-slate-500"
+        className="cursor-grab text-subtle hover:text-muted-foreground"
       >
         <GripVertical className="h-3.5 w-3.5" />
       </span>
@@ -88,7 +88,7 @@ function DraggableHeader<T>({
         className={cn(
           "ms-1 flex flex-1 items-center gap-1 truncate",
           align === "right" && "justify-end",
-          canSort && "cursor-pointer hover:text-slate-700",
+          canSort && "cursor-pointer hover:text-foreground",
         )}
       >
         <span className="truncate">
@@ -96,11 +96,11 @@ function DraggableHeader<T>({
         </span>
         {canSort &&
           (sortDir === "asc" ? (
-            <ChevronUp className="h-3.5 w-3.5 text-teal-600" />
+            <ChevronUp className="h-3.5 w-3.5 text-brand" />
           ) : sortDir === "desc" ? (
-            <ChevronDown className="h-3.5 w-3.5 text-teal-600" />
+            <ChevronDown className="h-3.5 w-3.5 text-brand" />
           ) : (
-            <ChevronsUpDown className="h-3 w-3 text-slate-300" />
+            <ChevronsUpDown className="h-3 w-3 text-subtle" />
           ))}
       </HeaderLabel>
       {header.column.getCanResize() && (
@@ -108,7 +108,7 @@ function DraggableHeader<T>({
           onMouseDown={header.getResizeHandler()}
           onTouchStart={header.getResizeHandler()}
           onClick={(e) => e.stopPropagation()}
-          className="absolute end-0 top-0 h-full w-1.5 cursor-col-resize touch-none select-none hover:bg-teal-400/60"
+          className="absolute end-0 top-0 h-full w-1.5 cursor-col-resize touch-none select-none hover:bg-gray-alpha-200"
         />
       )}
     </div>
@@ -298,23 +298,23 @@ export function ListView<T>({
   const end = isServer ? Math.min(page * pageSize, total) : clientPag.end;
 
   const statusEl = loading ? (
-    <div className="flex h-40 items-center justify-center text-sm text-slate-500">
+    <div className="flex h-40 items-center justify-center text-body-quiet text-muted-foreground">
       {loadingMessage}
     </div>
   ) : error ? (
-    <div className="flex h-40 items-center justify-center text-sm text-red-600">
+    <div className="flex h-40 items-center justify-center text-body text-destructive">
       {errorMessage}
     </div>
   ) : rows.length === 0 ? (
-    <div className="flex h-40 items-center justify-center text-sm text-slate-500">
+    <div className="flex h-40 items-center justify-center text-body-quiet text-muted-foreground">
       {emptyMessage}
     </div>
   ) : null;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="hidden items-center justify-between border-b border-slate-200 px-4 py-2 md:flex">
-        <div className="flex items-center gap-2 text-xs text-slate-400">
+      <div className="hidden items-center justify-between border-b border-border px-4 py-2 md:flex">
+        <div className="flex items-center gap-2 text-caption-quiet text-subtle">
           <span>{total.toLocaleString()} total</span>
           {countSuffix}
         </div>
@@ -343,8 +343,8 @@ export function ListView<T>({
                       clickable ? () => onRowClick!(row.original) : undefined
                     }
                     className={cn(
-                      "rounded-lg border border-slate-200 bg-card p-3 shadow-sm",
-                      clickable && "cursor-pointer active:bg-slate-50",
+                      "rounded-lg border border-border bg-card p-3",
+                      clickable && "cursor-pointer active:bg-gray-alpha-50",
                       rowClassName?.(row.original),
                     )}
                   >
@@ -361,7 +361,7 @@ export function ListView<T>({
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
             >
-              <div className="sticky top-0 z-10 flex bg-slate-50">
+              <div className="sticky top-0 z-10 flex bg-surface-whisper">
                 <SortableContext
                   items={sortableIds}
                   strategy={horizontalListSortingStrategy}
@@ -371,7 +371,7 @@ export function ListView<T>({
                       <div
                         key={header.id}
                         style={{ width: header.getSize() }}
-                        className="flex shrink-0 items-center border-b border-slate-200 bg-slate-50 px-3 py-2"
+                        className="flex shrink-0 items-center border-b border-border bg-surface-whisper px-3 py-2"
                       >
                         {flexRender(
                           header.column.columnDef.header,
@@ -418,8 +418,8 @@ export function ListView<T>({
                         transform: `translateY(${vr.start}px)`,
                       }}
                       className={cn(
-                        "flex items-center border-b border-slate-100",
-                        clickable && "cursor-pointer hover:bg-slate-50",
+                        "flex items-center border-b border-border",
+                        clickable && "cursor-pointer hover:bg-row-surface-hover",
                         rowClassName?.(row.original),
                       )}
                     >
@@ -430,7 +430,7 @@ export function ListView<T>({
                             key={cell.id}
                             style={{ width: cell.column.getSize() }}
                             className={cn(
-                              "flex shrink-0 items-center overflow-hidden px-3 text-sm",
+                              "flex shrink-0 items-center overflow-hidden px-3 text-body",
                               align === "right" && "justify-end",
                             )}
                           >

@@ -48,7 +48,7 @@ const signupSchema = (t: Translate) =>
 type SignupFormValues = z.infer<ReturnType<typeof signupSchema>>;
 
 const inputClass =
-  "h-12 bg-card px-4 border-slate-200 transition-colors focus-visible:ring-primary/20 focus-visible:border-primary";
+  "h-12 bg-card px-4 border-input transition-colors focus-visible:ring-primary/20 focus-visible:border-primary";
 
 export default function SignupPage() {
   const { t } = useI18n();
@@ -179,7 +179,7 @@ export default function SignupPage() {
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
                       aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
-                      className="absolute end-3 top-1/2 -translate-y-1/2 rounded-md text-slate-400 hover:text-slate-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                      className="absolute end-3 top-1/2 -translate-y-1/2 rounded-md text-subtle hover:text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -192,7 +192,8 @@ export default function SignupPage() {
 
           <Button
             type="submit"
-            className="w-full h-12 text-base font-medium shadow-sm hover:shadow transition-all bg-primary hover:bg-primary/90 text-primary-foreground"
+            size="touch"
+            className="w-full"
             disabled={isSigningUp}
           >
             {isSigningUp ? (

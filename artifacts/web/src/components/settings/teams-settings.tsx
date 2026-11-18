@@ -83,15 +83,15 @@ function TeamCard({
           <EditableText
             value={team.name}
             onCommit={(next) => next.trim() && onRename(next.trim())}
-            className="-ms-1 text-sm font-semibold text-slate-800"
+            className="-ms-1 text-body font-semibold text-foreground"
           />
         </div>
         {!team.active && (
-          <span className="shrink-0 rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+          <span className="shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 text-caption font-medium text-muted-foreground">
             {t("common.archived")}
           </span>
         )}
-        <span className="shrink-0 text-xs tabular-nums text-slate-400">
+        <span className="shrink-0 text-caption-quiet tabular-nums text-subtle">
           {team.memberCount === 0
             ? t("settings.teams.noMembers")
             : tPlural("settings.teams.memberCount", team.memberCount, {
@@ -105,7 +105,7 @@ function TeamCard({
           onClick={onToggle}
           aria-label={team.active ? t("settings.teams.archive") : t("settings.teams.restore")}
           title={team.active ? t("settings.teams.archiveHint") : t("common.restore")}
-          className="h-7 w-7 shrink-0 text-slate-300 opacity-0 transition-opacity hover:text-slate-600 group-hover:opacity-100"
+          className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity hover:text-muted-foreground group-hover:opacity-100"
         >
           {team.active ? (
             <Archive className="h-3.5 w-3.5" />
@@ -120,7 +120,7 @@ function TeamCard({
               size="icon"
               disabled={busy}
               aria-label={t("settings.teams.deleteAria", { name: team.name })}
-              className="h-7 w-7 shrink-0 text-slate-300 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
+              className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
@@ -143,7 +143,7 @@ function TeamCard({
               <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={onDelete}
-                className="bg-red-600 text-white hover:bg-red-700"
+                className="bg-destructive text-white hover:bg-destructive"
               >
                 {t("settings.teams.deleteConfirm")}
               </AlertDialogAction>
@@ -156,7 +156,7 @@ function TeamCard({
         {team.members.map((member) => (
           <span
             key={member.id}
-            className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 py-0.5 ps-2.5 pe-1 text-xs text-slate-700"
+            className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-whisper py-0.5 ps-2.5 pe-1 text-caption-quiet text-foreground"
           >
             {member.name}
             <button
@@ -164,7 +164,7 @@ function TeamCard({
               disabled={busy}
               aria-label={t("settings.teams.removeMember", { name: member.name })}
               onClick={() => onRemoveMember(member)}
-              className="rounded-full p-0.5 text-slate-400 transition-colors hover:bg-slate-200 hover:text-red-600 disabled:opacity-50"
+              className="rounded-full p-0.5 text-subtle transition-colors hover:bg-gray-alpha-150 hover:text-destructive disabled:opacity-50"
             >
               <X className="h-3 w-3" />
             </button>
@@ -178,7 +178,7 @@ function TeamCard({
           value=""
           onChange={(v) => v && onAddMember(Number(v))}
           placeholder={t("settings.teams.addMemberPlaceholder")}
-          triggerClassName="h-7 w-40 text-xs"
+          triggerClassName="h-7 w-40 text-caption-quiet"
         />
       </div>
     </li>
@@ -243,8 +243,8 @@ export function TeamsSettings() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-6">
       <header className="mb-5">
-        <h1 className="font-heading text-xl font-bold text-slate-900">{t("settings.teams.title")}</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-heading-sm text-foreground">{t("settings.teams.title")}</h1>
+        <p className="mt-1 text-body-quiet text-muted-foreground">
           {t("settings.teams.subtitle")}
         </p>
       </header>
@@ -253,7 +253,7 @@ export function TeamsSettings() {
         title={t("settings.teams.title")}
         description={t("settings.teams.cardDescription")}
       >
-        <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-3">
+        <div className="flex items-center gap-2 border-b border-border px-5 py-3">
           <Input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -266,30 +266,30 @@ export function TeamsSettings() {
             size="sm"
             onClick={submit}
             disabled={!draft.trim() || busy}
-            className="h-8 bg-teal-600 text-white hover:bg-teal-700"
+            className="h-8 bg-primary text-primary-foreground hover:bg-primary-hover"
           >
             <Plus className="me-1 h-3.5 w-3.5" /> {t("common.add")}
           </Button>
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center gap-2 px-5 py-10 text-sm text-slate-400">
+          <div className="flex items-center justify-center gap-2 px-5 py-10 text-body-quiet text-subtle">
             <Loader2 className="h-4 w-4 animate-spin" /> {t("settings.teams.loading")}
           </div>
         ) : isError || !data ? (
-          <div className="px-5 py-10 text-center text-sm text-red-600">
+          <div className="px-5 py-10 text-center text-body-quiet text-destructive">
             {t("settings.teams.loadFailed")}
           </div>
         ) : data.teams.length === 0 ? (
           <div className="px-5 py-10 text-center">
-            <Users className="mx-auto mb-2 h-6 w-6 text-slate-300" />
-            <p className="text-sm text-slate-500">{t("settings.teams.empty")}</p>
-            <p className="mt-1 text-xs text-slate-400">
+            <Users className="mx-auto mb-2 h-6 w-6 text-subtle" />
+            <p className="text-body-quiet text-muted-foreground">{t("settings.teams.empty")}</p>
+            <p className="mt-1 text-caption-quiet text-subtle">
               {t("settings.teams.emptyHint")}
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-border">
             {data.teams.map((team) => (
               <TeamCard
                 key={team.id}
@@ -318,7 +318,7 @@ export function TeamsSettings() {
           </ul>
         )}
 
-        <p className="border-t border-slate-100 px-5 py-3 text-[11px] leading-relaxed text-slate-400">
+        <p className="border-t border-border px-5 py-3 text-[11px] leading-relaxed text-subtle">
           {t("settings.teams.footnote")}
         </p>
       </SectionCard>

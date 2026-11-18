@@ -7,11 +7,12 @@ import { useI18n } from "@/lib/i18n/i18n";
 // [primary button], right-aligned. The arrow and refresh are matched icon
 // buttons (same size, border, hover state) so they read as a set.
 
+// One's secondary icon button: bordered, on white, the button wash on hover.
 const ICON_BUTTON =
-  "flex h-9 w-9 shrink-0 items-center justify-center rounded-md border " +
-  "border-slate-200 bg-card text-slate-500 transition-colors " +
-  "hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 " +
-  "disabled:pointer-events-none disabled:opacity-60";
+  "flex h-control-lg aspect-square shrink-0 items-center justify-center rounded-lg border " +
+  "border-btn-border bg-background text-muted-foreground transition-colors " +
+  "hover:border-btn-border-hover hover:bg-btn-surface-hover hover:text-foreground " +
+  "disabled:pointer-events-none disabled:text-subtle";
 
 /** The collapse/expand-filters chevron — leftmost control in the cluster.
  *  `activeCount` marks the button when filters are applied, so a collapsed
@@ -50,7 +51,7 @@ export function FiltersToggle({
         <ChevronDown className="h-4 w-4" />
       )}
       {!open && activeCount > 0 && (
-        <span className="absolute -end-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-teal-600 px-1 text-[10px] font-semibold tabular-nums text-white">
+        <span className="absolute -end-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold tabular-nums text-primary-foreground">
           {activeCount}
         </span>
       )}

@@ -32,9 +32,9 @@ export function AuthGuard({
 
   if (isLoading) {
     return (
-      <div className="flex h-[100dvh] w-full flex-col items-center justify-center gap-3 bg-slate-50">
+      <div className="flex h-[100dvh] w-full flex-col items-center justify-center gap-3 bg-surface-whisper">
         <BrandMark iconOnly className="animate-pulse" />
-        <span className="text-xs text-slate-400">{t("auth.loadingWorkspace")}</span>
+        <span className="text-caption text-subtle">{t("auth.loadingWorkspace")}</span>
       </div>
     );
   }

@@ -51,10 +51,10 @@ export function WorkspaceSettings() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-6">
       <header className="mb-5">
-        <h1 className="font-heading text-xl font-bold text-slate-900">
+        <h1 className="text-heading-sm text-foreground">
           {t("settings.workspace.title")}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">{t("settings.workspace.subtitle")}</p>
+        <p className="mt-1 text-body-quiet text-muted-foreground">{t("settings.workspace.subtitle")}</p>
       </header>
       <SectionCard
         title={t("settings.workspace.nameTitle")}
@@ -62,11 +62,11 @@ export function WorkspaceSettings() {
       >
         <div className="px-5 py-4">
           {isLoading ? (
-            <div className="flex items-center gap-2 text-sm text-slate-500">
+            <div className="flex items-center gap-2 text-body-quiet text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> {t("common.loading")}
             </div>
           ) : isError ? (
-            <p className="text-sm text-red-600">{t("settings.workspace.loadFailed")}</p>
+            <p className="text-body text-destructive">{t("settings.workspace.loadFailed")}</p>
           ) : (
             <form
               className="flex flex-col gap-2 sm:flex-row sm:items-end"
@@ -87,7 +87,6 @@ export function WorkspaceSettings() {
               <Button
                 type="submit"
                 disabled={!dirty || update.isPending}
-                className="bg-teal-600 text-white hover:bg-teal-700"
               >
                 {update.isPending && <Loader2 className="me-1.5 h-4 w-4 animate-spin" />}
                 {t("common.save")}

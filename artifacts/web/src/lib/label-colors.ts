@@ -24,41 +24,41 @@ export const LABEL_COLOR_TOKENS = [
 
 export const LABEL_COLOR_CLASSES: Record<string, LabelColorClasses> = {
   slate: {
-    chip: "border-slate-200 bg-slate-100 text-slate-700",
-    swatch: "bg-slate-400",
+    chip: "border-border bg-muted text-foreground",
+    swatch: "bg-gray-400",
   },
-  red: { chip: "border-red-200 bg-red-50 text-red-700", swatch: "bg-red-500" },
+  red: { chip: "border-destructive/30 bg-destructive-subtle text-destructive", swatch: "bg-destructive" },
   orange: {
-    chip: "border-orange-200 bg-orange-50 text-orange-700",
-    swatch: "bg-orange-500",
+    chip: "border-warning/30 bg-warning-subtle text-warning",
+    swatch: "bg-warning",
   },
   amber: {
-    chip: "border-amber-200 bg-amber-50 text-amber-800",
-    swatch: "bg-amber-500",
+    chip: "border-warning/30 bg-warning-subtle text-warning",
+    swatch: "bg-warning",
   },
   green: {
-    chip: "border-green-200 bg-green-50 text-green-700",
-    swatch: "bg-green-500",
+    chip: "border-success/30 bg-success-subtle text-success",
+    swatch: "bg-success",
   },
   teal: {
-    chip: "border-teal-200 bg-teal-50 text-teal-700",
-    swatch: "bg-teal-500",
+    chip: "border-brand-200 bg-brand-subtle text-brand",
+    swatch: "bg-brand-500",
   },
   blue: {
-    chip: "border-blue-200 bg-blue-50 text-blue-700",
-    swatch: "bg-blue-500",
+    chip: "border-attention/30 bg-attention-subtle text-attention",
+    swatch: "bg-attention",
   },
   indigo: {
-    chip: "border-indigo-200 bg-indigo-50 text-indigo-700",
-    swatch: "bg-indigo-500",
+    chip: "border-attention/30 bg-attention-subtle text-attention",
+    swatch: "bg-attention",
   },
   purple: {
-    chip: "border-purple-200 bg-purple-50 text-purple-700",
-    swatch: "bg-purple-500",
+    chip: "border-attention/30 bg-attention-subtle text-attention",
+    swatch: "bg-attention",
   },
   pink: {
-    chip: "border-pink-200 bg-pink-50 text-pink-700",
-    swatch: "bg-pink-500",
+    chip: "border-destructive/30 bg-destructive-subtle text-destructive",
+    swatch: "bg-destructive",
   },
 };
 

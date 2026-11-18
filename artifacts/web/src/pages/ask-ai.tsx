@@ -168,7 +168,7 @@ function isTableSeparatorRow(line: string): boolean {
 function renderTable(header: string[], rows: string[][], key: number) {
   return (
     <div key={`table-${key}`} className="my-1.5 overflow-x-auto rounded-lg border border-border">
-      <table className="w-full min-w-max border-collapse text-start text-sm">
+      <table className="w-full min-w-max border-collapse text-start text-body">
         <thead>
           <tr className="bg-muted/50">
             {header.map((cell, idx) => (
@@ -302,7 +302,7 @@ function greeting(): string {
 function AssistantEyebrow() {
   const { t } = useI18n();
   return (
-    <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.02em] text-muted-foreground">
+    <div className="flex items-center gap-2 text-caption font-semibold tracking-[0.02em] text-muted-foreground">
       <Sparkles className="h-3.5 w-3.5" /> {t("askAi.title")}
     </div>
   );
@@ -364,7 +364,7 @@ const MessageBubble = memo(function MessageBubble({
       {okCount > 0 ? (
         <div
           className={cn(
-            "flex items-center gap-1.5 text-xs",
+            "flex items-center gap-1.5 text-caption",
             selected ? "text-primary" : "text-muted-foreground",
           )}
         >
@@ -460,7 +460,7 @@ const RAIL_CARD =
 function RailSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{title}</div>
+      <div className="text-caption font-semibold uppercase tracking-[0.08em] text-muted-foreground">{title}</div>
       <div className="flex flex-col gap-2.5">{children}</div>
     </div>
   );
@@ -491,7 +491,7 @@ function ContextRail({ message }: { message: ChatMessage | null }) {
 
   if (!message || message.role !== "assistant" || okCount === 0) {
     return (
-      <div className="flex h-full items-center justify-center px-6 py-10 text-center text-sm text-muted-foreground">
+      <div className="flex h-full items-center justify-center px-6 py-10 text-center text-body-quiet text-muted-foreground">
         {t("askAi.railEmpty")}
       </div>
     );
@@ -513,10 +513,10 @@ function ContextRail({ message }: { message: ChatMessage | null }) {
     <div className="flex h-full flex-col gap-5 overflow-y-auto px-4 py-5">
       <div className="flex flex-col gap-1">
         <div className="flex items-baseline justify-between">
-          <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <span className="text-caption font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             {t("askAi.behindAnswer")}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-caption-quiet text-muted-foreground">
             {okCount} source{okCount === 1 ? "" : "s"}
           </span>
         </div>
@@ -531,7 +531,7 @@ function ContextRail({ message }: { message: ChatMessage | null }) {
                 <RailCardEyebrow label={item.recordType ?? t("askAi.record")} />
                 <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" />
               </div>
-              <div className="text-sm font-medium text-foreground">{item.title ?? "—"}</div>
+              <div className="text-body font-medium text-foreground">{item.title ?? "—"}</div>
               {item.snippet ? (
                 <p className="mt-0.5 line-clamp-2 text-[12.5px] text-muted-foreground">{item.snippet}</p>
               ) : null}
@@ -547,7 +547,7 @@ function ContextRail({ message }: { message: ChatMessage | null }) {
         <RailSection title={t("askAi.relatedDeals")}>
           {relatedDeals.map((deal, idx) => (
             <a key={`${String(deal.id)}-${idx}`} href={`/deal/${String(deal.id)}`} className={RAIL_CARD}>
-              <div className="text-sm font-medium text-foreground">{formatValue(deal.title)}</div>
+              <div className="text-body font-medium text-foreground">{formatValue(deal.title)}</div>
               <div className="mt-1 text-[12.5px] text-muted-foreground">
                 {formatValue(deal.value)} · {formatValue(deal.stage)} · {formatValue(deal.owner)}
               </div>
@@ -560,7 +560,7 @@ function ContextRail({ message }: { message: ChatMessage | null }) {
         <RailSection title={t("askAi.signals")}>
           {pipeline && (
             <div className={RAIL_CARD}>
-              <div className="text-sm font-medium text-foreground">{formatValue(pipeline.pipelineName)}</div>
+              <div className="text-body font-medium text-foreground">{formatValue(pipeline.pipelineName)}</div>
               <div className="mt-1 text-[12.5px] text-muted-foreground">
                 {t("askAi.pipelineLine", { count: formatValue(pipeline.totalCount), value: formatValue(pipeline.totalValue) })}
               </div>
@@ -571,7 +571,7 @@ function ContextRail({ message }: { message: ChatMessage | null }) {
               key={`deal-stat-${String(row.key ?? row.label ?? idx)}-${String(row.currency)}`}
               className={RAIL_CARD}
             >
-              <div className="text-sm font-medium text-foreground">{formatValue(row.label)}</div>
+              <div className="text-body font-medium text-foreground">{formatValue(row.label)}</div>
               <div className="mt-1 text-[12.5px] text-muted-foreground">
                 {formatValue(row.count)} · {formatValue(row.value)} {formatValue(row.currency)}
               </div>

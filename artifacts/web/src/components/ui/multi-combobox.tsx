@@ -1,7 +1,11 @@
 import { useMemo, useState } from "react";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import {
+  FIELD_HEIGHT,
+  FIELD_RADIUS,
+  FIELD_TRIGGER,
+} from "@sirdab/one/components/field-chrome";
 import {
   Command,
   CommandEmpty,
@@ -85,14 +89,13 @@ export function MultiCombobox({
     <div className={cn("flex flex-col gap-1", className)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
+          <button
             type="button"
-            variant="outline"
             role="combobox"
             aria-expanded={open}
             disabled={disabled}
             className={cn(
-              "h-auto min-h-8 justify-between font-normal",
+              FIELD_TRIGGER, FIELD_HEIGHT.md, FIELD_RADIUS.md, "px-3", "h-auto min-h-8",
               values.length === 0 && "text-muted-foreground",
               triggerClassName,
             )}
@@ -104,8 +107,8 @@ export function MultiCombobox({
                   ? values[0]
                   : `${values.length} selected`}
             </span>
-            <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
+            <ChevronsUpDown className="ms-2 size-4 shrink-0 text-subtle" />
+          </button>
         </PopoverTrigger>
         <PopoverContent
           className="w-[280px] p-0"
@@ -138,7 +141,7 @@ export function MultiCombobox({
                 ))}
               </CommandGroup>
               {filtered.total > filtered.shown.length && (
-                <div className="px-2 py-1.5 text-center text-xs text-muted-foreground">
+                <div className="px-2 py-1.5 text-center text-caption text-muted-foreground">
                   {t("common.showingOf", { shown: filtered.shown.length, total: filtered.total })}
                 </div>
               )}
@@ -153,10 +156,10 @@ export function MultiCombobox({
             <span
               key={v}
               className={cn(
-                "inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs",
+                "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-caption",
                 orphans.includes(v)
-                  ? "border-amber-300 bg-amber-50 text-amber-700"
-                  : "border-teal-300 bg-teal-50 text-teal-700",
+                  ? "border-warning/30 bg-warning-subtle text-warning"
+                  : "border-border text-foreground",
               )}
               title={orphans.includes(v) ? t("common.notInOptionList") : undefined}
             >

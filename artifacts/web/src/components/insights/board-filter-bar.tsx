@@ -89,7 +89,7 @@ export function BoardFilterBar({
     <div className="mb-4 flex flex-wrap items-center gap-2">
       <MultiSelectFilter
         label={t("common.owner")}
-        icon={<Users className="h-3.5 w-3.5 text-slate-400" />}
+        icon={<Users className="h-3.5 w-3.5 text-subtle" />}
         items={owners.map((o) => ({ value: String(o.id), label: o.name }))}
         selected={filters.ownerIds.map(String)}
         onChange={(vals) =>
@@ -126,10 +126,10 @@ export function BoardFilterBar({
           aria-pressed={filters.statuses.includes(s)}
           data-testid={`status-chip-${s}`}
           className={cn(
-            "rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors",
+            "rounded-full border px-3 py-1 text-caption capitalize transition-colors",
             filters.statuses.includes(s)
-              ? "border-teal-600 bg-teal-50 text-teal-700"
-              : "border-slate-200 text-slate-500 hover:border-slate-300",
+              ? "border-gray-alpha-400 bg-gray-alpha-100 text-foreground"
+              : "border-border text-muted-foreground hover:border-input",
           )}
         >
           {s}
@@ -149,10 +149,10 @@ export function BoardFilterBar({
             aria-pressed={filters.qualification === q}
             data-testid={`qualification-chip-${q}`}
             className={cn(
-              "rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors",
+              "rounded-full border px-3 py-1 text-caption font-medium capitalize transition-colors",
               filters.qualification === q
-                ? "border-violet-600 bg-violet-50 text-violet-700"
-                : "border-slate-200 text-slate-500 hover:border-slate-300",
+                ? "border-gray-alpha-400 bg-gray-alpha-100 text-foreground"
+                : "border-border text-muted-foreground hover:border-input",
             )}
           >
             {q}
@@ -165,17 +165,17 @@ export function BoardFilterBar({
           <Button
             variant="outline"
             size="sm"
-            className={cn("gap-1.5", presetLabel && "border-teal-500 text-teal-700")}
+            className={cn("gap-1.5", presetLabel && "border-btn-border-hover bg-btn-surface-hover")}
             data-testid="date-filter"
           >
-            <CalendarDays className="h-3.5 w-3.5 text-slate-400" />
+            <CalendarDays className="h-3.5 w-3.5 text-subtle" />
             {presetLabel ?? t("common.date")}
-            <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            <ChevronDown className="h-3.5 w-3.5 text-subtle" />
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-80 max-w-[92vw] p-0">
           <div className="p-3">
-            <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+            <p className="mb-2 text-caption font-medium text-subtle">
               {t("insights.quickRanges")}
             </p>
             <div className="grid grid-cols-2 gap-1.5">
@@ -195,10 +195,10 @@ export function BoardFilterBar({
                       }))
                     }
                     className={cn(
-                      "rounded-md border px-2.5 py-1.5 text-start text-xs font-medium transition-colors",
+                      "rounded-md border px-2.5 py-1.5 text-start text-caption transition-colors",
                       active
-                        ? "border-teal-600 bg-teal-50 text-teal-700"
-                        : "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50",
+                        ? "border-gray-alpha-400 bg-gray-alpha-100 text-foreground"
+                        : "border-border text-muted-foreground hover:border-input hover:bg-gray-alpha-50",
                     )}
                   >
                     {t(p.label)}
@@ -207,15 +207,15 @@ export function BoardFilterBar({
               })}
             </div>
           </div>
-          <div className="border-t border-slate-100 p-3">
-            <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+          <div className="border-t border-border p-3">
+            <p className="mb-2 text-caption font-medium text-subtle">
               {t("insights.customRange")}
             </p>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <span className="text-xs text-slate-500">{t("insights.from")}</span>
+                <span className="text-caption-quiet text-muted-foreground">{t("insights.from")}</span>
                 <DatePicker
-                  className="h-8 w-full text-xs"
+                  className="h-8 w-full text-caption-quiet"
                   value={filters.from ?? ""}
                   onChange={(next) =>
                     setFilters((f) => ({
@@ -227,9 +227,9 @@ export function BoardFilterBar({
                 />
               </div>
               <div className="space-y-1">
-                <span className="text-xs text-slate-500">{t("insights.to")}</span>
+                <span className="text-caption-quiet text-muted-foreground">{t("insights.to")}</span>
                 <DatePicker
-                  className="h-8 w-full text-xs"
+                  className="h-8 w-full text-caption-quiet"
                   value={filters.to ?? ""}
                   onChange={(next) =>
                     setFilters((f) => ({
@@ -242,7 +242,7 @@ export function BoardFilterBar({
               </div>
             </div>
             <div className="mt-2.5 flex items-center justify-between gap-2">
-              <span className="shrink-0 text-xs text-slate-500">{t("insights.basedOn")}</span>
+              <span className="shrink-0 text-caption-quiet text-muted-foreground">{t("insights.basedOn")}</span>
               <Select
                 value={filters.basis ?? "createdAt"}
                 onValueChange={(v) =>
@@ -252,7 +252,7 @@ export function BoardFilterBar({
                   }))
                 }
               >
-                <SelectTrigger className="h-8 w-44 text-xs" data-testid="date-basis">
+                <SelectTrigger className="h-8 w-44 text-caption-quiet" data-testid="date-basis">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -266,11 +266,11 @@ export function BoardFilterBar({
             </div>
           </div>
           {(filters.preset || filters.from || filters.to) && (
-            <div className="border-t border-slate-100 p-1.5">
+            <div className="border-t border-border p-1.5">
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-full text-xs text-slate-500"
+                className="h-7 w-full text-caption-quiet text-muted-foreground"
                 onClick={() =>
                   setFilters((f) => ({
                     ...f,
@@ -301,14 +301,14 @@ export function BoardFilterBar({
             size="sm"
             className={cn(
               "gap-1.5",
-              boardConditionCount > 0 && "border-teal-500 text-teal-700",
+              boardConditionCount > 0 && "border-btn-border-hover bg-btn-surface-hover",
             )}
             data-testid="board-add-filter"
           >
             <Filter className="h-3.5 w-3.5" />
             {t("common.filter")}
             {boardConditionCount > 0 && (
-              <Badge className="bg-teal-600 px-1.5 hover:bg-teal-600">
+              <Badge className="bg-brand-600 px-1.5 hover:bg-brand-600">
                 {boardConditionCount}
               </Badge>
             )}
@@ -322,7 +322,7 @@ export function BoardFilterBar({
               onChange={setBoardDraft}
             />
           </div>
-          <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+          <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
             <Button
               variant="ghost"
               size="sm"

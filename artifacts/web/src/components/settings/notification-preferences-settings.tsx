@@ -82,10 +82,10 @@ function Channel({
 }) {
   return (
     <label
-      className="flex w-[86px] items-center justify-end gap-2"
+      className="flex min-w-[86px] items-center justify-end gap-2"
       title={title}
     >
-      <span className="text-xs text-slate-500">{label}</span>
+      <span className="whitespace-nowrap text-caption-quiet text-muted-foreground">{label}</span>
       <Switch
         checked={checked}
         disabled={disabled}
@@ -106,10 +106,10 @@ function Row({
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4 last:border-b-0">
+    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4 last:border-b-0">
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-slate-900">{label}</p>
-        <p className="text-xs text-slate-500">{description}</p>
+        <p className="text-body text-foreground">{label}</p>
+        <p className="text-caption-quiet text-muted-foreground">{description}</p>
       </div>
       <div className="flex items-center gap-4">{children}</div>
     </div>

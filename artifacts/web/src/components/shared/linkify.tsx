@@ -35,7 +35,7 @@ export function linkifyText(text: string): ReactNode[] {
           // onFocus and flip it into edit mode before the browser navigates —
           // stopping only the click's propagation isn't enough.
           onFocus={(e) => e.stopPropagation()}
-          className="text-teal-700 underline underline-offset-2"
+          className="text-brand underline underline-offset-2"
         >
           {url}
         </a>

@@ -698,6 +698,7 @@
   "files.category.vat_certificate": "VAT Certificate",
   "files.deleteBody": "This permanently removes the file. This action cannot be undone.",
   "files.deleteTitle": "Delete \"{name}\"?",
+  "files.dropzone": "Choose a file or drag it here",
   "files.empty": "No files yet.",
   "files.file": "File",
   "files.selectCategory": "Select category",
@@ -1124,5 +1125,5 @@
   "activity.strip.keepAsIs": "Keep as is",
   "activity.strip.editFollowUp": "Edit follow-up",
   "activity.strip.followUpMoved": "Follow-up set for {date}",
-  "brand.productName": "CRM"
+  "brand.productName": "Sirdab Revenue Engine"
 }

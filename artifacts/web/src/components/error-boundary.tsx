@@ -59,19 +59,19 @@ function ErrorFallback({
   const { t } = useI18n();
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-      <AlertTriangle className="h-8 w-8 text-amber-500" />
+      <AlertTriangle className="h-8 w-8 text-warning-glyph" />
       <div>
-        <p className="font-medium text-slate-700">
+        <p className="font-medium text-foreground">
           {title ?? t("common.somethingWentWrongDot")}
         </p>
-        <p className="mx-auto mt-1 max-w-md break-words text-sm text-slate-500">
+        <p className="mx-auto mt-1 max-w-md break-words text-body-quiet text-muted-foreground">
           {error.message || String(error)}
         </p>
       </div>
       <button
         type="button"
         onClick={onRetry}
-        className="rounded-md border border-slate-200 bg-card px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-800"
+        className="rounded-md border border-border bg-card px-3 py-1.5 text-body font-medium text-muted-foreground transition-colors hover:bg-gray-alpha-50 hover:text-foreground"
       >
         {t("common.tryAgain")}
       </button>

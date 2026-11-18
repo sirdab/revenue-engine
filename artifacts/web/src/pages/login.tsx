@@ -77,7 +77,7 @@ export default function LoginPage() {
     // window is short.
     <div className="h-[100dvh] w-full flex overflow-hidden bg-background">
       {/* Left side: Visual / Brand panel (hidden on smaller screens) */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-slate-50 items-center justify-center overflow-hidden border-e">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-surface-whisper items-center justify-center overflow-hidden border-e">
         <div className="absolute inset-0 z-0">
           <img 
             src="/side-bg.png" 
@@ -89,7 +89,7 @@ export default function LoginPage() {
             }}
           />
           {/* A subtle overlay to ensure it feels deep and sophisticated */}
-          <div className="absolute inset-0 bg-gradient-to-br from-teal-900/10 to-slate-900/20 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-900/10 to-gray-900/20 mix-blend-multiply" />
         </div>
         
         {/* Optional text or graphic overlay could go here */}
@@ -105,10 +105,10 @@ export default function LoginPage() {
           <div className="mb-10">
             <BrandMark className="mb-8" />
 
-            <h1 className="text-3xl font-heading font-semibold text-foreground tracking-tight mb-2">
+            <h1 className="text-heading-sm text-foreground mb-2">
               {t("auth.login.title")}
             </h1>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-body">
               {t("auth.login.subtitle")}
             </p>
           </div>
@@ -128,7 +128,7 @@ export default function LoginPage() {
                         type="email" 
                         autoComplete="email"
                         autoFocus
-                        className="h-12 bg-card px-4 border-slate-200 transition-colors focus-visible:ring-primary/20 focus-visible:border-primary"
+                        size="touch"
                         {...field} 
                       />
                     </FormControl>
@@ -149,14 +149,14 @@ export default function LoginPage() {
                           placeholder="••••••••" 
                           type={showPassword ? "text" : "password"} 
                           autoComplete="current-password"
-                          className="h-12 bg-card px-4 pe-10 border-slate-200 transition-colors focus-visible:ring-primary/20 focus-visible:border-primary"
+                          size="touch" inputClassName="pe-10"
                           {...field} 
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
-                          className="absolute end-3 top-1/2 -translate-y-1/2 rounded-md text-slate-400 hover:text-slate-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                          className="absolute end-3 top-1/2 -translate-y-1/2 rounded-md text-subtle hover:text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                         >
                           {showPassword ? (
                             <EyeOff className="h-5 w-5" />
@@ -181,11 +181,11 @@ export default function LoginPage() {
                         <Checkbox 
                           checked={field.value} 
                           onCheckedChange={field.onChange} 
-                          className="border-slate-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm font-medium text-slate-600 cursor-pointer">
+                        <FormLabel className="text-body font-medium text-muted-foreground cursor-pointer">
                           {t("auth.rememberMe")}
                         </FormLabel>
                       </div>
@@ -195,7 +195,7 @@ export default function LoginPage() {
                 
                 <Link
                   href="/forgot-password"
-                  className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                  className="text-body text-foreground underline-offset-4 hover:underline"
                 >
                   {t("auth.forgotPassword")}
                 </Link>
@@ -203,7 +203,8 @@ export default function LoginPage() {
 
               <Button 
                 type="submit" 
-                className="w-full h-12 text-base font-medium shadow-sm hover:shadow transition-all bg-primary hover:bg-primary/90 text-primary-foreground"
+                size="touch"
+                className="w-full"
                 disabled={isLoggingIn}
               >
                 {isLoggingIn ? (
@@ -218,7 +219,7 @@ export default function LoginPage() {
             </form>
           </Form>
 
-          <p className="mt-8 text-center text-sm text-muted-foreground">
+          <p className="mt-8 text-center text-body-quiet text-muted-foreground">
             {t("auth.login.noAccount")}{" "}
             <Link
               href="/signup"

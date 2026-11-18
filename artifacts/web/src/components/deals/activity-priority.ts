@@ -22,10 +22,10 @@ export const ACTIVITY_PRIORITY_META: Record<
   ActivityPriority,
   { label: MessageKey; dot: string }
 > = {
-  overdue: { label: "activity.status.overdue", dot: "bg-red-500" },
-  today: { label: "deals.priority.dueToday", dot: "bg-amber-400" },
-  scheduled: { label: "deals.priority.scheduled", dot: "bg-green-500" },
-  none: { label: "deals.priority.none", dot: "bg-slate-300" },
+  overdue: { label: "activity.status.overdue", dot: "bg-destructive" },
+  today: { label: "deals.priority.dueToday", dot: "bg-warning" },
+  scheduled: { label: "deals.priority.scheduled", dot: "bg-success" },
+  none: { label: "deals.priority.none", dot: "bg-gray-300" },
 };
 
 // Legend order: most-urgent first.

@@ -155,7 +155,7 @@ export function ActivityEditDialog({
             />
           </div>
           <div>
-            <span className="mb-1 block text-xs font-medium text-slate-500">
+            <span className="mb-1 block text-caption font-medium text-muted-foreground">
               {t("activity.composer.duration")}
             </span>
             <DurationPicker value={form.duration} onChange={(d) => set("duration", d)} />
@@ -195,7 +195,6 @@ export function ActivityEditDialog({
           <Button
             onClick={() => void save()}
             disabled={!form.subject.trim() || source.pending}
-            className="bg-teal-600 text-white hover:bg-teal-700"
           >
             {source.pending && <Loader2 className="me-1.5 h-4 w-4 animate-spin" />}
             {t("common.save")}

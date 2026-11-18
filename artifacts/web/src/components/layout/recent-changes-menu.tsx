@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { changeFullSentence, changeHref } from "@/lib/change-feed";
 import { useI18n } from "@/lib/i18n/i18n";
+import { TOPBAR_ICON_BUTTON } from "@/components/layout/topbar-icon";
 
 // Recent changes on your records, in the topbar next to the bell.
 //
@@ -39,34 +40,34 @@ export function RecentChangesMenu() {
       <DropdownMenuTrigger
         aria-label={t("recentChanges.title")}
         title={t("recentChanges.title")}
-        className="relative flex-shrink-0 rounded-md p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none"
+        className={TOPBAR_ICON_BUTTON}
       >
-        <History className="h-5 w-5" />
+        <History />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
-        <div className="border-b border-slate-100 px-3 py-2">
-          <p className="text-sm font-semibold text-slate-700">{t("recentChanges.title")}</p>
-          <p className="text-xs text-slate-400">
+        <div className="border-b border-border px-3 py-2.5">
+          <p className="text-label text-foreground">{t("recentChanges.title")}</p>
+          <p className="text-caption text-subtle">
             {t("recentChanges.subtitle")}
           </p>
         </div>
         {items.length === 0 ? (
-          <p className="px-3 py-6 text-center text-sm text-slate-500">
+          <p className="px-3 py-6 text-center text-body text-muted-foreground">
             {t("recentChanges.empty")}
           </p>
         ) : (
-          <div className="max-h-96 divide-y divide-slate-100 overflow-y-auto">
+          <div className="max-h-96 divide-y divide-border overflow-y-auto">
             {items.map((item: ChangesFeedItem) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => navigate(changeHref(item))}
-                className="block w-full px-3 py-2 text-start hover:bg-slate-50"
+                className="block w-full px-3 py-2 text-start transition-colors hover:bg-btn-ghost-surface-hover"
               >
-                <p className="text-sm leading-snug text-slate-600">
+                <p className="text-body leading-snug text-muted-foreground">
                   {changeFullSentence(item)}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-caption text-subtle">
                   {formatRelativeShort(item.changedAt)}
                 </p>
               </button>

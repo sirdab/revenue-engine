@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n/i18n";
 import {
   useSlackSettings,
@@ -21,16 +21,9 @@ import {
 function StatusPill({ set }: { set: boolean }) {
   const { t } = useI18n();
   return (
-    <span
-      className={cn(
-        "shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium",
-        set
-          ? "border-teal-200 bg-teal-50 text-teal-700"
-          : "border-slate-200 bg-slate-50 text-slate-500",
-      )}
-    >
+    <Badge tone={set ? "success" : "neutral"} className="shrink-0">
       {set ? t("settings.slack.connected") : t("settings.slack.notSet")}
-    </span>
+    </Badge>
   );
 }
 
@@ -83,16 +76,16 @@ export function SlackSettings() {
   const anythingSet = Boolean(data && (data.botTokenSet || data.webhookUrlSet || data.announceChannel));
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-card p-4">
-      <h2 className="text-sm font-semibold text-slate-900">{t("settings.slack.title")}</h2>
-      <p className="mb-4 text-xs text-slate-500">{t("settings.slack.description")}</p>
+    <section className="rounded-lg border border-border bg-card p-4">
+      <h2 className="text-body font-semibold text-foreground">{t("settings.slack.title")}</h2>
+      <p className="mb-4 text-caption-quiet text-muted-foreground">{t("settings.slack.description")}</p>
 
       {isLoading ? (
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+        <div className="flex items-center gap-2 text-body-quiet text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> {t("common.loading")}
         </div>
       ) : isError || !data ? (
-        <p className="text-sm text-red-600">{t("settings.slack.loadFailed")}</p>
+        <p className="text-body text-destructive">{t("settings.slack.loadFailed")}</p>
       ) : (
         <div className="space-y-4">
           <div className="space-y-1.5">
@@ -107,9 +100,9 @@ export function SlackSettings() {
               value={botToken}
               onChange={(e) => setBotToken(e.target.value)}
               placeholder={data.botTokenSet ? t("settings.slack.keepCurrent") : "xoxb-…"}
-              className="font-mono text-xs"
+              className="font-mono text-caption"
             />
-            <p className="text-xs text-slate-400">{t("settings.slack.botTokenHint")}</p>
+            <p className="text-caption-quiet text-subtle">{t("settings.slack.botTokenHint")}</p>
           </div>
 
           <div className="space-y-1.5">
@@ -128,9 +121,9 @@ export function SlackSettings() {
                   ? t("settings.slack.keepCurrent")
                   : "https://hooks.slack.com/services/…"
               }
-              className="font-mono text-xs"
+              className="font-mono text-caption"
             />
-            <p className="text-xs text-slate-400">{t("settings.slack.webhookUrlHint")}</p>
+            <p className="text-caption-quiet text-subtle">{t("settings.slack.webhookUrlHint")}</p>
           </div>
 
           <div className="space-y-1.5">
@@ -141,7 +134,7 @@ export function SlackSettings() {
               onChange={(e) => setChannel(e.target.value)}
               placeholder="#sales"
             />
-            <p className="text-xs text-slate-400">{t("settings.slack.announceChannelHint")}</p>
+            <p className="text-caption-quiet text-subtle">{t("settings.slack.announceChannelHint")}</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -150,7 +143,6 @@ export function SlackSettings() {
               size="sm"
               onClick={save}
               disabled={!dirty || update.isPending}
-              className="bg-teal-600 text-white hover:bg-teal-700"
             >
               {update.isPending && <Loader2 className="me-1.5 h-4 w-4 animate-spin" />}
               {t("common.save")}

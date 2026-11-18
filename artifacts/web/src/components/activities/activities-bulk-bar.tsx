@@ -60,11 +60,11 @@ export function ActivitiesBulkBar({
   };
 
   return (
-    <div className="fixed bottom-6 start-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-slate-200 bg-card px-4 py-2.5 shadow-lg">
-      <span className="text-sm font-medium text-slate-700">
+    <div className="fixed bottom-6 start-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-xl bg-popover px-4 py-2.5 shadow-popover-sm backdrop-blur-popover">
+      <span className="text-body font-medium text-foreground">
         {selectedIds.length} selected
       </span>
-      <div className="h-5 w-px bg-slate-200" />
+      <div className="h-5 w-px bg-gray-200" />
 
       <Button
         variant="outline"
@@ -72,7 +72,7 @@ export function ActivitiesBulkBar({
         disabled={bulk.isPending}
         onClick={() => run("mark_done", t("activity.bulk.completed"))}
       >
-        <CheckCircle2 className="me-1.5 h-4 w-4 text-teal-600" />
+        <CheckCircle2 className="me-1.5 h-4 w-4" />
         {t("activity.bulk.markComplete")}
       </Button>
 
@@ -92,7 +92,7 @@ export function ActivitiesBulkBar({
             variant="outline"
             size="sm"
             disabled={bulk.isPending}
-            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+            className="text-destructive hover:bg-destructive-subtle hover:text-destructive"
           >
             <Trash2 className="me-1.5 h-4 w-4" />
             {t("common.delete")}
@@ -111,7 +111,7 @@ export function ActivitiesBulkBar({
           <AlertDialogFooter>
             <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-destructive hover:bg-destructive"
               onClick={() => run("delete", t("activity.bulk.deleted"))}
             >
               {t("common.delete")}
@@ -121,13 +121,13 @@ export function ActivitiesBulkBar({
       </AlertDialog>
 
       {bulk.isPending && (
-        <Loader2 className="h-4 w-4 animate-spin text-teal-600" />
+        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
       )}
 
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-slate-500"
+        className="h-8 w-8 text-muted-foreground"
         onClick={onClear}
         aria-label={t("activity.bulk.clearSelection")}
       >

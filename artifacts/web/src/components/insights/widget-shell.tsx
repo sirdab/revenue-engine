@@ -254,8 +254,8 @@ export function WidgetShell({
   return (
     <Card
       className={cn(
-        "flex h-full flex-col overflow-hidden rounded-xl border-slate-200 p-3 shadow-sm transition-shadow hover:shadow-md",
-        modified && "ring-1 ring-amber-300",
+        "flex h-full flex-col overflow-hidden p-3 transition-shadow hover:shadow-card-hover",
+        modified && "ring-1 ring-warning/30",
       )}
       data-testid={`widget-${widget.id}`}
     >
@@ -267,12 +267,12 @@ export function WidgetShell({
           )}
           {...dragHandleProps}
         >
-          <h3 className="truncate text-sm font-semibold text-slate-700">
+          <h3 className="truncate text-body font-semibold text-foreground">
             {widget.name}
           </h3>
           {modified && (
             <span
-              className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500"
+              className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning"
               title={t("insights.widget.unsavedFilters")}
               data-testid={`widget-${widget.id}-modified`}
             />
@@ -282,12 +282,12 @@ export function WidgetShell({
           <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400">
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-subtle">
                   <Info className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" align="end" className="max-w-72">
-                <div className="space-y-1.5 text-xs">
+                <div className="space-y-1.5 text-caption-quiet">
                   <div>
                     <span className="font-semibold">{t("insights.widget.boardFilters")}</span>{" "}
                     {appliedBoard.length > 0 ? appliedBoard.join("; ") : t("insights.widget.none")}
@@ -297,7 +297,7 @@ export function WidgetShell({
                     {appliedWidget.length > 0 ? appliedWidget.join("; ") : t("insights.widget.none")}
                   </div>
                   {dataUpdatedAt > 0 && (
-                    <div className="text-slate-400">
+                    <div className="text-subtle">
                       {t("insights.widget.updatedAt", { time: formatRelativeLong(dataUpdatedAt) })}
                     </div>
                   )}
@@ -312,15 +312,15 @@ export function WidgetShell({
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  "relative h-7 w-7 text-slate-400",
-                  (filterCount > 0 || modified) && "text-teal-600",
+                  "relative h-7 w-7 text-subtle",
+                  (filterCount > 0 || modified) && "text-brand",
                 )}
                 title={t("insights.widget.widgetFiltersTitle")}
                 data-testid={`widget-${widget.id}-filters`}
               >
                 <Filter className="h-3.5 w-3.5" />
                 {filterCount > 0 && (
-                  <span className="absolute -end-0.5 -top-0.5 rounded-full bg-teal-600 px-1 text-[9px] font-semibold leading-3 text-white">
+                  <span className="absolute -end-0.5 -top-0.5 rounded-full bg-primary px-1 text-[9px] font-semibold leading-3 text-primary-foreground">
                     {filterCount}
                   </span>
                 )}
@@ -334,8 +334,8 @@ export function WidgetShell({
                   onChange={setDraft}
                 />
               </div>
-              <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
-                <span className="text-xs text-slate-400">
+              <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                <span className="text-caption-quiet text-subtle">
                   {modified ? t("insights.widget.unsavedLive") : t("insights.widget.editsLive")}
                 </span>
                 <div className="flex gap-2">
@@ -381,7 +381,7 @@ export function WidgetShell({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400">
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-subtle">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -426,7 +426,7 @@ export function WidgetShell({
               {!readOnly && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={onRemove} className="text-red-600">
+                  <DropdownMenuItem onClick={onRemove} className="text-destructive">
                     <Trash2 className="me-2 h-4 w-4" /> {t("common.remove")}
                   </DropdownMenuItem>
                 </>
@@ -447,7 +447,7 @@ export function WidgetShell({
           </div>
         ) : isError ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
-            <p className="text-sm text-red-500">{error?.message || t("insights.queryFailed")}</p>
+            <p className="text-body-quiet text-destructive">{error?.message || t("insights.queryFailed")}</p>
             <Button variant="outline" size="sm" onClick={() => void refetch()}>
               <RefreshCw className="me-1.5 h-3.5 w-3.5" /> {t("common.retry")}
             </Button>
@@ -468,7 +468,7 @@ export function WidgetShell({
       </div>
       {data?.meta.rowCap != null && (
         <p
-          className="mt-1 shrink-0 text-[11px] text-amber-600"
+          className="mt-1 shrink-0 text-[11px] text-warning"
           title={t("insights.widget.rowCapTitle")}
           data-testid={`widget-${widget.id}-rowcap`}
         >

@@ -85,14 +85,14 @@ export function ActivityCompleteBody({
         <DialogTitle>{t("activity.outcome.completeTitle")}</DialogTitle>
       </DialogHeader>
       <div className="min-w-0 space-y-2">
-        <p dir="auto" className="text-sm font-medium text-slate-700">
+        <p dir="auto" className="text-body font-medium text-foreground">
           {activity.subject}
         </p>
         {activity.note?.trim() && <NoteView note={activity.note} />}
-        <p className="text-xs text-slate-500">{t("activity.outcome.completeHint")}</p>
+        <p className="text-caption text-muted-foreground">{t("activity.outcome.completeHint")}</p>
         <label
           htmlFor="activity-response"
-          className="block pt-1 text-xs font-medium text-slate-500"
+          className="block pt-1 text-caption font-medium text-muted-foreground"
         >
           {t("activity.outcome.responseLabel")}
         </label>
@@ -104,7 +104,7 @@ export function ActivityCompleteBody({
           onSubmit={() => void replied()}
         />
         {missing && (
-          <p className="text-xs text-red-600">{t("activity.outcome.responseRequired")}</p>
+          <p className="text-caption text-destructive">{t("activity.outcome.responseRequired")}</p>
         )}
       </div>
       <DialogFooter>
@@ -123,7 +123,6 @@ export function ActivityCompleteBody({
         <Button
           onClick={() => void replied()}
           disabled={source.pending}
-          className="bg-teal-600 text-white hover:bg-teal-700"
         >
           {source.pending ? (
             <Loader2 className="me-1.5 h-4 w-4 animate-spin" />

@@ -13,6 +13,7 @@ import {
   isLocale,
   type Locale,
 } from "@/lib/i18n/locales";
+import { TOPBAR_ICON_BUTTON } from "@/components/layout/topbar-icon";
 
 // The language switcher. Language is a property of the person
 // rather than of the screen, so it is an account-level preference and not a
@@ -60,16 +61,13 @@ export function LanguageToggle() {
       onClick={() => setLocale(target)}
       aria-label={t("language.switchTo", { language: info.englishName })}
       title={t("language.switchTo", { language: info.nativeName })}
-      className={cn(
-        "flex h-9 min-w-9 flex-shrink-0 items-center justify-center gap-1 rounded-md px-2",
-        "text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900",
-      )}
+      className={cn(TOPBAR_ICON_BUTTON, "w-auto min-w-9 gap-1 px-2")}
     >
-      <Languages className="h-5 w-5 shrink-0" />
+      <Languages className="shrink-0" />
       <span
         dir={info.dir}
         aria-hidden="true"
-        className="text-xs font-semibold leading-none"
+        className="text-caption font-semibold leading-none"
       >
         {/* The target language's own name, kept to the script's shortest
             recognisable form so the button stays a button and not a word. */}
@@ -84,7 +82,7 @@ export function LanguageMenuSection() {
 
   return (
     <>
-      <DropdownMenuLabel className="flex items-center gap-2 text-xs font-normal text-slate-500">
+      <DropdownMenuLabel className="flex items-center gap-2 text-caption font-normal text-muted-foreground">
         <Languages className="h-3.5 w-3.5" />
         {t("language.label")}
       </DropdownMenuLabel>
@@ -109,7 +107,7 @@ export function LanguageMenuSection() {
                 {info.nativeName}
               </span>
               {info.nativeName !== info.englishName && (
-                <span className="ms-2 text-xs text-slate-400">
+                <span className="ms-2 text-caption text-subtle">
                   {info.englishName}
                 </span>
               )}

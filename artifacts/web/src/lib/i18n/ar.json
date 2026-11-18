@@ -726,6 +726,7 @@
   "files.category.vat_certificate": "شهادة ضريبة القيمة المضافة",
   "files.deleteBody": "سيؤدي هذا إلى حذف الملف نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
   "files.deleteTitle": "حذف \"{name}\"؟",
+  "files.dropzone": "اختر ملفًا أو اسحبه هنا",
   "files.empty": "لا توجد ملفات بعد.",
   "files.file": "الملف",
   "files.selectCategory": "اختر الفئة",
@@ -1176,5 +1177,5 @@
   "activity.strip.keepAsIs": "إبقاؤها كما هي",
   "activity.strip.editFollowUp": "تعديل المتابعة",
   "activity.strip.followUpMoved": "حُددت المتابعة في {date}",
-  "brand.productName": "CRM"
+  "brand.productName": "Sirdab Revenue Engine"
 }

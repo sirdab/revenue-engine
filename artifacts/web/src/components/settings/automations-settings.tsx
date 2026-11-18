@@ -142,7 +142,7 @@ function AutomationRow({
           disabled={busy || index === 0}
           onClick={() => onMove(-1)}
           aria-label="Move up"
-          className="text-slate-300 transition-colors hover:text-slate-600 disabled:opacity-30"
+          className="text-subtle transition-colors hover:text-muted-foreground disabled:opacity-30"
         >
           <ArrowUp className="h-3.5 w-3.5" />
         </button>
@@ -151,17 +151,17 @@ function AutomationRow({
           disabled={busy || index === count - 1}
           onClick={() => onMove(1)}
           aria-label="Move down"
-          className="text-slate-300 transition-colors hover:text-slate-600 disabled:opacity-30"
+          className="text-subtle transition-colors hover:text-muted-foreground disabled:opacity-30"
         >
           <ArrowDown className="h-3.5 w-3.5" />
         </button>
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-slate-800">
+        <p className="truncate text-body font-semibold text-foreground">
           {automation.name}
         </p>
-        <p className="truncate text-xs text-slate-500">
+        <p className="truncate text-caption-quiet text-muted-foreground">
           {automation.triggerEvent === "deal_updated"
             ? conditionCount === 0
               ? "Any change to any deal"
@@ -189,7 +189,7 @@ function AutomationRow({
         disabled={busy}
         onClick={onEdit}
         aria-label={`Edit ${automation.name}`}
-        className="h-7 w-7 shrink-0 text-slate-300 opacity-0 transition-opacity hover:text-slate-700 group-hover:opacity-100"
+        className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
       >
         <Pencil className="h-3.5 w-3.5" />
       </Button>
@@ -201,7 +201,7 @@ function AutomationRow({
             size="icon"
             disabled={busy}
             aria-label={`Delete ${automation.name}`}
-            className="h-7 w-7 shrink-0 text-slate-300 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
+            className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
@@ -218,7 +218,7 @@ function AutomationRow({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={onDelete}
-              className="bg-red-600 text-white hover:bg-red-700"
+              className="bg-destructive text-white hover:bg-destructive"
             >
               Delete automation
             </AlertDialogAction>
@@ -302,10 +302,10 @@ export function AutomationsSettings() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-6">
       <header className="mb-5">
-        <h1 className="font-heading text-xl font-bold text-slate-900">
+        <h1 className="text-heading-sm text-foreground">
           Automations
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-body-quiet text-muted-foreground">
           When something happens — a deal comes in, a deal moves stage — have
           the app do the next step for you.
         </p>
@@ -318,30 +318,30 @@ export function AutomationsSettings() {
           <Button
             size="sm"
             onClick={openCreate}
-            className="h-8 bg-teal-600 text-white hover:bg-teal-700"
+            className="h-8 bg-primary text-primary-foreground hover:bg-primary-hover"
           >
             <Plus className="me-1 h-3.5 w-3.5" /> Automation
           </Button>
         }
       >
         {isLoading ? (
-          <div className="flex items-center justify-center gap-2 px-5 py-10 text-sm text-slate-400">
+          <div className="flex items-center justify-center gap-2 px-5 py-10 text-body-quiet text-subtle">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading automations…
           </div>
         ) : isError || !data ? (
-          <div className="px-5 py-10 text-center text-sm text-red-600">
+          <div className="px-5 py-10 text-center text-body-quiet text-destructive">
             Failed to load automations.
           </div>
         ) : total === 0 ? (
           <div className="px-5 py-10 text-center">
-            <Zap className="mx-auto mb-2 h-6 w-6 text-slate-300" />
-            <p className="text-sm text-slate-500">No automations yet.</p>
-            <p className="mt-1 text-xs text-slate-400">
+            <Zap className="mx-auto mb-2 h-6 w-6 text-subtle" />
+            <p className="text-body-quiet text-muted-foreground">No automations yet.</p>
+            <p className="mt-1 text-caption-quiet text-subtle">
               Add one to take a repetitive step off your plate.
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-border">
             {EVENT_ORDER.filter((event) => byEvent[event].length > 0).flatMap(
               (event) =>
                 byEvent[event].map((automation, i) => (

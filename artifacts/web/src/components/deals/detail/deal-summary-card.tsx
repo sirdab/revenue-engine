@@ -35,18 +35,18 @@ function Metric({
 }) {
   return (
     <div className="min-w-0">
-      <div className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+      <div className="text-caption text-muted-foreground">
         {label}
       </div>
       {control ?? (
         <div
-          className="mt-0.5 truncate text-sm font-semibold text-slate-800"
+          className="mt-0.5 truncate text-body font-semibold text-foreground"
           title={title ?? value ?? undefined}
         >
           {value != null && value !== "" ? (
             value
           ) : (
-            <span className="font-normal text-slate-400">—</span>
+            <span className="font-normal text-subtle">—</span>
           )}
         </div>
       )}
@@ -94,7 +94,7 @@ export function DealSummaryCard({
               value={deal.value}
               currency={deal.currency}
               onCommit={(v) => onCommit({ value: v })}
-              className="-ms-1 mt-0.5 w-full text-sm font-semibold text-slate-800"
+              className="-ms-1 mt-0.5 w-full text-body font-semibold text-foreground"
             />
           }
         />
@@ -150,22 +150,22 @@ export function DealSummaryCard({
                   // can't be wheel-scrolled. In-place is clip-safe — Radix
                   // positions the popover `fixed`, so page mode is unaffected.
                   inModal
-                  triggerClassName="h-8 w-full justify-between border-transparent bg-transparent px-1 text-sm font-semibold text-slate-800 shadow-none hover:bg-slate-100"
+                  triggerClassName="h-8 w-full justify-between border-transparent bg-transparent px-1 text-body font-semibold text-foreground shadow-none hover:bg-gray-alpha-100"
                 />
               ) : (
                 <div
-                  className="flex h-8 items-center truncate px-1 text-sm font-semibold text-slate-800"
+                  className="flex h-8 items-center truncate px-1 text-body font-semibold text-foreground"
                   title={deal.ownerName ?? undefined}
                 >
                   {deal.ownerName ?? (
-                    <span className="font-normal text-slate-400">
+                    <span className="font-normal text-subtle">
                       {t("common.unassigned")}
                     </span>
                   )}
                 </div>
               )}
               {ownerTeam && (
-                <div className="mt-0.5 text-[11px] text-slate-400">
+                <div className="mt-0.5 text-[11px] text-subtle">
                   {ownerTeam}
                 </div>
               )}
@@ -183,7 +183,7 @@ export function DealSummaryCard({
         />
       </div>
 
-      <div className="mt-3 border-t border-slate-100 pt-2 text-[11px] text-slate-400">
+      <div className="mt-3 border-t border-border pt-2 text-[11px] text-subtle">
         {t("deals.summary.added", { date: formatDate(deal.addTime) })}
       </div>
     </DealSectionCard>

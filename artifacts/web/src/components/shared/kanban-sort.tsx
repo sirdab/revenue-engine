@@ -95,11 +95,11 @@ export function KanbanSortControl({
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="h-8 gap-1.5">
           <ArrowDownUp className="h-3.5 w-3.5" />
-          <span className="text-xs">{t("sort.active", { field: active?.label ?? "" })}</span>
+          <span className="text-caption">{t("sort.active", { field: active?.label ?? "" })}</span>
           {sort.dir === "asc" ? (
-            <ArrowUp className="h-3 w-3 text-slate-400" />
+            <ArrowUp className="h-3 w-3 text-subtle" />
           ) : (
-            <ArrowDown className="h-3 w-3 text-slate-400" />
+            <ArrowDown className="h-3 w-3 text-subtle" />
           )}
         </Button>
       </DropdownMenuTrigger>
@@ -120,7 +120,7 @@ export function KanbanSortControl({
             <Check
               className={cn(
                 "h-3.5 w-3.5",
-                sort.id === o.id ? "text-teal-600" : "opacity-0",
+                sort.id === o.id ? "text-brand" : "opacity-0",
               )}
             />
           </DropdownMenuItem>
@@ -134,9 +134,9 @@ export function KanbanSortControl({
           className="flex items-center gap-2"
         >
           {sort.dir === "asc" ? (
-            <ArrowUp className="h-3.5 w-3.5 text-slate-500" />
+            <ArrowUp className="h-3.5 w-3.5 text-muted-foreground" />
           ) : (
-            <ArrowDown className="h-3.5 w-3.5 text-slate-500" />
+            <ArrowDown className="h-3.5 w-3.5 text-muted-foreground" />
           )}
           <span>{sort.dir === "asc" ? t("common.ascending") : t("common.descending")}</span>
         </DropdownMenuItem>

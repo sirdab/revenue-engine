@@ -1,24 +1,18 @@
 import { Link } from "wouter";
 import { Handshake, ChevronRight, Flame } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyMedia,
-} from "@/components/ui/empty";
-import { cn } from "@/lib/utils";
+import { EmptyState } from "@sirdab/one/components/empty-state";
+import { Badge, type StatusTone } from "@/components/ui/badge";
 import { Money } from "@/components/shared/money";
 import { DealSectionCard } from "@/components/deals/detail/deal-section-card";
 import type { Deal } from "@workspace/api-client-react";
 import { useI18n } from "@/lib/i18n/i18n";
 
-const STATUS_PILL: Record<string, string> = {
-  open: "bg-teal-50 text-teal-700 border-teal-200",
-  won: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  lost: "bg-red-50 text-red-600 border-red-200",
-  deleted: "bg-slate-100 text-slate-500 border-slate-200",
+const STATUS_TONE: Record<string, StatusTone> = {
+  open: "neutral",
+  won: "success",
+  lost: "critical",
+  deleted: "neutral",
 };
 
 export function PersonDeals({
@@ -34,7 +28,7 @@ export function PersonDeals({
       title={t("common.deals")}
       action={
         deals.length > 0 ? (
-          <span className="text-[11px] font-medium text-slate-400">
+          <span className="text-caption font-medium text-subtle">
             {deals.length}
           </span>
         ) : undefined
@@ -48,50 +42,43 @@ export function PersonDeals({
           ))}
         </div>
       ) : deals.length === 0 ? (
-        <Empty className="border-dashed py-8">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Handshake className="h-4 w-4" />
-            </EmptyMedia>
-            <EmptyTitle>{t("contacts.noDeals")}</EmptyTitle>
-            <EmptyDescription>
-              {t("contacts.personDealsHint")}
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <EmptyState
+          className="py-8"
+          icon={Handshake}
+          title={t("contacts.noDeals")}
+          caption={t("contacts.personDealsHint")}
+        />
       ) : (
-        <ul className="divide-y divide-slate-100">
+        <ul className="divide-y divide-border">
           {deals.map((d) => (
             <li key={d.id}>
               <Link
                 href={`/deal/${d.id}`}
-                className="group flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-slate-50"
+                className="group flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-gray-alpha-50"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="truncate text-sm font-medium text-slate-800">
+                    <span className="truncate text-body font-medium text-foreground">
                       {d.title}
                     </span>
                     {d.isRotting && d.status === "open" && (
-                      <Flame className="h-3 w-3 shrink-0 text-orange-500" />
+                      <Flame className="h-3 w-3 shrink-0 text-warning-glyph" />
                     )}
                   </div>
-                  <div className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-400">
-                    <span
-                      className={cn(
-                        "rounded-full border px-1.5 py-px font-semibold uppercase tracking-wide",
-                        STATUS_PILL[d.status] ?? STATUS_PILL.deleted,
-                      )}
+                  <div className="mt-0.5 flex items-center gap-2 text-caption text-subtle">
+                    <Badge
+                      tone={STATUS_TONE[d.status] ?? "neutral"}
+                      className="capitalize"
                     >
                       {d.status}
-                    </span>
+                    </Badge>
                     {d.stageName && <span className="truncate">{d.stageName}</span>}
                   </div>
                 </div>
-                <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-700">
+                <span className="shrink-0 text-body font-medium tabular-nums text-foreground">
                   <Money value={d.value} currency={d.currency} />
                 </span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition-colors group-hover:text-teal-500" />
+                <ChevronRight className="h-4 w-4 shrink-0 text-subtle transition-colors group-hover:text-foreground" />
               </Link>
             </li>
           ))}

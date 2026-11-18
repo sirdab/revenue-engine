@@ -21,7 +21,7 @@ export function SearchInput({
 }) {
   return (
     <div className={cn("relative w-full sm:w-[240px]", className)}>
-      <Search className="pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <Search className="pointer-events-none absolute start-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}

@@ -13,13 +13,13 @@ export function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-xl border border-slate-200 bg-card shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+    <section className="overflow-hidden rounded-2xl bg-card shadow-card">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4">
         <div>
-          <h2 className="font-heading text-sm font-bold text-slate-900">
-            {title}
-          </h2>
-          <p className="mt-0.5 max-w-lg text-xs text-slate-500">{description}</p>
+          <h2 className="text-heading-xs text-foreground">{title}</h2>
+          <p className="mt-1 max-w-prose text-body-quiet text-muted-foreground">
+            {description}
+          </p>
         </div>
         {actions}
       </div>
