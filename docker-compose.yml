@@ -1,8 +1,15 @@
-# Local Postgres for development:
+# Local services for development:
 #
-#   docker compose up -d db
+#   docker compose up -d
 #
-# and, to run the whole app from the production image (self-hosting / a quick
+# starts Postgres, S3-compatible file storage (RustFS) for deal attachments and
+# Mailpit, which catches every outgoing email. `.env.example` points `pnpm dev`
+# at all three, so attachments and emails work with no extra setup:
+#
+#   storage console  http://localhost:9001/rustfs/console/   (rustfsadmin / rustfsadmin)
+#   mailpit inbox    http://localhost:8025
+#
+# To run the whole app from the production image (self-hosting / a quick
 # try-out), also:
 #
 #   docker compose --profile app up -d --build
@@ -27,6 +34,54 @@ services:
       timeout: 5s
       retries: 10
 
+  # S3-compatible object storage for deal attachments (console on :9001 at
+  # /rustfs/console/). RustFS speaks the S3 API
+  # (MinIO no longer publishes container images); any S3 store works in its place.
+  storage:
+    image: rustfs/rustfs:1.0.4
+    environment:
+      RUSTFS_ACCESS_KEY: rustfsadmin
+      RUSTFS_SECRET_KEY: rustfsadmin
+      RUSTFS_CONSOLE_ENABLE: "true"
+    ports:
+      - "127.0.0.1:${STORAGE_PORT:-9000}:9000"
+      - "127.0.0.1:${STORAGE_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - storage-data:/data
+
+  # Creates the attachments bucket once storage answers, then idles and reports
+  # healthy. It stays up rather than exiting because `docker compose up --wait`
+  # (pnpm db:up) treats a container that exits as a failure, even with code 0.
+  storage-init:
+    image: amazon/aws-cli:2.39.6
+    depends_on:
+      - storage
+    environment:
+      AWS_ACCESS_KEY_ID: rustfsadmin
+      AWS_SECRET_ACCESS_KEY: rustfsadmin
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint: ["sh", "-c"]
+    command:
+      - >
+        trap 'exit 0' TERM INT;
+        until aws --endpoint-url http://storage:9000 s3api head-bucket --bucket crm-files 2>/dev/null ||
+        aws --endpoint-url http://storage:9000 s3api create-bucket --bucket crm-files >/dev/null 2>&1;
+        do sleep 1; done;
+        touch /tmp/ready; echo "bucket crm-files ready";
+        sleep infinity & wait
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/ready"]
+      interval: 2s
+      timeout: 2s
+      retries: 60
+
+  # Catches outgoing email (SMTP on 1025); read it at http://localhost:8025.
+  mailpit:
+    image: axllent/mailpit:v1.33
+    ports:
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+
   app:
     profiles: ["app"]
     build: .
@@ -37,30 +92,36 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    # Compose reads .env in this folder for these ${...} values.
+      storage-init:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    # Compose reads .env in this folder for these ${...} values. Storage and
+    # email always use the services above: this profile is a local try-out,
+    # never a deployment (mail goes to Mailpit's open inbox). See DEPLOY.md.
     environment:
       DATABASE_URL: postgres://crm_app:crm_app@db:5432/crm
       SESSION_SECRET: ${SESSION_SECRET:-}   # required by the app; set it in .env
       PORT: "8080"
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
-      APP_NAME: ${APP_NAME:-CRM}
+      APP_NAME: ${APP_NAME:-Sirdab Revenue Engine}
       APP_TIMEZONE: ${APP_TIMEZONE:-UTC}
       PHONE_COUNTRY_CODE: ${PHONE_COUNTRY_CODE:-}
       MAIL_FROM: ${MAIL_FROM:-}
-      AWS_SES_SMTP_ENDPOINT: ${AWS_SES_SMTP_ENDPOINT:-}
-      AWS_SES_SMTP_USER: ${AWS_SES_SMTP_USER:-}
-      AWS_SES_SMTP_PASSWORD: ${AWS_SES_SMTP_PASSWORD:-}
-      AWS_SMTP_PORT: ${AWS_SMTP_PORT:-}
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_REQUIRE_TLS: "false"
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      S3_ENDPOINT: ${S3_ENDPOINT:-}
-      S3_REGION: ${S3_REGION:-}
-      S3_BUCKET_NAME: ${S3_BUCKET_NAME:-}
-      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
-      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+      S3_ENDPOINT: http://storage:9000
+      S3_REGION: us-east-1
+      S3_BUCKET_NAME: crm-files
+      S3_ACCESS_KEY_ID: rustfsadmin
+      S3_SECRET_ACCESS_KEY: rustfsadmin
       SENTRY_DSN: ${SENTRY_DSN:-}
     ports:
-      - "${APP_PORT:-8080}:8080"
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
     command: ["sh", "-c", "node dist/migrate.mjs && exec node --enable-source-maps dist/index.mjs"]
 
 volumes:
   db-data:
+  storage-data:

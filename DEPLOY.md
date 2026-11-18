@@ -86,7 +86,7 @@ fly secrets set --stage --app my-crm \
 fly secrets set --stage --app my-crm \
   APP_NAME="Acme CRM" APP_TIMEZONE="Europe/London" PHONE_COUNTRY_CODE="44" \
   MAIL_FROM="Acme CRM <no-reply@example.com>" \
-  AWS_SES_SMTP_ENDPOINT="…" AWS_SES_SMTP_USER="…" AWS_SES_SMTP_PASSWORD="…" AWS_SMTP_PORT="587" \
+  SMTP_HOST="…" SMTP_PORT="587" SMTP_USER="…" SMTP_PASSWORD="…" \
   S3_ENDPOINT="…" S3_BUCKET_NAME="…" S3_ACCESS_KEY_ID="…" S3_SECRET_ACCESS_KEY="…" \
   ANTHROPIC_API_KEY="…"
 ```
@@ -141,10 +141,16 @@ docker run -p 8080:8080 --env-file .env crm \
   sh -c "node dist/migrate.mjs && exec node --enable-source-maps dist/index.mjs"
 ```
 
-`docker-compose.yml` is a complete example with its own Postgres
-(`docker compose --profile app up -d --build`). Serve it over HTTPS, since the
-session cookie is `Secure` in production, and set `APP_BASE_URL` to the public
-URL so links in emails and Slack messages are right.
+Serve it over HTTPS, since the session cookie is `Secure` in production, and
+set `APP_BASE_URL` to the public URL so links in emails and Slack messages are
+right.
+
+`docker-compose.yml`'s `app` profile (`docker compose --profile app up -d
+--build`) is a local try-out, not a deployment: it always sends email to
+Mailpit (whose inbox has no login, and password-reset links land there) and
+stores files in the bundled RustFS with default credentials. Its services
+listen on `127.0.0.1` only. For a server, run the image as above with a real
+SMTP provider and object store.
 
 ## Production checklist
 

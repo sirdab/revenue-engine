@@ -5,7 +5,7 @@
   "scripts": {
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
     "dev": "node scripts/dev.mjs",
-    "db:up": "docker compose up -d --wait db",
+    "db:up": "docker compose up -d --wait",
     "db:migrate": "node scripts/with-env.mjs pnpm --filter @workspace/db run migrate",
     "seed": "node scripts/with-env.mjs pnpm --filter @workspace/api-server run seed",
     "bootstrap": "node scripts/with-env.mjs pnpm --filter @workspace/api-server run bootstrap",

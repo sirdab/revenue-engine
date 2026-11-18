@@ -4,15 +4,17 @@ import { logger } from "./logger";
 // ---------------------------------------------------------------------------
 // Central outbound mailer.
 //
-// A single SMTP transport (AWS SES) used for every transactional email and,
-// later, notifications. Configuration comes entirely from the environment so no
+// A single SMTP transport used for every transactional email and
+// notification. Works with any SMTP provider (AWS SES, Postmark, Mailgun, a
+// local Mailpit, ...). Configuration comes entirely from the environment so no
 // credentials live in code:
 //
-//   AWS_SES_SMTP_ENDPOINT   e.g. email-smtp.eu-central-1.amazonaws.com
-//   AWS_SES_SMTP_USER       SES SMTP username (an IAM access key id)
-//   AWS_SES_SMTP_PASSWORD   SES SMTP password (keep this a secret)
-//   AWS_SMTP_PORT           587 (STARTTLS) by default, or 465 (implicit TLS)
-//   MAIL_FROM               verified SES sender, e.g. "Acme CRM <no-reply@example.com>"
+//   SMTP_HOST          e.g. email-smtp.eu-central-1.amazonaws.com
+//   SMTP_PORT          587 (STARTTLS) by default, or 465 (implicit TLS)
+//   SMTP_USER          optional; omit both user and password for no auth
+//   SMTP_PASSWORD      optional (keep this a secret)
+//   SMTP_REQUIRE_TLS   "false" to allow a plain session (local dev only)
+//   MAIL_FROM          sender address, e.g. "Acme CRM <no-reply@acme.com>"
 //
 // The transport is built lazily and memoised. When the SMTP env is absent
 // `sendMail` throws `MailerNotConfiguredError`; callers decide whether that is
@@ -36,7 +38,7 @@ export interface MailMessage {
 
 export class MailerNotConfiguredError extends Error {
   constructor() {
-    super("SMTP mailer is not configured (missing AWS_SES_SMTP_* env)");
+    super("SMTP mailer is not configured (SMTP_HOST is not set)");
     this.name = "MailerNotConfiguredError";
   }
 }
@@ -46,11 +48,12 @@ let cached: Transporter | null | undefined;
 
 function getTransport(): Transporter | null {
   if (cached !== undefined) return cached;
-  const host = process.env.AWS_SES_SMTP_ENDPOINT;
-  const user = process.env.AWS_SES_SMTP_USER;
-  const pass = process.env.AWS_SES_SMTP_PASSWORD;
-  const port = Number(process.env.AWS_SMTP_PORT) || 587;
-  if (!host || !user || !pass) {
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASSWORD;
+  const port = Number(process.env.SMTP_PORT) || 587;
+  const requireTls = process.env.SMTP_REQUIRE_TLS !== "false";
+  if (!host) {
     cached = null;
     return null;
   }
@@ -58,11 +61,11 @@ function getTransport(): Transporter | null {
   cached = nodemailer.createTransport({
     host,
     port,
-    // 465 = implicit TLS; 587/25 must negotiate STARTTLS (require it explicitly
-    // so we never fall back to an unencrypted session against SES).
+    // 465 = implicit TLS; 587/25 must negotiate STARTTLS (required explicitly
+    // so we never fall back to an unencrypted session, unless opted out).
     secure,
-    requireTLS: !secure,
-    auth: { user, pass },
+    requireTLS: !secure && requireTls,
+    ...(user && pass ? { auth: { user, pass } } : {}),
   });
   logger.info({ host, port }, "SMTP mailer configured");
   return cached;
@@ -73,7 +76,7 @@ export function isMailerConfigured(): boolean {
 }
 
 export function mailFrom(): string {
-  return process.env.MAIL_FROM || "CRM <no-reply@example.com>";
+  return process.env.MAIL_FROM || "Sirdab Revenue Engine <no-reply@localhost>";
 }
 
 /** Send an email via SMTP. Throws MailerNotConfiguredError when unconfigured. */
