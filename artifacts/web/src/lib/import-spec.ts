@@ -100,7 +100,7 @@ export const ENTITY_SPECS: Record<EntityKey, EntitySpec> = {
         required: false,
         type: "string",
         example: "221B Baker Street, London",
-        aliases: ["location"],
+        aliases: ["location", "full/combined address of address"],
       },
       {
         key: "ownerId",
@@ -134,7 +134,7 @@ export const ENTITY_SPECS: Record<EntityKey, EntitySpec> = {
         required: false,
         type: "string",
         example: "sara@acme.com",
-        aliases: ["e-mail", "email address"],
+        aliases: ["e-mail", "email address", "email - work", "email - home", "email - other"],
       },
       {
         key: "phone",
@@ -142,7 +142,15 @@ export const ENTITY_SPECS: Record<EntityKey, EntitySpec> = {
         required: false,
         type: "string",
         example: "+15550100",
-        aliases: ["mobile", "telephone", "phone number"],
+        aliases: [
+          "mobile",
+          "telephone",
+          "phone number",
+          "phone - mobile",
+          "phone - work",
+          "phone - home",
+          "phone - other",
+        ],
       },
       {
         key: "jobTitle",
@@ -202,6 +210,7 @@ export const ENTITY_SPECS: Record<EntityKey, EntitySpec> = {
         required: false,
         type: "string",
         example: "USD",
+        aliases: ["currency of value"],
         defaultable: "currency",
       },
       {
@@ -263,7 +272,7 @@ export const ENTITY_SPECS: Record<EntityKey, EntitySpec> = {
         required: false,
         type: "string",
         example: "Sara Ahmed",
-        aliases: ["contact name", "person name", "poc", "poc name"],
+        aliases: ["contact name", "person name", "poc", "poc name", "contact person"],
         help: "Optional name for the contact created from Person phone.",
       },
       {
@@ -300,6 +309,7 @@ export const ENTITY_SPECS: Record<EntityKey, EntitySpec> = {
         required: false,
         type: "stringArray",
         example: "enterprise;priority",
+        aliases: ["label"],
         help: "Separate multiple labels with ; or ,",
       },
     ],
@@ -310,17 +320,69 @@ export const ENTITY_SPECS: Record<EntityKey, EntitySpec> = {
 
 const norm = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
+// ---- Pipedrive exports -----------------------------------------------------
+//
+// Pipedrive's spreadsheet exports name their columns plainly ("Title",
+// "Currency of Value", "Email - Work"), or with the entity in front from some
+// list views ("Deal - Title"). The aliases above cover the plain names. Its
+// owner, organization, person, pipeline and stage columns hold Pipedrive's
+// names and ids, never this workspace's IDs, so a Pipedrive file must not
+// auto-map onto an ID field (a Pipedrive "Organization ID" of 42 would link
+// to whatever local organization has id 42): those come from the defaults.
+
+/** Columns only Pipedrive's exports carry. */
+const PIPEDRIVE_MARKERS = new Set(
+  [
+    "contact person id",
+    "currency of value",
+    "organization created",
+    "person created",
+    "deal created",
+    "full/combined address of address",
+    "last stage change",
+    "deal closed on",
+    // Pipedrive's labelled contact columns ("Email - Work", "Phone - Mobile").
+    "email - work",
+    "email - home",
+    "email - other",
+    "phone - work",
+    "phone - mobile",
+    "phone - home",
+    "phone - other",
+  ].map(norm),
+);
+
+const PIPEDRIVE_PREFIX: Record<EntityKey, string> = {
+  organizations: "organization",
+  persons: "person",
+  deals: "deal",
+};
+
+const ANY_PIPEDRIVE_PREFIX = /^(deal|person|organization|lead)\s+-\s+/i;
+
+/** True when the headers look like a Pipedrive export. */
+export function isPipedriveExport(headers: string[]): boolean {
+  if (headers.some((h) => PIPEDRIVE_MARKERS.has(norm(h)))) return true;
+  return headers.filter((h) => ANY_PIPEDRIVE_PREFIX.test(h)).length >= 2;
+}
+
 /** Best-effort map of fieldKey -> CSV header, by key/label/alias match. */
 export function autoMapHeaders(
   entity: EntityKey,
   headers: string[],
 ): Record<string, string> {
+  const pipedrive = isPipedriveExport(headers);
+  // "Deal - Title" in a deals file is just "Title". Other entities' prefixes
+  // stay: "Person - Name" in a deals file is the deal's person name.
+  const ownPrefix = new RegExp(`^${PIPEDRIVE_PREFIX[entity]}\\s+-\\s+`, "i");
+  const headerKey = (h: string) => norm(pipedrive ? h.replace(ownPrefix, "") : h);
   const map: Record<string, string> = {};
   for (const field of ENTITY_SPECS[entity].fields) {
+    if (pipedrive && field.defaultable && field.type === "integer") continue;
     const candidates = new Set(
       [field.key, field.label, ...(field.aliases ?? [])].map(norm),
     );
-    const match = headers.find((h) => candidates.has(norm(h)));
+    const match = headers.find((h) => candidates.has(headerKey(h)));
     if (match) map[field.key] = match;
   }
   return map;

@@ -43,6 +43,7 @@ import {
   ENTITY_SPECS,
   IMPORT_BATCH_SIZE,
   autoMapHeaders,
+  isPipedriveExport,
   downloadTemplate,
   validateRows,
   unsatisfiedRequiredFields,
@@ -65,6 +66,7 @@ import {
   CheckCircle2,
   AlertCircle,
   AlertTriangle,
+  Info,
   Loader2,
   FileWarning,
 } from "lucide-react";
@@ -669,6 +671,19 @@ function MapStep({
 
   return (
     <div className="space-y-4">
+      {isPipedriveExport(headers) && (
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>Pipedrive export detected</AlertTitle>
+          <AlertDescription>
+            Its columns are matched for you. Owners, organizations,
+            {isDeals ? " people, pipelines and stages" : " and people"} in the
+            file are Pipedrive’s, not this workspace’s, so they are not
+            linked: pick them under Defaults for every row.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Bulk-select defaults — the answer to "a key detail isn't there". */}
       <Card>
         <h2 className="font-semibold text-foreground">Defaults for every row</h2>
