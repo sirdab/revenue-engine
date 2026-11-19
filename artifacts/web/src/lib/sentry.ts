@@ -4,6 +4,7 @@
 // time via Vite's VITE_ prefix convention — a Sentry DSN is not a secret.
 import * as Sentry from "@sentry/react";
 import { isChunkLoadError } from "./chunk-reload";
+import { isSessionExpiredError, isSessionExpiredEventException } from "./session-expiry";
 
 export function initSentry(): void {
   const dsn = import.meta.env.VITE_SENTRY_DSN as string | undefined;
@@ -20,6 +21,14 @@ export function initSentry(): void {
       if (isChunkLoadError(hint?.originalException)) return null;
       const value = event.exception?.values?.[0]?.value;
       if (isChunkLoadError(value)) return null;
+      // An expired session's 401 is expected: the query/mutation cache sends
+      // the user back to sign-in (see App.tsx). A mutateAsync caller that
+      // doesn't catch still surfaces it as an unhandled rejection, which was
+      // paging us as a high-priority ApiError.
+      if (isSessionExpiredError(hint?.originalException)) return null;
+      if (isSessionExpiredEventException(event.exception?.values?.[0]?.type, value)) {
+        return null;
+      }
       return event;
     },
   });
