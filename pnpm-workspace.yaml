@@ -58,7 +58,7 @@ catalog:
   drizzle-orm: ^0.45.2
   framer-motion: ^12.23.24
   lucide-react: ^0.545.0
-  multer: ^2.2.0
+  multer: ^2.5.0
   '@types/multer': ^2.2.0
   open-graph-scraper: ^6.12.0
   mustache: ^4.2.0
@@ -160,6 +160,8 @@ overrides:
   "@esbuild-kit/esm-loader": "npm:tsx@^4.21.0"
   esbuild: "0.28.1"
   # Security: force patched versions of vulnerable transitive dependencies
+  proxy-addr: "2.0.8"
+  undici: "7.30.1"
   markdown-it: ">=14.2.0"
   # Cap below 5.x: js-yaml 5 is ESM-only with no default export, which breaks
   # orval's config loader. 4.2.0+ still carries the security patch.
