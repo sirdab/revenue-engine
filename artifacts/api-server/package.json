@@ -24,7 +24,7 @@
     "@workspace/db": "workspace:*",
     "@workspace/deals-filter": "workspace:*",
     "@workspace/insights-spec": "workspace:*",
-    "compression": "^1.8.1",
+    "compression": "^1.8.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "drizzle-orm": "catalog:",
