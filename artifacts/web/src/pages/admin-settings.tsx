@@ -7,7 +7,7 @@ import {
   SETTINGS_SECTIONS,
 } from "@/components/settings/settings-shell";
 import { CustomFieldsSettings } from "@/components/settings/custom-fields-settings";
-import { WebhookSettings } from "@/components/settings/webhook-settings";
+import { IntegrationsPage } from "@/components/settings/integrations/integrations-page";
 import { PipelineStageSettings } from "@/components/settings/pipeline-stage-settings";
 import { LabelsSettings } from "@/components/settings/labels-settings";
 import { TeamsSettings } from "@/components/settings/teams-settings";
@@ -54,7 +54,7 @@ export default function AdminSettingsPage() {
         ) : active === "automations" ? (
           <AutomationsSettings />
         ) : active === "integrations" ? (
-          <WebhookSettings />
+          <IntegrationsPage />
         ) : active === "imports" ? (
           // The wizard brings no page padding of its own (the standalone
           // /import route wraps it in <Padded>), so give it the same gutters

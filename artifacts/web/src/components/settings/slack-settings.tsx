@@ -27,7 +27,7 @@ function StatusPill({ set }: { set: boolean }) {
   );
 }
 
-export function SlackSettings() {
+export function SlackSettings({ embedded = false }: { embedded?: boolean } = {}) {
   const { t } = useI18n();
   const { toast } = useToast();
   const { data, isLoading, isError } = useSlackSettings();
@@ -76,9 +76,13 @@ export function SlackSettings() {
   const anythingSet = Boolean(data && (data.botTokenSet || data.webhookUrlSet || data.announceChannel));
 
   return (
-    <section className="rounded-lg border border-border bg-card p-4">
-      <h2 className="text-body font-semibold text-foreground">{t("settings.slack.title")}</h2>
-      <p className="mb-4 text-caption-quiet text-muted-foreground">{t("settings.slack.description")}</p>
+    <section className={embedded ? "" : "rounded-lg border border-border bg-card p-4"}>
+      {!embedded && (
+        <>
+          <h2 className="text-body font-semibold text-foreground">{t("settings.slack.title")}</h2>
+          <p className="mb-4 text-caption-quiet text-muted-foreground">{t("settings.slack.description")}</p>
+        </>
+      )}
 
       {isLoading ? (
         <div className="flex items-center gap-2 text-body-quiet text-muted-foreground">
