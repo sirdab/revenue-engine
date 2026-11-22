@@ -18,15 +18,16 @@ export default function NotificationSettingsPage() {
     // Inside the shared Settings shell so the sidebar stays put — clicking
     // Notifications used to navigate away from it and the whole nav vanished.
     <SettingsShell active="notifications">
-      <div className="mx-auto w-full max-w-3xl px-4 py-4">
-      <div className="px-5 pt-5 pb-5">
-        <h1 className="text-heading-sm text-foreground">
-          {t("settings.notifications.pageTitle")}
-        </h1>
-        <p className="mt-1 text-body-quiet text-muted-foreground">
-          {t("settings.notifications.pageSubtitle")}
-        </p>
-      </div>
+      {/* The same gutters and header as the other settings sections. */}
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-6">
+        <header className="mb-5">
+          <h1 className="text-heading-sm text-foreground">
+            {t("settings.notifications.pageTitle")}
+          </h1>
+          <p className="mt-1 text-body-quiet text-muted-foreground">
+            {t("settings.notifications.pageSubtitle")}
+          </p>
+        </header>
         <NotificationPreferencesSettings />
       </div>
     </SettingsShell>
