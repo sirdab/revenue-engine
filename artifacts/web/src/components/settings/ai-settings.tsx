@@ -32,14 +32,21 @@ const PROVIDERS: { value: AiProvider; label: string; placeholder: string; keysUr
   },
 ];
 
-export function AiSettings() {
+export function AiSettings({
+  embedded = false,
+  initialProvider,
+}: {
+  embedded?: boolean;
+  /** Preselected when opened from a provider's card. */
+  initialProvider?: AiProvider;
+} = {}) {
   const { t } = useI18n();
   const { toast } = useToast();
   const { data, isLoading, isError } = useAiSettings();
   const update = useUpdateAiSettings();
   const test = useTestAiConnection();
   // null = untouched, so the controls show what is stored until edited.
-  const [provider, setProvider] = useState<AiProvider | null>(null);
+  const [provider, setProvider] = useState<AiProvider | null>(initialProvider ?? null);
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState<string | null>(null);
 
@@ -61,7 +68,7 @@ export function AiSettings() {
 
   if (isLoading) {
     return (
-      <Section>
+      <Section embedded={embedded}>
         <div className="flex items-center gap-2 text-body-quiet text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> {t("common.loading")}
         </div>
@@ -70,7 +77,7 @@ export function AiSettings() {
   }
   if (isError || !data) {
     return (
-      <Section>
+      <Section embedded={embedded}>
         <p className="text-body text-destructive">{t("settings.ai.loadFailed")}</p>
       </Section>
     );
@@ -121,7 +128,7 @@ export function AiSettings() {
   };
 
   return (
-    <Section>
+    <Section embedded={embedded}>
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3 rounded-md bg-surface-whisper px-3 py-2.5">
           <div className="min-w-0">
@@ -236,8 +243,9 @@ export function AiSettings() {
   );
 }
 
-function Section({ children }: { children: ReactNode }) {
+function Section({ children, embedded }: { children: ReactNode; embedded: boolean }) {
   const { t } = useI18n();
+  if (embedded) return <>{children}</>;
   return (
     <section className="rounded-lg border border-border bg-card p-4">
       <h2 className="text-body font-semibold text-foreground">{t("settings.ai.title")}</h2>

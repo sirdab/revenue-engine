@@ -3,8 +3,8 @@
 The [MIT License](LICENSE) covers this repository's source code. It does not
 grant any right to use Sirdab's trademarks:
 
-- the names **Sirdab** and **Sirdab Revenue Engine**,
-- the Sirdab and Sirdab Revenue Engine logos and favicons
+- the names **Sirdab** and **Revenue Engine**,
+- the Sirdab and Revenue Engine logos and favicons
   (`artifacts/web/src/assets/brand/`, `artifacts/web/public/sirdab-favicon.*`),
 - the link-preview and share images (`artifacts/web/public/link-preview.png`,
   `artifacts/web/public/og-*.jpg`).
