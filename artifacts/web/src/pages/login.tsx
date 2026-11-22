@@ -31,7 +31,10 @@ const loginSchema = (t: Translate) =>
     rememberMe: z.boolean().default(false),
   });
 
-type LoginFormValues = z.infer<ReturnType<typeof loginSchema>>;
+// rememberMe has a default, so the form's input type (optional) differs from
+// the parsed output (always set); the resolver is typed with both.
+type LoginFormInput = z.input<ReturnType<typeof loginSchema>>;
+type LoginFormValues = z.output<ReturnType<typeof loginSchema>>;
 
 export default function LoginPage() {
   const { t } = useI18n();
@@ -46,7 +49,7 @@ export default function LoginPage() {
     }
   }, [user, setLocation]);
 
-  const form = useForm<LoginFormValues>({
+  const form = useForm<LoginFormInput, unknown, LoginFormValues>({
     resolver: zodResolver(loginSchema(t)),
     defaultValues: {
       email: "",

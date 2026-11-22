@@ -1,6 +1,12 @@
 import { Suspense, useEffect, useState } from "react";
 import { Switch, Route, Redirect, Router as WouterRouter } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  MutationCache,
+  QueryCache,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
+import { getGetCurrentUserQueryKey } from "@workspace/api-client-react";
 import { Loader2 } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +17,7 @@ import { AuthGuard } from "@/components/auth-guard";
 import { AppLayout } from "@/components/layout/app-layout";
 import { routeLoaders } from "@/lib/route-preload";
 import { lazyWithReload } from "@/lib/chunk-reload";
+import { isSessionExpiredError } from "@/lib/session-expiry";
 
 // The login flow is the entry path — keep it in the main bundle.
 import LoginPage from "@/pages/login";
@@ -38,7 +45,19 @@ const PersonDetailPage = lazyWithReload(() => import("@/pages/person-detail"));
 const SearchPage = lazyWithReload(() => import("@/pages/search"));
 const NotFound = lazyWithReload(() => import("@/pages/not-found"));
 
-const queryClient = new QueryClient({
+// A 401 from any request means the session is gone (signed out elsewhere,
+// password changed, user deactivated). Drop the cached user so AuthGuard sends
+// them to sign-in, instead of leaving them on a page where every call fails.
+// Only when someone was signed in: the signed-out /auth/me probe is a 401 too.
+function onRequestError(error: unknown): void {
+  if (!isSessionExpiredError(error)) return;
+  const key = getGetCurrentUserQueryKey();
+  if (queryClient.getQueryData(key)) queryClient.setQueryData(key, null);
+}
+
+const queryClient: QueryClient = new QueryClient({
+  queryCache: new QueryCache({ onError: onRequestError }),
+  mutationCache: new MutationCache({ onError: onRequestError }),
   defaultOptions: {
     queries: {
       // Data is fresh for 30s: revisiting a page renders instantly from cache
