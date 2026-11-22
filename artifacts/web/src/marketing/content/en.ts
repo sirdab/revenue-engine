@@ -5,6 +5,10 @@
 // present in the code: the page is the first promise a new user reads.
 
 import type { Content } from "./types";
+import { salesManagement } from "./guides/sales-management";
+import { crmSoftware } from "./guides/crm-software";
+import { freeCrm } from "./guides/free-crm";
+import { arabicCrm } from "./guides/arabic-crm";
 
 export const en: Content = {
   common: {
@@ -581,6 +585,13 @@ export const en: Content = {
       lead: "Something else? Open an issue on [GitHub](github).",
       items: [
         {
+          q: "What is a CRM?",
+          a: [
+            "A CRM (customer relationship management system) keeps your deals, contacts and your sales team's activities in one place, so every rep knows the next step with each customer and where every deal stands.",
+            "Revenue Engine is an open-source CRM with a full Arabic and English interface: pipelines, contacts, activities, automations and dashboards.",
+          ],
+        },
+        {
           q: "How much does Revenue Engine cost?",
           a: [
             "The hosted version is free for the first 3 months. After that it is SAR 24.91 per seat per month, billed annually as one payment of SAR 299 per seat a year.",
@@ -645,6 +656,10 @@ export const en: Content = {
   },
 
   guides: {
+    "sales-management": salesManagement.en,
+    "crm-software": crmSoftware.en,
+    "free-crm": freeCrm.en,
+    "arabic-crm": arabicCrm.en,
     "open-source-crm": {
       meta: {
         title: "Open-source CRM, MIT licensed and free | Revenue Engine",
