@@ -7,13 +7,18 @@ import {
   useWebhookSecret,
   useRotateWebhookSecret,
 } from "@/lib/webhook-settings-api";
-import { AiSettings } from "./ai-settings";
-import { SlackSettings } from "./slack-settings";
 import { useI18n, type MessageKey } from "@/lib/i18n/i18n";
 
-// The inbound webhooks, in integration order (create a deal, then update it).
-// Each renders as a self-contained section: purpose, its own POST URL, the
-// fields that matter, and an example body. They all share one secret (below).
+// Settings › Integrations › Webhooks: the workspace's inbound webhooks, which
+// Zapier, n8n, Make or any HTTP client call to create and update deals.
+//
+// Every workspace posts to the same URLs; the workspace's own key, sent as
+// `Authorization: Bearer <key>`, is what says which workspace a request is
+// for (routes/webhooks.ts resolves the tenant from it, and anything without a
+// valid key is a 401). So each endpoint below shows the full request, key
+// included, rather than a bare URL.
+//
+// The endpoints, in integration order (create a deal, then update it).
 // Titles and prose are message keys resolved at render; the example bodies are
 // wire format and stay as the API expects them.
 const code = (name: string) => (
@@ -104,18 +109,32 @@ function CopyButton({ value, label }: { value: string; label: string }) {
   );
 }
 
+/** A ready-to-run request, so the key is never left out by accident. */
+function curlCommand(url: string, secret: string, body: Record<string, unknown>): string {
+  return [
+    `curl -X POST '${url}' \\`,
+    `  -H 'Authorization: Bearer ${secret}' \\`,
+    `  -H 'Content-Type: application/json' \\`,
+    `  -d '${JSON.stringify(body).replace(/'/g, "'\\''")}'`,
+  ].join("\n");
+}
+
 function EndpointSection({
   origin,
   endpoint,
+  secret,
+  maskedSecret,
 }: {
   origin: string;
   endpoint: (typeof ENDPOINTS)[number];
+  secret: string;
+  maskedSecret: string;
 }) {
   const { t, tNode } = useI18n();
   const url = `${origin}${endpoint.path}`;
   const example = JSON.stringify(endpoint.example, null, 2);
   return (
-    <section className="rounded-2xl bg-card p-5 shadow-card">
+    <section className="rounded-xl border border-border bg-card p-4">
       <div className="mb-1 flex items-center gap-2">
         <span className="rounded-sm bg-primary px-1.5 py-0.5 font-mono text-caption text-gray-100">
           POST
@@ -140,6 +159,13 @@ function EndpointSection({
         <CopyButton value={url} label={t("settings.webhooks.copy")} />
       </div>
 
+      <label className="text-caption text-muted-foreground">
+        {t("settings.webhooks.headers")}
+      </label>
+      <pre dir="ltr" className="mb-3 mt-1 overflow-x-auto rounded-md bg-surface-whisper p-3 text-start font-mono text-caption-quiet leading-relaxed text-foreground">
+        {`Authorization: Bearer ${maskedSecret}\nContent-Type: application/json`}
+      </pre>
+
       <p className="mb-2 text-caption-quiet text-subtle">{tNode(
           endpoint.fieldsKey,
           Object.fromEntries(
@@ -150,11 +176,17 @@ function EndpointSection({
       <pre dir="ltr" className="overflow-x-auto text-start rounded-md bg-primary p-3 text-caption-quiet leading-relaxed text-gray-100">
         {example}
       </pre>
+      <div className="mt-3 flex justify-end">
+        <CopyButton
+          value={curlCommand(url, secret, endpoint.example)}
+          label={t("settings.webhooks.copyCurl")}
+        />
+      </div>
     </section>
   );
 }
 
-export function WebhookSettings() {
+export function WebhooksPanel() {
   const { t, tNode } = useI18n();
   const { data, isLoading, isError } = useWebhookSecret();
   const rotate = useRotateWebhookSecret();
@@ -187,16 +219,7 @@ export function WebhookSettings() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
-      <header className="mb-6">
-        <h1 className="text-heading-sm text-foreground">
-          {t("settings.integrations.title")}
-        </h1>
-        <p className="mt-1 text-body-quiet text-muted-foreground">
-          {t("settings.integrations.subtitle")}
-        </p>
-      </header>
-
+    <div>
       {isLoading ? (
         <div className="flex items-center gap-2 text-body-quiet text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> {t("common.loading")}
@@ -206,9 +229,9 @@ export function WebhookSettings() {
           {t("settings.webhooks.loadFailed")}
         </div>
       ) : (
-        <div className="space-y-6">
-          {/* Authentication — one secret, shared by every endpoint below */}
-          <section className="rounded-2xl bg-card p-5 shadow-card">
+        <div className="space-y-5">
+          {/* The workspace's key, shared by every endpoint below */}
+          <section className="rounded-xl border border-border bg-card p-4">
             <h2 className="text-body font-semibold text-foreground">
               {t("settings.webhooks.auth.title")}
             </h2>
@@ -267,16 +290,14 @@ export function WebhookSettings() {
             </div>
           </section>
 
-          <SlackSettings />
-
-          <AiSettings />
-
           {/* One self-contained section per inbound webhook */}
           {ENDPOINTS.map((endpoint) => (
             <EndpointSection
               key={endpoint.id}
               origin={origin}
               endpoint={endpoint}
+              secret={secret}
+              maskedSecret={reveal ? secret : masked}
             />
           ))}
         </div>
