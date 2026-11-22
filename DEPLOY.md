@@ -153,14 +153,21 @@ DATABASE_URL="postgres://crm_app:<password>@localhost:<proxy-port>/crm" \
 
 ### 4. Optional: deploy on every push to `main`
 
-`.github/workflows/deploy.yml` typechecks and runs `fly deploy`. It does
-nothing until you turn it on:
+`.github/workflows/deploy.yml` runs `fly deploy` once CI has passed on `main`.
+It does nothing until you turn it on. Protect `main` first (require a pull
+request and the `build` check), because the environment below only opens to
+protected branches. Then:
 
 ```bash
-fly tokens create deploy --app my-crm     # copy the token
-gh secret set FLY_API_TOKEN --body "FlyV1 …"
+gh api -X PUT repos/OWNER/REPO/environments/production --input - \
+  <<< '{"deployment_branch_policy":{"protected_branches":true,"custom_branch_policies":false}}'
+fly tokens create deploy --app my-crm \
+  | gh secret set FLY_API_TOKEN --env production
 gh variable set FLY_APP --body my-crm
 ```
+
+Keep the token in the environment, not in the repository's secrets: a repository
+secret can be read by a workflow pushed to any branch.
 
 ### Sizing
 
