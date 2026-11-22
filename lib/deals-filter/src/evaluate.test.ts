@@ -355,3 +355,17 @@ test("throws for a list-only presence check (labels is_empty)", () => {
   const g = group("and", [{ field: "labels", operator: "is_empty" }]);
   assert.throws(() => evaluate(g, facts()), /only available in deals-list/);
 });
+
+test("an explicit workspace time zone overrides APP_TIMEZONE", () => {
+  const g: FilterGroup = {
+    combinator: "and",
+    conditions: [{ field: "createdDate", operator: "is", value: "2026-07-06" }],
+  };
+  // 2026-07-05T21:30:00Z is the 6th in Istanbul (the env) and in Riyadh (UTC+3),
+  // but still the 5th in London (UTC+1 in July) and in UTC.
+  const at = facts({ createdDate: new Date("2026-07-05T21:30:00Z") });
+  assert.equal(evaluate(g, at), true);
+  assert.equal(evaluate(g, at, { timeZone: "Asia/Riyadh" }), true);
+  assert.equal(evaluate(g, at, { timeZone: "Europe/London" }), false);
+  assert.equal(evaluate(g, at, { timeZone: "UTC" }), false);
+});

@@ -69,8 +69,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Written during render, before any child formats a date or an amount:
   // the app behind AuthGuard only renders once the user is known.
+  // The workspace decides the zone and the week; its currency wins over the
+  // user's legacy one only once the workspace has chosen one, matching the
+  // server's currencyForNewAmount.
   if (user) {
-    setDisplayDefaults({ currency: user.defaultCurrency, timeZone: user.timezoneName });
+    const ws = user.workspace;
+    setDisplayDefaults({
+      currency: ws?.regional.defaultCurrency ?? user.defaultCurrency,
+      timeZone: ws?.effectiveRegional.timezone ?? user.timezoneName,
+      weekStart: ws?.effectiveRegional.weekStart,
+    });
   }
 
   return (

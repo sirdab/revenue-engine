@@ -19,16 +19,30 @@ import {
 } from "@/lib/i18n/formatting";
 import type { Locale } from "@/lib/i18n/locales";
 
-// The signed-in user's display defaults: their currency for an amount that
-// names none, and their timezone for every timestamp. Same pattern as the
-// active locale (see i18n/active-locale.ts): the auth provider writes them
-// once the user is known, and these plain helpers read them.
+// The workspace's display defaults (Settings › Workspace): the currency for
+// an amount that names none, the time zone for every timestamp, and the first
+// day of the week. Same pattern as the active locale (see
+// i18n/active-locale.ts): the auth provider writes them once the user is
+// known, and these plain helpers read them.
 let defaultCurrency = "USD";
 let timeZone = "UTC";
+let weekStart: 0 | 1 | 6 = 1;
 
-export function setDisplayDefaults(defaults: { currency?: string; timeZone?: string }): void {
+export function setDisplayDefaults(defaults: {
+  currency?: string;
+  timeZone?: string;
+  weekStart?: number;
+}): void {
   if (defaults.currency) defaultCurrency = defaults.currency.toUpperCase();
   if (defaults.timeZone && isValidTimeZone(defaults.timeZone)) timeZone = defaults.timeZone;
+  if (defaults.weekStart === 0 || defaults.weekStart === 1 || defaults.weekStart === 6) {
+    weekStart = defaults.weekStart;
+  }
+}
+
+/** First day of the week: 0 Sunday, 1 Monday, 6 Saturday. */
+export function getWeekStart(): 0 | 1 | 6 {
+  return weekStart;
 }
 
 /** The currency an amount is shown in when the record names none. */

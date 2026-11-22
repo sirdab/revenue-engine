@@ -37,6 +37,7 @@ import {
 import { postNotificationAction } from "./notification-subscriptions";
 import { logger } from "./logger";
 import { appDateInDays } from "./assistant-dates";
+import { currentTimeZone } from "./regional-context";
 
 // Deal-automations engine. Given a trigger event and the (post-write) deal,
 // run every active matching automation in priority order. Runs INLINE inside
@@ -116,9 +117,9 @@ export function dealAutomationMatches(
   after: DealFacts,
   before: DealFacts | null,
 ): boolean {
-  if (!evaluate(conditions, after)) return false;
+  if (!evaluate(conditions, after, { timeZone: currentTimeZone() })) return false;
   if (before === null || countConditions(conditions) === 0) return true;
-  return !evaluate(conditions, before);
+  return !evaluate(conditions, before, { timeZone: currentTimeZone() });
 }
 
 function dealFacts(tx: Tx, deal: Deal): Promise<DealFacts> {

@@ -122,21 +122,30 @@ function reqStatus(v: unknown): string {
   throw new EvaluateError("Invalid status value");
 }
 
-// The deal's timestamp truncated to an app-time-zone calendar date — the same
-// APP_TIMEZONE the server's SQL compiler uses (rules only ever evaluate on the
-// server, so reading the env here is safe; it defaults to UTC). en-CA yields
-// an ISO "YYYY-MM-DD" string, which compares chronologically as a string.
-const appTimeZone =
-  (globalThis as { process?: { env?: Record<string, string | undefined> } })
-    .process?.env?.APP_TIMEZONE || "UTC";
-const appDateFmt = new Intl.DateTimeFormat("en-CA", {
-  timeZone: appTimeZone,
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-});
-function appDate(d: Date): string {
-  return appDateFmt.format(d);
+// The deal's timestamp truncated to a calendar date in the workspace's time
+// zone — the same zone the server's SQL compiler uses. The caller passes it
+// (`evaluate(…, { timeZone })`); without one, APP_TIMEZONE, else UTC (rules
+// only ever evaluate on the server, so reading the env here is safe). en-CA
+// yields an ISO "YYYY-MM-DD" string, which compares chronologically as a string.
+function defaultTimeZone(): string {
+  return (
+    (globalThis as { process?: { env?: Record<string, string | undefined> } })
+      .process?.env?.APP_TIMEZONE || "UTC"
+  );
+}
+const dateFormatters = new Map<string, Intl.DateTimeFormat>();
+function appDate(d: Date, timeZone: string): string {
+  let f = dateFormatters.get(timeZone);
+  if (!f) {
+    f = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" });
+    dateFormatters.set(timeZone, f);
+  }
+  return f.format(d);
+}
+
+export interface EvaluateOptions {
+  /** IANA zone whose calendar days date conditions compare in. */
+  timeZone?: string;
 }
 
 /**
@@ -148,7 +157,7 @@ function isDistinctFrom(a: string | number | null, b: string | number): boolean 
   return a !== b;
 }
 
-function evalCondition(c: FilterCondition, facts: DealFacts): boolean {
+function evalCondition(c: FilterCondition, facts: DealFacts, timeZone: string): boolean {
   const def = FILTER_FIELD_MAP[c.field];
   const meta = FIELD_META[c.field];
   if (!def) throw new EvaluateError(`Unknown field: ${c.field}`);
@@ -220,7 +229,7 @@ function evalCondition(c: FilterCondition, facts: DealFacts): boolean {
     }
     case "date": {
       const d = raw as Date | null;
-      const local = d === null ? null : appDate(d);
+      const local = d === null ? null : appDate(d, timeZone);
       if (op === "is") return local !== null && local === reqDateOnly(v);
       if (op === "is_not") return isDistinctFrom(local, reqDateOnly(v));
       if (op === "gt") return local !== null && local > reqDateOnly(v);
@@ -244,14 +253,14 @@ function evalCondition(c: FilterCondition, facts: DealFacts): boolean {
 // Mirrors compileGroup: collect the truth of each node; a nested group with no
 // evaluable conditions contributes nothing (undefined). A group with zero parts
 // imposes no constraint (undefined => treated as "matches").
-function evalGroup(group: FilterGroup, facts: DealFacts): boolean | undefined {
+function evalGroup(group: FilterGroup, facts: DealFacts, timeZone: string): boolean | undefined {
   const parts: boolean[] = [];
   for (const node of group.conditions) {
     if (isFilterGroup(node)) {
-      const nested = evalGroup(node, facts);
+      const nested = evalGroup(node, facts, timeZone);
       if (nested !== undefined) parts.push(nested);
     } else {
-      parts.push(evalCondition(node, facts));
+      parts.push(evalCondition(node, facts, timeZone));
     }
   }
   if (parts.length === 0) return undefined;
@@ -263,7 +272,11 @@ function evalGroup(group: FilterGroup, facts: DealFacts): boolean | undefined {
  * `filterGroupSchema` upstream. An empty (or vacuous) group matches everything,
  * consistent with the SQL compiler dropping an empty filter.
  */
-export function evaluate(group: FilterGroup, facts: DealFacts): boolean {
-  const result = evalGroup(group, facts);
+export function evaluate(
+  group: FilterGroup,
+  facts: DealFacts,
+  options: EvaluateOptions = {},
+): boolean {
+  const result = evalGroup(group, facts, options.timeZone ?? defaultTimeZone());
   return result === undefined ? true : result;
 }

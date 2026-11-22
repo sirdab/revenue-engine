@@ -96,6 +96,7 @@ import {
   OWNER_CHANGE_ADMIN_ONLY,
   ownerChangeAllowed,
 } from "../lib/deal-reassign";
+import { currencyForNewAmount } from "../lib/regional-context";
 
 const router: IRouter = Router();
 
@@ -366,7 +367,7 @@ router.post("/deals", async (req, res): Promise<void> => {
       .values({
         title: d.title,
         value: d.value ?? 0,
-        currency: d.currency ?? user.defaultCurrency ?? "USD",
+        currency: d.currency ?? currencyForNewAmount(user.defaultCurrency),
         pipelineId: d.pipelineId,
         stageId: d.stageId,
         ownerId,

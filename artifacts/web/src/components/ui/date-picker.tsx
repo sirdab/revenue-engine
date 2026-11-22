@@ -20,6 +20,7 @@ import {
   ymdToDmy,
 } from "@/components/ui/date-utils"
 import { useI18n } from "@/lib/i18n/i18n"
+import { getWeekStart } from "@/lib/format";
 
 export interface DatePickerProps {
   /** `yyyy-mm-dd`, or `""` for empty. Drop-in for `<input type="date">`. */
@@ -396,6 +397,7 @@ function CalendarPicker({
       {view === "day" && (
         <Calendar
           mode="single"
+          weekStartsOn={getWeekStart()}
           selected={selected}
           onSelect={onSelect}
           month={month}

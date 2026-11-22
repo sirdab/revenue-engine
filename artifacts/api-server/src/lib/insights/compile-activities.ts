@@ -12,7 +12,7 @@ import {
   type FilterGroup,
 } from "@workspace/deals-filter";
 import type { WidgetSpec } from "@workspace/insights-spec";
-import { localDate, APP_TZ_SQL } from "../queries";
+import { localDate, appTzSql, bucketDate } from "../queries";
 import { runPerformanceReport, type PerformanceResult } from "./analytics-db";
 import {
   InsightsQueryError,
@@ -272,8 +272,8 @@ function resolveActivityDimension(
     const base =
       fieldKey === "dueDate"
         ? sql`${col}`
-        : sql`${col} AT TIME ZONE ${APP_TZ_SQL}`;
-    return { expr: sql`date_trunc(${bucket}, ${base})::date` };
+        : sql`${col} AT TIME ZONE ${appTzSql()}`;
+    return { expr: bucketDate(bucket, base) };
   }
   if (dateBucket) {
     throw new InsightsQueryError(

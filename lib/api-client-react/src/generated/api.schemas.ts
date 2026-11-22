@@ -100,12 +100,103 @@ export interface ResetTokenValidity {
 }
 
 /**
+ * First day of the week — 0 Sunday, 1 Monday, 6 Saturday.
+ * @nullable
+ */
+export type WorkspaceRegionalSettingsWeekStart = typeof WorkspaceRegionalSettingsWeekStart[keyof typeof WorkspaceRegionalSettingsWeekStart] | null;
+
+
+export const WorkspaceRegionalSettingsWeekStart = {
+  NUMBER_0: 0,
+  NUMBER_1: 1,
+  NUMBER_6: 6,
+} as const;
+
+/**
+ * Interface language for members who haven't chosen one.
+ * @nullable
+ */
+export type WorkspaceRegionalSettingsDefaultLocale = typeof WorkspaceRegionalSettingsDefaultLocale[keyof typeof WorkspaceRegionalSettingsDefaultLocale] | null;
+
+
+export const WorkspaceRegionalSettingsDefaultLocale = {
+  en: 'en',
+  ar: 'ar',
+} as const;
+
+/**
+ * The workspace's regional settings as stored. null means "use the server default" (APP_TIMEZONE / PHONE_COUNTRY_CODE, else UTC, Monday, USD, and each member's own language).
+ */
+export interface WorkspaceRegionalSettings {
+  /**
+     * IANA time zone, e.g. Asia/Riyadh.
+     * @nullable
+     */
+  timezone: string | null;
+  /**
+     * First day of the week — 0 Sunday, 1 Monday, 6 Saturday.
+     * @nullable
+     */
+  weekStart: WorkspaceRegionalSettingsWeekStart;
+  /**
+     * ISO 4217 code for amounts that name no currency.
+     * @nullable
+     */
+  defaultCurrency: string | null;
+  /**
+     * Calling code without "+", e.g. "966".
+     * @nullable
+     */
+  phoneCountryCode: string | null;
+  /**
+     * Interface language for members who haven't chosen one.
+     * @nullable
+     */
+  defaultLocale: WorkspaceRegionalSettingsDefaultLocale;
+}
+
+export type WorkspaceEffectiveRegionalSettingsWeekStart = typeof WorkspaceEffectiveRegionalSettingsWeekStart[keyof typeof WorkspaceEffectiveRegionalSettingsWeekStart];
+
+
+export const WorkspaceEffectiveRegionalSettingsWeekStart = {
+  NUMBER_0: 0,
+  NUMBER_1: 1,
+  NUMBER_6: 6,
+} as const;
+
+/**
+ * @nullable
+ */
+export type WorkspaceEffectiveRegionalSettingsDefaultLocale = typeof WorkspaceEffectiveRegionalSettingsDefaultLocale[keyof typeof WorkspaceEffectiveRegionalSettingsDefaultLocale] | null;
+
+
+export const WorkspaceEffectiveRegionalSettingsDefaultLocale = {
+  en: 'en',
+  ar: 'ar',
+} as const;
+
+/**
+ * The regional settings that apply, with server defaults filled in.
+ */
+export interface WorkspaceEffectiveRegionalSettings {
+  timezone: string;
+  weekStart: WorkspaceEffectiveRegionalSettingsWeekStart;
+  defaultCurrency: string;
+  /** @nullable */
+  phoneCountryCode: string | null;
+  /** @nullable */
+  defaultLocale: WorkspaceEffectiveRegionalSettingsDefaultLocale;
+}
+
+/**
  * A tenant — one customer's isolated CRM workspace.
  */
 export interface Workspace {
   id: number;
   name: string;
   slug: string;
+  regional: WorkspaceRegionalSettings;
+  effectiveRegional: WorkspaceEffectiveRegionalSettings;
 }
 
 export interface User {
@@ -118,7 +209,9 @@ export interface User {
   roleId?: number | null;
   isAdmin: boolean;
   activeFlag: boolean;
+  /** Legacy per-user default. New amounts use the workspace's default currency when it sets one (Workspace.regional.defaultCurrency). */
   defaultCurrency: string;
+  /** Legacy per-user zone, no longer used for display; the app shows times in the workspace's zone (Workspace.effectiveRegional.timezone). */
   timezoneName: string;
   created: string;
   /** @nullable */
@@ -132,12 +225,48 @@ export interface User {
   workspace?: Workspace;
 }
 
+/**
+ * @nullable
+ */
+export type WorkspaceUpdateWeekStart = typeof WorkspaceUpdateWeekStart[keyof typeof WorkspaceUpdateWeekStart] | null;
+
+
+export const WorkspaceUpdateWeekStart = {
+  NUMBER_0: 0,
+  NUMBER_1: 1,
+  NUMBER_6: 6,
+} as const;
+
+/**
+ * @nullable
+ */
+export type WorkspaceUpdateDefaultLocale = typeof WorkspaceUpdateDefaultLocale[keyof typeof WorkspaceUpdateDefaultLocale] | null;
+
+
+export const WorkspaceUpdateDefaultLocale = {
+  en: 'en',
+  ar: 'ar',
+} as const;
+
+/**
+ * Send only the fields to change. A regional field set to null returns it to the server default.
+ */
 export interface WorkspaceUpdate {
   /**
      * @minLength 1
      * @maxLength 120
      */
-  name: string;
+  name?: string;
+  /** @nullable */
+  timezone?: string | null;
+  /** @nullable */
+  weekStart?: WorkspaceUpdateWeekStart;
+  /** @nullable */
+  defaultCurrency?: string | null;
+  /** @nullable */
+  phoneCountryCode?: string | null;
+  /** @nullable */
+  defaultLocale?: WorkspaceUpdateDefaultLocale;
 }
 
 export interface SignupInput {

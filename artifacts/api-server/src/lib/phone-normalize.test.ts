@@ -5,21 +5,16 @@ import assert from "node:assert/strict";
 // DATABASE_URL. Nothing here touches the database.
 process.env.DATABASE_URL ??= "postgres://phone-normalize-test/unused";
 
-// PHONE_COUNTRY_CODE is read once at module load, so each setting needs a
-// fresh module instance: set the env var, then import under a cache-busting
-// query.
+// The calling code is the workspace's setting, else PHONE_COUNTRY_CODE. Each
+// test runs the helpers as a workspace with the code under test.
 async function loadQueriesWith(
   countryCode: string | undefined,
 ): Promise<typeof import("./queries.ts")> {
-  const previous = process.env.PHONE_COUNTRY_CODE;
-  if (countryCode === undefined) delete process.env.PHONE_COUNTRY_CODE;
-  else process.env.PHONE_COUNTRY_CODE = countryCode;
-  try {
-    return await import(`./queries.ts?cc=${countryCode ?? "none"}`);
-  } finally {
-    if (previous === undefined) delete process.env.PHONE_COUNTRY_CODE;
-    else process.env.PHONE_COUNTRY_CODE = previous;
-  }
+  const q = await import("./queries.ts");
+  const { runWithRegionalSettings, serverDefaults } = await import("./regional-context.ts");
+  const as = <A extends unknown[], R>(f: (...a: A) => R) => (...a: A): R =>
+    runWithRegionalSettings({ ...serverDefaults(), phoneCountryCode: countryCode ?? null }, () => f(...a));
+  return { ...q, phoneNsn: as(q.phoneNsn), phoneDigitsVariants: as(q.phoneDigitsVariants) };
 }
 
 test("phoneDigits drops formatting, an international 00 and a trunk 0", async () => {
@@ -31,14 +26,14 @@ test("phoneDigits drops formatting, an international 00 and a trunk 0", async ()
   assert.equal(phoneDigits(null), "");
 });
 
-test("without PHONE_COUNTRY_CODE no country code is assumed", async () => {
+test("without a calling code no country code is assumed", async () => {
   const { phoneNsn, phoneDigitsVariants } = await loadQueriesWith(undefined);
   assert.equal(phoneNsn("+44 7700 900123"), "447700900123");
   assert.equal(phoneNsn("+966 54 084 3494"), "966540843494");
   assert.deepEqual(phoneDigitsVariants("7700900123"), ["7700900123"]);
 });
 
-test("PHONE_COUNTRY_CODE makes national and international forms meet", async () => {
+test("a calling code makes national and international forms meet", async () => {
   const { phoneNsn, phoneDigits, phoneDigitsVariants } = await loadQueriesWith("44");
   const national = phoneNsn("07700 900123");
   assert.equal(national, "7700900123");

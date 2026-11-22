@@ -21,7 +21,7 @@ import {
   generateTempPassword,
   currentUser,
 } from "../lib/auth";
-import { APP_TIMEZONE } from "../lib/assistant-dates";
+import { currentCurrency, currentTimeZone } from "../lib/regional-context";
 import { sendAccountCredentialsEmail, appBaseUrl } from "../lib/email";
 import { isMailerConfigured } from "../lib/mailer";
 import { logger } from "../lib/logger";
@@ -113,8 +113,8 @@ router.post("/users", async (req, res): Promise<void> => {
       roleId: d.roleId ?? null,
       isAdmin: d.isAdmin ?? false,
       activeFlag: d.activeFlag ?? true,
-      defaultCurrency: d.defaultCurrency ?? "USD",
-      timezoneName: d.timezoneName ?? APP_TIMEZONE,
+      defaultCurrency: d.defaultCurrency ?? currentCurrency(),
+      timezoneName: d.timezoneName ?? currentTimeZone(),
     })
     .returning();
 

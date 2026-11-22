@@ -14,7 +14,7 @@ import {
   type FilterGroup,
 } from "@workspace/deals-filter";
 import type { WidgetSpec } from "@workspace/insights-spec";
-import { compileCondition, localDate, APP_TZ_SQL, DealFilterError } from "../queries";
+import { compileCondition, localDate, appTzSql, bucketDate, DealFilterError } from "../queries";
 import { runPerformanceReport, type PerformanceResult } from "./analytics-db";
 import {
   InsightsQueryError,
@@ -355,7 +355,7 @@ function resolveDimension(
     if (def.type === "date") {
       const bucket = dateBucket ?? "month";
       return {
-        expr: sql`date_trunc(${bucket}, (${customExpr(def)})::date)::date`,
+        expr: bucketDate(bucket, sql`(${customExpr(def)})::date`),
       };
     }
     if (dateBucket) {
@@ -373,7 +373,7 @@ function resolveDimension(
   if (DATE_FIELD_KEYS.has(key)) {
     const bucket = dateBucket ?? "month";
     return {
-      expr: sql`date_trunc(${bucket}, ${col} AT TIME ZONE ${APP_TZ_SQL})::date`,
+      expr: bucketDate(bucket, sql`${col} AT TIME ZONE ${appTzSql()}`),
     };
   }
   if (dateBucket) {

@@ -9,6 +9,7 @@ import {
   stagesTable,
   type Tenant,
 } from "@workspace/db";
+import { runInWorkspace } from "./workspace-settings";
 import { hashPassword } from "./auth";
 import { ensureNativeColumnFields } from "./deal-fields";
 import { logger } from "./logger";
@@ -149,7 +150,7 @@ export async function forEachTenant(
   );
   for (const { id } of tenants) {
     try {
-      await runWithTenant(id, () => fn(id));
+      await runInWorkspace(id, () => fn(id));
     } catch (err) {
       logger.error({ err, tenantId: id }, `${label} failed for tenant`);
     }

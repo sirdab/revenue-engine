@@ -6,9 +6,9 @@ import {
   db,
   usersTable,
   runAsSystem,
-  runWithTenant,
   type User,
 } from "@workspace/db";
+import { runInWorkspace } from "./workspace-settings";
 
 const scryptAsync = promisify(scrypt);
 const KEY_LENGTH = 64;
@@ -220,8 +220,9 @@ export async function requireAuth(
   }
   res.locals.user = toSafeUser(user);
   // Every query made while handling the rest of this request — including
-  // work it starts and does not await — is bound to this tenant.
-  runWithTenant(user.tenantId, () => next());
+  // work it starts and does not await — is bound to this tenant, and sees
+  // its regional settings (time zone, week start, currency…).
+  await runInWorkspace(user.tenantId, () => next());
 }
 
 export function requireAdmin(

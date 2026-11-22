@@ -17,6 +17,7 @@ import { errorMessage } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n/i18n";
 import { useAuth } from "@/hooks/use-auth";
 import { SectionCard } from "./section-card";
+import { RegionalSettings } from "./regional-settings";
 
 // Settings › Workspace: the workspace's name and logo, which every member sees
 // at the top of the sidebar. The sidebar reads the name from the current user,
@@ -101,6 +102,10 @@ export function WorkspaceSettings() {
 
       <div className="mt-5">
         <LogoCard />
+      </div>
+
+      <div className="mt-5">
+        <RegionalSettings />
       </div>
     </div>
   );
