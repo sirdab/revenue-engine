@@ -128,7 +128,7 @@ router.post("/users", async (req, res): Promise<void> => {
         name: created.name,
         email: created.email,
         password: d.password,
-        loginUrl: appBaseUrl(),
+        loginUrl: `${appBaseUrl()}/login`,
         isNew: true,
       });
     } catch (err) {
@@ -179,7 +179,7 @@ router.post(
         name: user.name,
         email: user.email,
         password: tempPassword,
-        loginUrl: appBaseUrl(),
+        loginUrl: `${appBaseUrl()}/login`,
         isNew: false,
       });
     } catch (err) {

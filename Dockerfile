@@ -68,6 +68,10 @@ WORKDIR /app
 COPY --from=build /app/artifacts/api-server/dist ./dist
 # Built frontend must sit at dist/public so import.meta.dirname + "public" hits it.
 COPY --from=build /app/artifacts/web/dist/public ./dist/public
+# The prerendered public pages (landing page, sitemap, robots), read at boot.
+# Beside dist/public rather than inside it: they are served by the app, which
+# fills in the site's origin, never as raw static files.
+COPY --from=build /app/artifacts/web/dist/marketing ./dist/marketing
 # Minimal prod deps (nodemailer). pnpm deploy writes them under /prod/node_modules.
 COPY --from=prune /prod/node_modules ./node_modules
 # The committed SQL migrations, for dist/migrate.mjs (self-hosted setups run it

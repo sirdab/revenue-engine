@@ -8,6 +8,10 @@ activities and notes, automate the busywork and see how the pipeline is doing.
 Built and maintained by [Sirdab](https://sirdab.co). Licensed under
 [MIT](LICENSE); the Sirdab name and logos are [trademarks](TRADEMARKS.md).
 
+**Try it:** a free hosted instance runs at
+[revenue-engine.fly.dev](https://revenue-engine.fly.dev). Sign up and you get
+a workspace of your own.
+
 **Features**
 
 - **Pipelines and deals**: multiple pipelines, a drag-and-drop board, win
@@ -32,6 +36,9 @@ Built and maintained by [Sirdab](https://sirdab.co). Licensed under
   Postgres row-level security. Admins manage users, teams, labels, pipelines
   and integrations.
 - **English and Arabic** UI, including right-to-left layout.
+- **A public landing page**: `/` is a prerendered marketing site (English and
+  Arabic, with a sitemap, structured data and share images), so a hosted
+  instance has a front door. The app sits behind `/login` and `/signup`.
 
 Stack: TypeScript everywhere. Express 5 + Drizzle ORM + PostgreSQL on the
 server, React 19 + Vite + Tailwind + [Sirdab One](https://github.com/sirdab/one)
@@ -136,7 +143,7 @@ A pnpm-workspace monorepo:
 | Path | What |
 |---|---|
 | `artifacts/api-server` | Express 5 API (esbuild bundle) |
-| `artifacts/web` | React web app (Vite, React Query, [Sirdab One](https://github.com/sirdab/one)) |
+| `artifacts/web` | React web app (Vite, React Query, [Sirdab One](https://github.com/sirdab/one)), plus the public landing pages in `src/marketing` |
 | `lib/db` | Drizzle schema, migrations and the tenant-scoped `db` handle |
 | `lib/api-spec` | `openapi.yaml`, the API contract; generates `lib/api-zod` and `lib/api-client-react` |
 | `lib/deals-filter`, `lib/insights-spec`, `lib/automation-placeholders` | Shared between server and client |

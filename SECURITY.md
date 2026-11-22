@@ -30,3 +30,6 @@ Things we especially want to hear about:
   over HTTPS.
 - Never run `pnpm seed` against a database you care about: it deletes every
   workspace.
+- Leave `WEBHOOK_ALLOW_PRIVATE_ADDRESSES` unset on any deployment where people
+  you don't know can sign up. Outbound webhooks then reach public addresses
+  only, and cannot be aimed at the network the server sits on.

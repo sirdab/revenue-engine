@@ -6,6 +6,11 @@ import type {
 import { getWebhookSecret } from "./app-settings";
 import { loadDealForWebhook } from "./queries";
 import { logger } from "./logger";
+import {
+  allowPrivateWebhookTargets,
+  sendToWebhook,
+  webhookUrlProblem,
+} from "./outbound-guard";
 
 // A pending outbound webhook call, collected during the deal-write transaction
 // and fired AFTER it commits. Outbound HTTP must never run inside the DB
@@ -99,24 +104,27 @@ async function fireOne(
     account: config.includeDeal ? (account ?? null) : null,
   });
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  // Checked when the automation was saved, and again here: the rule may be
+  // newer than the automation, and the setting may have changed since.
+  const allowPrivate = allowPrivateWebhookTargets();
+  const problem = webhookUrlProblem(config.url, { allowPrivate });
+  if (problem) {
+    logger.warn({ automationId, url: config.url, problem }, "webhook not sent");
+    return;
+  }
   try {
-    const res = await fetch(config.url, {
-      method: config.method,
-      headers,
-      body,
-      signal: controller.signal,
-    });
-    if (!res.ok) {
+    const status = await sendToWebhook(
+      config.url,
+      { method: config.method, headers, body },
+      { allowPrivate, timeoutMs: TIMEOUT_MS },
+    );
+    if (status < 200 || status >= 300) {
       logger.warn(
-        { automationId, url: config.url, status: res.status },
+        { automationId, url: config.url, status },
         "webhook returned non-2xx",
       );
     }
   } catch (err) {
     logger.warn({ err, automationId, url: config.url }, "webhook call failed");
-  } finally {
-    clearTimeout(timer);
   }
 }

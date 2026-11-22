@@ -34,7 +34,14 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
       <div className="flex-1 flex flex-col justify-center px-6 py-12 lg:px-16 xl:px-24">
         <div className="w-full max-w-[400px] mx-auto flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="mb-10">
-            <BrandMark className="mb-8" />
+            {/* A plain link, not a router one: the landing page is served by the
+                server, outside this app. */}
+            <a
+              href={import.meta.env.BASE_URL}
+              className="mb-8 inline-flex self-start rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              <BrandMark />
+            </a>
 
             <h1 className="text-heading-sm text-foreground mb-2">
               {title}

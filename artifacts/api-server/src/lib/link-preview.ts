@@ -1,4 +1,3 @@
-import dns from "node:dns";
 import http from "node:http";
 import https from "node:https";
 import { and, eq, inArray } from "drizzle-orm";
@@ -7,10 +6,10 @@ import { PgRateLimitStore } from "./rate-limit-store-pg";
 import { logger } from "./logger";
 import {
   extractPreviewUrls,
-  isGlobalUnicastAddress,
   validateUrlShape,
   type UrlShape,
 } from "./link-preview-validation";
+import { publicOnlyLookup as safeLookup } from "./outbound-guard";
 
 // Re-export the pure validation core (CI-tested in link-preview-validation.ts).
 export {
@@ -50,44 +49,8 @@ const FAIL_TTL_MS = 24 * 3600 * 1000;
 
 // -------------------------- impure: hardened fetch -------------------------
 
-// Custom lookup: resolve, then connect ONLY to a global-unicast address. The
-// address returned here is the one the socket connects to, so validation and
-// connection are the same act — no DNS-rebinding window.
-function safeLookup(
-  hostname: string,
-  options: dns.LookupOneOptions | dns.LookupAllOptions,
-  callback: (
-    err: NodeJS.ErrnoException | null,
-    address: string | dns.LookupAddress[],
-    family?: number,
-  ) => void,
-): void {
-  dns.lookup(hostname, { all: true }, (err, addresses) => {
-    if (err) return callback(err, "", 0);
-    // Keep every global-unicast (public) candidate. The socket only ever
-    // connects to an address returned here, so validating all of them closes
-    // the DNS-rebinding window whichever one Happy Eyeballs races to.
-    const safe = addresses.filter((a) => isGlobalUnicastAddress(a.address));
-    if (safe.length === 0) {
-      callback(
-        new Error(`blocked non-public address for ${hostname}`),
-        "",
-        0,
-      );
-      return;
-    }
-    // Node's connect path enables autoSelectFamily (Happy Eyeballs) by default
-    // since Node 20, calling lookup with { all: true } and REQUIRING the
-    // array-form callback. Answering with the single-address form makes Node
-    // read the address string as the address list ("Invalid IP address:
-    // undefined"), so every fetch fails. Honor whichever form was requested.
-    if (options.all) {
-      callback(null, safe);
-    } else {
-      callback(null, safe[0].address, safe[0].family);
-    }
-  });
-}
+// The custom lookup (resolve, then connect ONLY to a global-unicast address)
+// is shared with outbound webhooks: see outbound-guard.ts.
 
 interface RawResponse {
   status: number;

@@ -85,6 +85,28 @@ function storedLocale(): Locale | null {
   }
 }
 
+/**
+ * `?lang=ar` on the current URL. The public pages link to sign-up this way, so
+ * someone who read them in Arabic is not handed an English form.
+ */
+function requestedLocale(): Locale | null {
+  try {
+    const value = new URLSearchParams(window.location.search).get("lang");
+    return isLocale(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The guess used until a saved preference says otherwise: a language asked
+ * for in the URL, else the one last used in this browser, else the default.
+ * A signed-in person's saved preference always wins over it (I18nProvider).
+ */
+function guessedLocale(): Locale {
+  return requestedLocale() ?? storedLocale() ?? DEFAULT_LOCALE;
+}
+
 function applyLocale(locale: Locale): void {
   const { dir, tag } = LOCALE_INFO[locale];
   document.documentElement.lang = tag;
@@ -99,7 +121,7 @@ function applyLocale(locale: Locale): void {
  */
 export function initLocale(): void {
   try {
-    applyLocale(storedLocale() ?? DEFAULT_LOCALE);
+    applyLocale(guessedLocale());
   } catch {
     /* no DOM (e.g. SSR) — ignore */
   }
@@ -108,9 +130,12 @@ export function initLocale(): void {
 export function I18nProvider({ children }: { children: ReactNode }) {
   // The synchronous guess initLocale() already applied doubles as the
   // default, so there is no flicker while the server value loads.
+  // (A language asked for in the URL is mirrored to storage by the effect
+  // below on the first render, so it outlives the navigation that drops the
+  // `?lang=` parameter.)
   const [rawLocale, setStoredLocale] = usePreference<Locale>(
     "layout.locale",
-    storedLocale() ?? DEFAULT_LOCALE,
+    guessedLocale(),
   );
   const locale = sanitizeLocale(rawLocale) ?? DEFAULT_LOCALE;
 

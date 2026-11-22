@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+import { marketingSite } from "./marketing-plugin";
 
 const rawPort = process.env.PORT;
 
@@ -31,6 +32,8 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    // The public landing pages: served at `/` in dev, prerendered on build.
+    marketingSite(),
   ],
   resolve: {
     alias: {
@@ -43,6 +46,12 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
     rollupOptions: {
+      // Two entries: the app shell, and the shell of the public marketing
+      // pages (no React at runtime; see marketing-plugin.ts).
+      input: {
+        main: path.resolve(import.meta.dirname, "index.html"),
+        marketing: path.resolve(import.meta.dirname, "marketing.html"),
+      },
       output: {
         // Split the always-loaded, rarely-changing vendors out of the entry
         // chunk so frequent app deploys don't invalidate them in browser
