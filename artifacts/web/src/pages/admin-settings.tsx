@@ -19,12 +19,13 @@ import { WorkspaceSettings } from "@/components/settings/workspace-settings";
 import AdminImportPage from "@/pages/admin-import";
 
 function Stub({ label }: { label: string }) {
+  const { t } = useI18n();
   return (
     <div className="flex h-full items-center justify-center p-6">
       <EmptyState
         icon={Settings2}
         title={label}
-        caption="This settings section isn't available yet."
+        caption={t("settings.stub.caption")}
       />
     </div>
   );
@@ -55,7 +56,12 @@ export default function AdminSettingsPage() {
         ) : active === "integrations" ? (
           <WebhookSettings />
         ) : active === "imports" ? (
-          <AdminImportPage />
+          // The wizard brings no page padding of its own (the standalone
+          // /import route wraps it in <Padded>), so give it the same gutters
+          // as the other settings panels here.
+          <div className="mx-auto h-full w-full max-w-5xl px-4 py-6 md:px-6">
+            <AdminImportPage />
+          </div>
         ) : (
           <Stub label={section ? t(section.labelKey) : t("common.settings")} />
         )}

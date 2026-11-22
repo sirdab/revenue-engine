@@ -14,7 +14,6 @@ import { invalidateDealCollections } from "@/lib/deal-collections";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { format } from "date-fns";
 import {
   Loader2,
   Shield,
@@ -69,6 +68,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useI18n, type Translate } from "@/lib/i18n/i18n";
 
 // Creating, editing, or deactivating a user changes every user-picker list.
 // The admin table reads the full list (getListUsersQueryKey); the app's owner
@@ -99,36 +99,39 @@ function serverError(e: unknown, fallback: string): string {
 // instead of the generic error above — this opens the reassign dialog.
 function needsDealReassign(e: unknown): number | null {
   if (e && typeof e === "object" && (e as { status?: number }).status === 409) {
-    const data = (e as { data?: { needsReassign?: boolean; openDealsCount?: number } })
-      .data;
+    const data = (
+      e as { data?: { needsReassign?: boolean; openDealsCount?: number } }
+    ).data;
     if (data?.needsReassign) return data.openDealsCount ?? 0;
   }
   return null;
 }
 
-const createUserSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Enter a valid email"),
-  phone: z.string().optional().or(z.literal("")),
-  password: z
-    .string()
-    .min(8, "At least 8 characters")
-    .regex(/[A-Za-z]/, "Must contain a letter")
-    .regex(/[0-9]/, "Must contain a number"),
-  isAdmin: z.boolean(),
-  sendInvite: z.boolean(),
-});
+const createUserSchema = (t: Translate) =>
+  z.object({
+    name: z.string().min(1, t("contacts.nameRequired")),
+    email: z.string().email(t("admin.users.validation.email")),
+    phone: z.string().optional().or(z.literal("")),
+    password: z
+      .string()
+      .min(8, t("admin.users.validation.passwordMin"))
+      .regex(/[A-Za-z]/, t("admin.users.validation.letter"))
+      .regex(/[0-9]/, t("admin.users.validation.number")),
+    isAdmin: z.boolean(),
+    sendInvite: z.boolean(),
+  });
 
-type CreateUserForm = z.infer<typeof createUserSchema>;
+type CreateUserForm = z.infer<ReturnType<typeof createUserSchema>>;
 
 function AddUserDialog() {
+  const { t } = useI18n();
   const createUser = useCreateUser();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
 
   const form = useForm<CreateUserForm>({
-    resolver: zodResolver(createUserSchema),
+    resolver: zodResolver(createUserSchema(t)),
     defaultValues: {
       name: "",
       email: "",
@@ -152,13 +155,13 @@ function AddUserDialog() {
         },
       });
       await invalidateUserPickers(queryClient);
-      toast({ title: "User created" });
+      toast({ title: t("admin.users.created") });
       form.reset();
       setOpen(false);
     } catch (e) {
       toast({
-        title: "Could not create user",
-        description: serverError(e, "Please try again."),
+        title: t("admin.users.createFailed"),
+        description: serverError(e, t("admin.users.tryAgain")),
         variant: "destructive",
       });
     }
@@ -176,11 +179,11 @@ function AddUserDialog() {
         className="bg-primary hover:bg-primary-hover text-primary-foreground"
         onClick={() => setOpen(true)}
       >
-        <Plus className="me-2 h-4 w-4" /> Add User
+        <Plus className="me-2 h-4 w-4" /> {t("admin.users.addUser")}
       </Button>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>New user</DialogTitle>
+          <DialogTitle>{t("admin.users.newUser")}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -189,9 +192,13 @@ function AddUserDialog() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{t("common.name")}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Full name" />
+                    <Input
+                      {...field}
+                      dir="auto"
+                      placeholder={t("admin.users.fullName")}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -202,12 +209,13 @@ function AddUserDialog() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t("common.email")}</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
+                      dir="ltr"
                       {...field}
-                      placeholder="name@company.com"
+                      placeholder={t("admin.users.emailPlaceholder")}
                     />
                   </FormControl>
                   <FormMessage />
@@ -219,9 +227,14 @@ function AddUserDialog() {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone</FormLabel>
+                  <FormLabel>{t("common.phone")}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Optional" />
+                    <Input
+                      {...field}
+                      type="tel"
+                      dir="ltr"
+                      placeholder={t("common.optional")}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -232,7 +245,7 @@ function AddUserDialog() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Temporary password</FormLabel>
+                  <FormLabel>{t("admin.users.tempPassword")}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
@@ -241,7 +254,7 @@ function AddUserDialog() {
                     />
                   </FormControl>
                   <FormDescription>
-                    At least 8 characters with a letter and a number.
+                    {t("admin.users.passwordHint")}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -253,9 +266,11 @@ function AddUserDialog() {
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
                   <div>
-                    <FormLabel className="text-body-quiet">Administrator</FormLabel>
+                    <FormLabel className="text-body-quiet">
+                      {t("admin.users.administrator")}
+                    </FormLabel>
                     <FormDescription>
-                      Can manage users and import data.
+                      {t("admin.users.administratorHint")}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -274,10 +289,10 @@ function AddUserDialog() {
                 <FormItem className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
                   <div>
                     <FormLabel className="text-body-quiet">
-                      Email login details
+                      {t("admin.users.sendInvite")}
                     </FormLabel>
                     <FormDescription>
-                      Send the user their email and password.
+                      {t("admin.users.sendInviteHint")}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -298,7 +313,7 @@ function AddUserDialog() {
                 {createUser.isPending && (
                   <Loader2 className="me-2 h-4 w-4 animate-spin" />
                 )}
-                Create user
+                {t("admin.users.createUser")}
               </Button>
             </DialogFooter>
           </form>
@@ -308,21 +323,23 @@ function AddUserDialog() {
   );
 }
 
-const editUserSchema = z.object({
-  name: z.string().min(1, "Required"),
-  phone: z.string().optional().or(z.literal("")),
-  isAdmin: z.boolean(),
-});
-type EditUserForm = z.infer<typeof editUserSchema>;
+const editUserSchema = (t: Translate) =>
+  z.object({
+    name: z.string().min(1, t("admin.users.validation.required")),
+    phone: z.string().optional().or(z.literal("")),
+    isAdmin: z.boolean(),
+  });
+type EditUserForm = z.infer<ReturnType<typeof editUserSchema>>;
 
 function EditUserDialog({ user, isSelf }: { user: User; isSelf: boolean }) {
+  const { t } = useI18n();
   const updateUser = useUpdateUser();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
 
   const form = useForm<EditUserForm>({
-    resolver: zodResolver(editUserSchema),
+    resolver: zodResolver(editUserSchema(t)),
     defaultValues: {
       name: user.name,
       phone: user.phone ?? "",
@@ -354,12 +371,12 @@ function EditUserDialog({ user, isSelf }: { user: User; isSelf: boolean }) {
         },
       });
       await invalidateUserPickers(queryClient);
-      toast({ title: "User updated" });
+      toast({ title: t("admin.users.updated") });
       setOpen(false);
     } catch (e) {
       toast({
-        title: "Could not update user",
-        description: serverError(e, "Please try again."),
+        title: t("admin.users.updateFailed"),
+        description: serverError(e, t("admin.users.tryAgain")),
         variant: "destructive",
       });
     }
@@ -374,11 +391,11 @@ function EditUserDialog({ user, isSelf }: { user: User; isSelf: boolean }) {
         className="h-8 border-border text-muted-foreground hover:bg-gray-alpha-50"
       >
         <Pencil className="me-1.5 h-3.5 w-3.5" />
-        Edit
+        {t("common.edit")}
       </Button>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit user</DialogTitle>
+          <DialogTitle>{t("admin.users.editUser")}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -387,9 +404,13 @@ function EditUserDialog({ user, isSelf }: { user: User; isSelf: boolean }) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{t("common.name")}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Full name" />
+                    <Input
+                      {...field}
+                      dir="auto"
+                      placeholder={t("admin.users.fullName")}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -400,9 +421,14 @@ function EditUserDialog({ user, isSelf }: { user: User; isSelf: boolean }) {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone</FormLabel>
+                  <FormLabel>{t("common.phone")}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Optional" />
+                    <Input
+                      {...field}
+                      type="tel"
+                      dir="ltr"
+                      placeholder={t("common.optional")}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -413,7 +439,7 @@ function EditUserDialog({ user, isSelf }: { user: User; isSelf: boolean }) {
               name="isAdmin"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Role</FormLabel>
+                  <FormLabel>{t("admin.users.role")}</FormLabel>
                   <Select
                     value={field.value ? "admin" : "member"}
                     onValueChange={(v) => field.onChange(v === "admin")}
@@ -425,14 +451,18 @@ function EditUserDialog({ user, isSelf }: { user: User; isSelf: boolean }) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="admin">Administrator</SelectItem>
-                      <SelectItem value="member">Member</SelectItem>
+                      <SelectItem value="admin">
+                        {t("admin.users.administrator")}
+                      </SelectItem>
+                      <SelectItem value="member">
+                        {t("admin.users.member")}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <FormDescription>
                     {isSelf
-                      ? "You can't change your own role."
-                      : "Administrators can manage users and import data."}
+                      ? t("admin.users.cannotChangeOwnRole")
+                      : t("admin.users.administratorsHint")}
                   </FormDescription>
                 </FormItem>
               )}
@@ -446,7 +476,7 @@ function EditUserDialog({ user, isSelf }: { user: User; isSelf: boolean }) {
                 {updateUser.isPending && (
                   <Loader2 className="me-2 h-4 w-4 animate-spin" />
                 )}
-                Save changes
+                {t("admin.users.saveChanges")}
               </Button>
             </DialogFooter>
           </form>
@@ -457,6 +487,7 @@ function EditUserDialog({ user, isSelf }: { user: User; isSelf: boolean }) {
 }
 
 function StatusActions({ user, isSelf }: { user: User; isSelf: boolean }) {
+  const { t, tNode } = useI18n();
   const updateUser = useUpdateUser();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -480,9 +511,11 @@ function StatusActions({ user, isSelf }: { user: User; isSelf: boolean }) {
         invalidateDealCollections(queryClient);
       }
       toast({
-        title: activeFlag ? "User reactivated" : "User deactivated",
+        title: activeFlag
+          ? t("admin.users.reactivated")
+          : t("admin.users.deactivated"),
         ...(reassignOwnerId != null
-          ? { description: "Their open deals were reassigned." }
+          ? { description: t("admin.users.dealsReassigned") }
           : {}),
       });
       setOpen(false);
@@ -495,8 +528,8 @@ function StatusActions({ user, isSelf }: { user: User; isSelf: boolean }) {
         return;
       }
       toast({
-        title: "Could not update user",
-        description: serverError(e, "Please try again."),
+        title: t("admin.users.updateFailed"),
+        description: serverError(e, t("admin.users.tryAgain")),
         variant: "destructive",
       });
     }
@@ -512,24 +545,25 @@ function StatusActions({ user, isSelf }: { user: User; isSelf: boolean }) {
               size="sm"
               disabled={isSelf || updateUser.isPending}
               className="h-8 border-destructive/30 text-destructive hover:bg-destructive-subtle hover:text-destructive disabled:opacity-40"
-              title={
-                isSelf ? "You cannot deactivate your own account" : undefined
-              }
+              title={isSelf ? t("admin.users.cannotDeactivateSelf") : undefined}
             >
               <UserX className="me-1.5 h-3.5 w-3.5" />
-              Deactivate
+              {t("admin.users.deactivate")}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Deactivate {user.name}?</AlertDialogTitle>
+              <AlertDialogTitle>
+                {tNode("admin.users.deactivateTitle", {
+                  name: <bdi>{user.name}</bdi>,
+                })}
+              </AlertDialogTitle>
               <AlertDialogDescription>
-                They will be signed out and unable to log in until reactivated.
-                Their data and history are kept.
+                {t("admin.users.deactivateBody")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={(e) => {
                   e.preventDefault();
@@ -540,7 +574,7 @@ function StatusActions({ user, isSelf }: { user: User; isSelf: boolean }) {
                 {updateUser.isPending && (
                   <Loader2 className="me-2 h-4 w-4 animate-spin" />
                 )}
-                Deactivate
+                {t("admin.users.deactivate")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -571,12 +605,13 @@ function StatusActions({ user, isSelf }: { user: User; isSelf: boolean }) {
       ) : (
         <UserCheck className="me-1.5 h-3.5 w-3.5" />
       )}
-      Reactivate
+      {t("admin.users.reactivate")}
     </Button>
   );
 }
 
 function ResendCredentialsButton({ user }: { user: User }) {
+  const { t, tNode } = useI18n();
   const resend = useResendUserCredentials();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -584,12 +619,12 @@ function ResendCredentialsButton({ user }: { user: User }) {
   const onConfirm = async () => {
     try {
       const res = await resend.mutateAsync({ id: user.id });
-      toast({ title: res.message || "Login details sent" });
+      toast({ title: res.message || t("admin.users.loginSent") });
       setOpen(false);
     } catch (e) {
       toast({
-        title: "Could not send login details",
-        description: serverError(e, "Please try again."),
+        title: t("admin.users.loginSendFailed"),
+        description: serverError(e, t("admin.users.tryAgain")),
         variant: "destructive",
       });
     }
@@ -609,22 +644,24 @@ function ResendCredentialsButton({ user }: { user: User }) {
           ) : (
             <Mail className="me-1.5 h-3.5 w-3.5" />
           )}
-          Resend login
+          {t("admin.users.resendLogin")}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            Resend login details to {user.name}?
+            {tNode("admin.users.resendTitle", {
+              name: <bdi>{user.name}</bdi>,
+            })}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            This sets a new temporary password and emails it to {user.email}.
-            Their current password will stop working and any active sessions
-            will be signed out.
+            {tNode("admin.users.resendBody", {
+              email: <bdi dir="ltr">{user.email}</bdi>,
+            })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault();
@@ -635,7 +672,7 @@ function ResendCredentialsButton({ user }: { user: User }) {
             {resend.isPending && (
               <Loader2 className="me-2 h-4 w-4 animate-spin" />
             )}
-            Send details
+            {t("admin.users.sendDetails")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -661,6 +698,7 @@ function dash(value: string | null | undefined): string {
 export default function AdminUsersPage() {
   const { data: users, isLoading } = useListUsers();
   const { user: currentUser } = useAuth();
+  const { t, formatDate, formatNumber } = useI18n();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState(ALL);
   const [roleFilter, setRoleFilter] = useState(ALL);
@@ -696,7 +734,7 @@ export default function AdminUsersPage() {
       {
         id: "name",
         accessorKey: "name",
-        header: "Name",
+        header: t("common.name"),
         size: 250,
         cell: ({ row }) => {
           const u = row.original;
@@ -717,16 +755,18 @@ export default function AdminUsersPage() {
                   {u.isAdmin && (
                     <Shield
                       className="h-3.5 w-3.5 shrink-0 text-brand"
-                      aria-label="Admin"
+                      aria-label={t("admin.users.admin")}
                     />
                   )}
                   {isSelf && (
                     <span className="shrink-0 rounded-sm bg-muted px-1.5 py-0.5 text-caption text-muted-foreground">
-                      You
+                      {t("admin.users.you")}
                     </span>
                   )}
                 </div>
-                <div className="truncate text-caption-quiet text-subtle">#{u.id}</div>
+                <div className="truncate text-caption-quiet text-subtle">
+                  #{u.id}
+                </div>
               </div>
             </div>
           );
@@ -735,11 +775,12 @@ export default function AdminUsersPage() {
       {
         id: "email",
         accessorKey: "email",
-        header: "Email",
+        header: t("common.email"),
         size: 240,
         cell: ({ row }) => (
           <a
             href={`mailto:${row.original.email}`}
+            dir="ltr"
             className="truncate text-brand hover:underline"
           >
             {row.original.email}
@@ -749,10 +790,10 @@ export default function AdminUsersPage() {
       {
         id: "phone",
         accessorKey: "phone",
-        header: "Phone",
+        header: t("common.phone"),
         size: 150,
         cell: ({ row }) => (
-          <span dir="auto" className="truncate text-muted-foreground">
+          <span dir="ltr" className="truncate text-muted-foreground">
             {dash(row.original.phone)}
           </span>
         ),
@@ -760,7 +801,7 @@ export default function AdminUsersPage() {
       {
         id: "role",
         accessorKey: "isAdmin",
-        header: "Role",
+        header: t("admin.users.role"),
         size: 110,
         cell: ({ row }) => (
           <span
@@ -771,14 +812,16 @@ export default function AdminUsersPage() {
                 : "bg-muted text-muted-foreground",
             )}
           >
-            {row.original.isAdmin ? "Admin" : "User"}
+            {row.original.isAdmin
+              ? t("admin.users.admin")
+              : t("admin.users.user")}
           </span>
         ),
       },
       {
         id: "team",
         accessorKey: "teamName",
-        header: "Team",
+        header: t("common.team"),
         size: 150,
         cell: ({ row }) =>
           row.original.teamName ? (
@@ -792,31 +835,31 @@ export default function AdminUsersPage() {
       {
         id: "created",
         accessorKey: "created",
-        header: "Joined",
+        header: t("admin.users.joined"),
         size: 130,
         cell: ({ row }) => (
           <span className="text-muted-foreground">
-            {format(new Date(row.original.created), "MMM d, yyyy")}
+            {formatDate(row.original.created)}
           </span>
         ),
       },
       {
         id: "lastLogin",
         accessorKey: "lastLogin",
-        header: "Last login",
+        header: t("admin.users.lastLogin"),
         size: 140,
         cell: ({ row }) => (
           <span className="text-muted-foreground">
             {row.original.lastLogin
-              ? format(new Date(row.original.lastLogin), "MMM d, yyyy")
-              : "Never"}
+              ? formatDate(row.original.lastLogin)
+              : t("admin.users.never")}
           </span>
         ),
       },
       {
         id: "status",
         accessorKey: "activeFlag",
-        header: "Status",
+        header: t("common.status"),
         size: 110,
         cell: ({ row }) => (
           <span
@@ -827,13 +870,15 @@ export default function AdminUsersPage() {
                 : "bg-destructive-subtle text-destructive",
             )}
           >
-            {row.original.activeFlag ? "Active" : "Inactive"}
+            {row.original.activeFlag
+              ? t("admin.users.active")
+              : t("admin.users.inactive")}
           </span>
         ),
       },
       {
         id: "actions",
-        header: "Actions",
+        header: t("common.actions"),
         size: 340,
         enableSorting: false,
         enableResizing: false,
@@ -855,14 +900,34 @@ export default function AdminUsersPage() {
         ),
       },
     ],
-    [currentUser],
+    [currentUser, t, formatDate],
   );
 
   const cards = [
-    { label: "Total", value: summary.total, dot: "bg-gray-400" },
-    { label: "Active", value: summary.active, dot: "bg-success" },
-    { label: "Admins", value: summary.admins, dot: "bg-brand-500" },
-    { label: "Inactive", value: summary.inactive, dot: "bg-destructive" },
+    {
+      id: "total",
+      label: t("common.total"),
+      value: summary.total,
+      dot: "bg-gray-400",
+    },
+    {
+      id: "active",
+      label: t("admin.users.stat.active"),
+      value: summary.active,
+      dot: "bg-success",
+    },
+    {
+      id: "admins",
+      label: t("admin.users.stat.admins"),
+      value: summary.admins,
+      dot: "bg-brand-500",
+    },
+    {
+      id: "inactive",
+      label: t("admin.users.stat.inactive"),
+      value: summary.inactive,
+      dot: "bg-destructive",
+    },
   ];
 
   const hasFilters =
@@ -873,10 +938,10 @@ export default function AdminUsersPage() {
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 pb-1 pt-3">
         <div>
           <h1 className="text-heading-sm text-foreground">
-            User Management
+            {t("admin.users.title")}
           </h1>
           <p className="text-body-quiet text-muted-foreground">
-            Create teammates and control who can access the CRM.
+            {t("admin.users.subtitle")}
           </p>
         </div>
         <AddUserDialog />
@@ -885,7 +950,7 @@ export default function AdminUsersPage() {
       <div className="grid grid-cols-2 gap-3 px-4 pb-3 pt-3 sm:grid-cols-4">
         {cards.map((card) => (
           <div
-            key={card.label}
+            key={card.id}
             className="rounded-2xl bg-card px-4 py-3 shadow-card"
           >
             <div className="flex items-center gap-1.5 text-caption text-muted-foreground">
@@ -893,7 +958,7 @@ export default function AdminUsersPage() {
               {card.label}
             </div>
             <div className="mt-1 text-heading-sm tabular-nums text-foreground">
-              {card.value.toLocaleString()}
+              {formatNumber(card.value)}
             </div>
           </div>
         ))}
@@ -905,30 +970,32 @@ export default function AdminUsersPage() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search name, email, phone…"
+            placeholder={t("admin.users.searchPlaceholder")}
             className="w-full ps-8 sm:w-[240px]"
           />
         </div>
 
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="All statuses" />
+            <SelectValue placeholder={t("admin.users.allStatuses")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL}>All statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
+            <SelectItem value={ALL}>{t("admin.users.allStatuses")}</SelectItem>
+            <SelectItem value="active">{t("admin.users.active")}</SelectItem>
+            <SelectItem value="inactive">
+              {t("admin.users.inactive")}
+            </SelectItem>
           </SelectContent>
         </Select>
 
         <Select value={roleFilter} onValueChange={setRoleFilter}>
           <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="All roles" />
+            <SelectValue placeholder={t("admin.users.allRoles")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL}>All roles</SelectItem>
-            <SelectItem value="admin">Admins</SelectItem>
-            <SelectItem value="user">Users</SelectItem>
+            <SelectItem value={ALL}>{t("admin.users.allRoles")}</SelectItem>
+            <SelectItem value="admin">{t("admin.users.admins")}</SelectItem>
+            <SelectItem value="user">{t("admin.users.users")}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -944,7 +1011,7 @@ export default function AdminUsersPage() {
             }}
           >
             <X className="me-1 h-4 w-4" />
-            Clear
+            {t("common.clear")}
           </Button>
         )}
       </div>
@@ -967,8 +1034,8 @@ export default function AdminUsersPage() {
             "actions",
           ]}
           isLoading={isLoading}
-          loadingMessage="Loading users…"
-          emptyMessage="No users match the current filters."
+          loadingMessage={t("admin.users.loading")}
+          emptyMessage={t("admin.users.empty")}
         />
       </div>
     </div>

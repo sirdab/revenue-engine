@@ -9,25 +9,39 @@ import {
 } from "@/lib/webhook-settings-api";
 import { AiSettings } from "./ai-settings";
 import { SlackSettings } from "./slack-settings";
+import { useI18n, type MessageKey } from "@/lib/i18n/i18n";
 
 // The inbound webhooks, in integration order (create a deal, then update it).
 // Each renders as a self-contained section: purpose, its own POST URL, the
 // fields that matter, and an example body. They all share one secret (below).
-const ENDPOINTS = [
+// Titles and prose are message keys resolved at render; the example bodies are
+// wire format and stay as the API expects them.
+const code = (name: string) => (
+  <code dir="ltr" className="font-mono">
+    {name}
+  </code>
+);
+
+const ENDPOINTS: {
+  id: string;
+  titleKey: MessageKey;
+  path: string;
+  summaryKey: MessageKey;
+  fieldsKey: MessageKey;
+  fieldCodes: Record<string, string>;
+  example: Record<string, unknown>;
+}[] = [
   {
     id: "create",
-    title: "Create a deal",
+    titleKey: "settings.webhooks.create.title",
     path: "/api/webhooks/leads",
-    summary:
-      "Turn an inbound lead into a new deal. Creates and links a person and organization when provided.",
-    fields: (
-      <>
-        <code className="font-mono">pipeline</code> accepts a name or id. Omit{" "}
-        <code className="font-mono">stage</code> to drop into the pipeline's
-        first stage. <code className="font-mono">externalId</code> makes retries
-        safe: the same id never creates a duplicate deal.
-      </>
-    ),
+    summaryKey: "settings.webhooks.create.summary",
+    fieldsKey: "settings.webhooks.create.fields",
+    fieldCodes: {
+      pipeline: "pipeline",
+      stage: "stage",
+      externalId: "externalId",
+    },
     example: {
       pipeline: "Sales",
       title: "Acme Corp - Annual plan",
@@ -45,18 +59,11 @@ const ENDPOINTS = [
   },
   {
     id: "update",
-    title: "Update a deal",
+    titleKey: "settings.webhooks.update.title",
     path: "/api/webhooks/deals/update",
-    summary:
-      "Patch an existing deal: move its stage, change its value, add a comment. Only the fields you send are changed.",
-    fields: (
-      <>
-        Target the deal by its numeric <code className="font-mono">dealId</code>{" "}
-        (returned when the deal is created). A{" "}
-        <code className="font-mono">stage</code> change resets the deal's aging
-        clock, just like editing it in the app.
-      </>
-    ),
+    summaryKey: "settings.webhooks.update.summary",
+    fieldsKey: "settings.webhooks.update.fields",
+    fieldCodes: { dealId: "dealId", stage: "stage" },
     example: {
       dealId: 42,
       stage: "Proposal",
@@ -65,9 +72,10 @@ const ENDPOINTS = [
       labels: ["Hot"],
     },
   },
-] as const;
+];
 
 function CopyButton({ value, label }: { value: string; label: string }) {
+  const { t } = useI18n();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   return (
@@ -82,7 +90,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
           setCopied(true);
           setTimeout(() => setCopied(false), 1500);
         } catch {
-          toast({ title: "Couldn't copy", variant: "destructive" });
+          toast({ title: t("settings.webhooks.copyFailed"), variant: "destructive" });
         }
       }}
     >
@@ -91,7 +99,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
       ) : (
         <Copy className="h-4 w-4" />
       )}
-      <span className="ms-1.5">{copied ? "Copied" : label}</span>
+      <span className="ms-1.5">{copied ? t("settings.webhooks.copied") : label}</span>
     </Button>
   );
 }
@@ -103,6 +111,7 @@ function EndpointSection({
   origin: string;
   endpoint: (typeof ENDPOINTS)[number];
 }) {
+  const { t, tNode } = useI18n();
   const url = `${origin}${endpoint.path}`;
   const example = JSON.stringify(endpoint.example, null, 2);
   return (
@@ -112,19 +121,33 @@ function EndpointSection({
           POST
         </span>
         <h3 className="text-body font-semibold text-foreground">
-          {endpoint.title}
+          {t(endpoint.titleKey)}
         </h3>
       </div>
-      <p className="mb-3 text-caption-quiet text-muted-foreground">{endpoint.summary}</p>
+      <p className="mb-3 text-caption-quiet text-muted-foreground">{t(endpoint.summaryKey)}</p>
 
-      <label className="text-caption text-muted-foreground">Endpoint</label>
+      <label className="text-caption text-muted-foreground">
+        {t("settings.webhooks.endpoint")}
+      </label>
       <div className="mb-3 mt-1 flex items-center gap-2">
-        <Input readOnly value={url} className="font-mono text-caption-quiet" />
-        <CopyButton value={url} label="Copy" />
+        <Input
+          readOnly
+          dir="ltr"
+          value={url}
+          aria-label={t("settings.webhooks.endpoint")}
+          className="font-mono text-caption-quiet"
+        />
+        <CopyButton value={url} label={t("settings.webhooks.copy")} />
       </div>
 
-      <p className="mb-2 text-caption-quiet text-subtle">{endpoint.fields}</p>
-      <pre className="overflow-x-auto rounded-md bg-primary p-3 text-caption-quiet leading-relaxed text-gray-100">
+      <p className="mb-2 text-caption-quiet text-subtle">{tNode(
+          endpoint.fieldsKey,
+          Object.fromEntries(
+            Object.entries(endpoint.fieldCodes).map(([k, v]) => [k, code(v)]),
+          ),
+        )}
+      </p>
+      <pre dir="ltr" className="overflow-x-auto text-start rounded-md bg-primary p-3 text-caption-quiet leading-relaxed text-gray-100">
         {example}
       </pre>
     </section>
@@ -132,6 +155,7 @@ function EndpointSection({
 }
 
 export function WebhookSettings() {
+  const { t, tNode } = useI18n();
   const { data, isLoading, isError } = useWebhookSecret();
   const rotate = useRotateWebhookSecret();
   const { toast } = useToast();
@@ -145,7 +169,7 @@ export function WebhookSettings() {
   const onRotate = async () => {
     if (
       !window.confirm(
-        "Regenerate the webhook secret? The old secret stops working immediately; you'll need to update it in n8n.",
+        t("settings.webhooks.regenerateConfirm"),
       )
     ) {
       return;
@@ -153,9 +177,12 @@ export function WebhookSettings() {
     try {
       await rotate.mutateAsync();
       setReveal(true);
-      toast({ title: "New secret generated" });
+      toast({ title: t("settings.webhooks.regenerated") });
     } catch {
-      toast({ title: "Couldn't regenerate secret", variant: "destructive" });
+      toast({
+        title: t("settings.webhooks.regenerateFailed"),
+        variant: "destructive",
+      });
     }
   };
 
@@ -163,41 +190,43 @@ export function WebhookSettings() {
     <div className="mx-auto max-w-3xl p-6">
       <header className="mb-6">
         <h1 className="text-heading-sm text-foreground">
-          Integrations
+          {t("settings.integrations.title")}
         </h1>
         <p className="mt-1 text-body-quiet text-muted-foreground">
-          Connect Slack for team notifications, and create and update deals
-          from external automations (n8n, Zapier, forms) by POSTing to the
-          inbound webhooks below.
+          {t("settings.integrations.subtitle")}
         </p>
       </header>
 
       {isLoading ? (
         <div className="flex items-center gap-2 text-body-quiet text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+          <Loader2 className="h-4 w-4 animate-spin" /> {t("common.loading")}
         </div>
       ) : isError ? (
         <div className="rounded-md border border-destructive/30 bg-destructive-subtle p-4 text-body-quiet text-destructive">
-          Couldn't load the webhook settings. Admins only.
+          {t("settings.webhooks.loadFailed")}
         </div>
       ) : (
         <div className="space-y-6">
           {/* Authentication — one secret, shared by every endpoint below */}
           <section className="rounded-2xl bg-card p-5 shadow-card">
             <h2 className="text-body font-semibold text-foreground">
-              Authentication
+              {t("settings.webhooks.auth.title")}
             </h2>
             <p className="mb-3 text-caption-quiet text-muted-foreground">
-              Every endpoint below uses this one shared secret. Send it as an{" "}
-              <code className="font-mono">
-                Authorization: Bearer &lt;secret&gt;
-              </code>{" "}
-              header. Keep it private.
+              {tNode("settings.webhooks.auth.description", {
+                header: (
+                  <code dir="ltr" className="font-mono">
+                    Authorization: Bearer &lt;secret&gt;
+                  </code>
+                ),
+              })}
             </p>
             <div className="flex items-center gap-2">
               <Input
                 readOnly
+                dir="ltr"
                 value={reveal ? secret : masked}
+                aria-label={t("settings.webhooks.auth.secret")}
                 className="font-mono text-caption-quiet"
               />
               <Button
@@ -206,7 +235,11 @@ export function WebhookSettings() {
                 size="sm"
                 className="shrink-0"
                 onClick={() => setReveal((r) => !r)}
-                aria-label={reveal ? "Hide secret" : "Reveal secret"}
+                aria-label={
+                  reveal
+                    ? t("settings.webhooks.auth.hide")
+                    : t("settings.webhooks.auth.reveal")
+                }
               >
                 {reveal ? (
                   <EyeOff className="h-4 w-4" />
@@ -214,7 +247,7 @@ export function WebhookSettings() {
                   <Eye className="h-4 w-4" />
                 )}
               </Button>
-              <CopyButton value={secret} label="Copy" />
+              <CopyButton value={secret} label={t("settings.webhooks.copy")} />
             </div>
             <div className="mt-3">
               <Button
@@ -229,7 +262,7 @@ export function WebhookSettings() {
                 ) : (
                   <RefreshCw className="h-4 w-4" />
                 )}
-                <span className="ms-1.5">Regenerate</span>
+                <span className="ms-1.5">{t("settings.webhooks.auth.regenerate")}</span>
               </Button>
             </div>
           </section>

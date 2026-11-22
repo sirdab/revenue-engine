@@ -148,6 +148,7 @@ function RequiredFieldsPicker({
    *  way to drop them is to edit the stage they come from. */
   locked?: Map<string, string>;
 }) {
+  const { t } = useI18n();
   const { data: registry } = useDealFieldRegistry();
   const fieldOptions = useMemo(
     () =>
@@ -167,11 +168,11 @@ function RequiredFieldsPicker({
     const byStorage: Record<string, typeof fieldOptions> = { column: [], data: [], custom: [] };
     for (const f of fieldOptions) (byStorage[f.storage] ?? byStorage.custom!).push(f);
     return [
-      { title: "Deal fields", items: byStorage.column!.filter(matches) },
-      { title: "Imported fields", items: byStorage.data!.filter(matches) },
-      { title: "Custom fields", items: byStorage.custom!.filter(matches) },
+      { title: t("settings.pipelines.picker.dealFields"), items: byStorage.column!.filter(matches) },
+      { title: t("settings.pipelines.picker.importedFields"), items: byStorage.data!.filter(matches) },
+      { title: t("settings.pipelines.picker.customFields"), items: byStorage.custom!.filter(matches) },
     ].filter((g) => g.items.length > 0);
-  }, [fieldOptions, fieldSearch]);
+  }, [fieldOptions, fieldSearch, t]);
 
   // Keys still required whose field was since deactivated or deleted —
   // surface them so they can be removed (the server rejects saves that keep
@@ -190,8 +191,7 @@ function RequiredFieldsPicker({
     <>
       {fieldOptions.length === 0 ? (
         <p className="text-caption-quiet text-subtle">
-          No deal fields available yet. Activate or create some under Settings › Custom
-          Fields to require them here.
+          {t("settings.pipelines.picker.noFields")}
         </p>
       ) : (
       <div className="rounded-md border border-border">
@@ -199,14 +199,14 @@ function RequiredFieldsPicker({
           <Input
             value={fieldSearch}
             onChange={(e) => setFieldSearch(e.target.value)}
-            placeholder="Search fields…"
+            placeholder={t("settings.pipelines.picker.search")}
             className="h-7 text-caption-quiet"
           />
         </div>
         <div className="max-h-48 space-y-2.5 overflow-y-auto p-2">
           {fieldGroups.length === 0 && (
             <p className="py-2 text-center text-caption-quiet text-subtle">
-              No fields match "{fieldSearch.trim()}".
+              {t("settings.pipelines.picker.noMatch", { query: fieldSearch.trim() })}
             </p>
           )}
           {fieldGroups.map((g) => (
@@ -232,9 +232,9 @@ function RequiredFieldsPicker({
                       disabled={lockedBy != null}
                       title={
                         lockedBy != null
-                          ? `Required since “${lockedBy}”: edit that stage to change it`
+                          ? t("settings.pipelines.picker.lockedBy", { stage: lockedBy })
                           : own && inheritedFrom
-                            ? `Also required since “${inheritedFrom}”: removing it here keeps it required via that stage`
+                            ? t("settings.pipelines.picker.alsoRequired", { stage: inheritedFrom })
                             : `${f.key} · ${f.fieldType}`
                       }
                       onClick={() => toggle(f.key)}
@@ -252,7 +252,7 @@ function RequiredFieldsPicker({
                       ) : (
                         on && <Check className="h-3 w-3" />
                       )}
-                      {f.label}
+                      <span dir="auto">{f.label}</span>
                     </button>
                   );
                 })}
@@ -265,18 +265,18 @@ function RequiredFieldsPicker({
       {staleRequired.length > 0 && (
         <div className="mt-2">
           <p className="mb-1 text-caption-quiet text-warning">
-            These required fields no longer exist or are inactive. Remove them to save:
+            {t("settings.pipelines.picker.stale")}
           </p>
           <div className="flex flex-wrap gap-1">
             {staleRequired.map((k) => (
               <button
                 key={k}
                 type="button"
-                title="Click to remove"
+                title={t("settings.pipelines.picker.clickToRemove")}
                 onClick={() => toggle(k)}
                 className="inline-flex items-center gap-1 rounded-sm border border-warning/30 bg-warning-subtle px-2 py-0.5 text-caption-quiet text-warning"
               >
-                {k} <X className="h-3 w-3" />
+                <span dir="ltr">{k}</span> <X className="h-3 w-3" />
               </button>
             ))}
           </div>
@@ -308,6 +308,7 @@ function StageDialog({
   onDone: () => void;
 }) {
   const { toast } = useToast();
+  const { t, formatNumber } = useI18n();
   const { data: registry } = useDealFieldRegistry();
   const [name, setName] = useState("");
   const [probability, setProbability] = useState("100");
@@ -353,17 +354,17 @@ function StageDialog({
     // Enter reaches here too, and the button's disabled state doesn't stop it.
     if (saving) return;
     if (!name.trim()) {
-      toast({ title: "Name is required", variant: "destructive" });
+      toast({ title: t("settings.pipelines.error.nameRequired"), variant: "destructive" });
       return;
     }
     const prob = Number(probability);
     if (!Number.isInteger(prob) || prob < 0 || prob > 100) {
-      toast({ title: "Probability must be 0–100", variant: "destructive" });
+      toast({ title: t("settings.pipelines.error.probabilityRange"), variant: "destructive" });
       return;
     }
     const rottingDays = rotting.trim() === "" ? null : Number(rotting);
     if (rottingDays !== null && (!Number.isInteger(rottingDays) || rottingDays <= 0)) {
-      toast({ title: "Rotting days must be a positive number", variant: "destructive" });
+      toast({ title: t("settings.pipelines.error.rottingPositive"), variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -379,7 +380,7 @@ function StageDialog({
       onDone();
       onOpenChange(false);
     } catch (e) {
-      toast({ title: "Couldn't save stage", description: (e as Error).message, variant: "destructive" });
+      toast({ title: t("settings.pipelines.error.saveStage"), description: (e as Error).message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -389,25 +390,26 @@ function StageDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit stage" : "New stage"}</DialogTitle>
+          <DialogTitle>{editing ? t("settings.pipelines.editStage") : t("settings.pipelines.newStage")}</DialogTitle>
           <DialogDescription>
-            Probability weights the forecast; rotting days flags idle deals.
+            {t("settings.pipelines.stageDialogDescription")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <label className="block text-body-quiet">
-            <span className="mb-1 block font-medium text-muted-foreground">Name</span>
+            <span className="mb-1 block font-medium text-muted-foreground">{t("common.name")}</span>
             <Input
               autoFocus
+              dir="auto"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Negotiation"
+              placeholder={t("settings.pipelines.stageNamePlaceholder")}
               onKeyDown={(e) => e.key === "Enter" && save()}
             />
           </label>
           <div className="text-body-quiet">
             <div className="mb-2 flex items-center justify-between">
-              <span className="font-medium text-muted-foreground">Win probability</span>
+              <span className="font-medium text-muted-foreground">{t("settings.pipelines.winProbability")}</span>
               <div className="flex items-center gap-1">
                 <Input
                   type="number"
@@ -415,6 +417,8 @@ function StageDialog({
                   max="100"
                   value={probability}
                   onChange={(e) => setProbability(e.target.value)}
+                  dir="ltr"
+                  aria-label={t("settings.pipelines.winProbability")}
                   className="h-7 w-16 text-end tabular-nums"
                 />
                 <span className="text-subtle">%</span>
@@ -425,38 +429,37 @@ function StageDialog({
               onValueChange={([v]) => setProbability(String(v))}
               max={100}
               step={5}
-              aria-label="Win probability"
+              aria-label={t("settings.pipelines.winProbability")}
             />
           </div>
           <label className="block text-body-quiet">
-            <span className="mb-1 block font-medium text-muted-foreground">Rotting days</span>
+            <span className="mb-1 block font-medium text-muted-foreground">{t("settings.pipelines.rottingDays")}</span>
             <Input
               type="number"
               min="1"
               value={rotting}
               onChange={(e) => setRotting(e.target.value)}
-              placeholder="never"
+              placeholder={t("settings.pipelines.rottingNever")}
             />
             <span className="mt-1 block text-caption-quiet text-subtle">
-              Deals idle in this stage longer than this are flagged as rotting.
+              {t("settings.pipelines.rottingHint")}
             </span>
           </label>
           <div className="text-body-quiet">
             <div className="mb-1 flex items-center justify-between">
-              <span className="font-medium text-muted-foreground">Required fields</span>
+              <span className="font-medium text-muted-foreground">{t("deals.requiredFields.title")}</span>
               {required.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setRequired([])}
                   className="text-caption-quiet text-subtle hover:text-muted-foreground"
                 >
-                  Clear ({required.length})
+                  {t("settings.pipelines.clearCount", { count: formatNumber(required.length) })}
                 </button>
               )}
             </div>
             <p className="mb-2 text-caption-quiet text-subtle">
-              A deal can't move into this stage until these are filled. Fields required by
-              earlier stages stay required here automatically (shown locked).
+              {t("settings.pipelines.stageRequiredHint")}
             </p>
             <RequiredFieldsPicker
               value={required}
@@ -467,10 +470,10 @@ function StageDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>{t("common.cancel")}</Button>
           <Button onClick={save} disabled={saving} className="gap-2">
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-            {editing ? "Save" : "Create"}
+            {editing ? t("common.save") : t("common.create")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -493,6 +496,7 @@ function WonRequiredFieldsDialog({
   onDone: () => void;
 }) {
   const { toast } = useToast();
+  const { t, tNode, formatNumber } = useI18n();
   const [selectedKeys, setSelectedKeys] = useState<string[]>(
     pipeline.wonRequiredFields ?? [],
   );
@@ -506,7 +510,7 @@ function WonRequiredFieldsDialog({
       onClose();
     } catch (e) {
       toast({
-        title: "Couldn't save won requirements",
+        title: t("settings.pipelines.error.saveWon"),
         description: (e as Error).message,
         variant: "destructive",
       });
@@ -521,23 +525,24 @@ function WonRequiredFieldsDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Trophy className="h-4 w-4 text-warning-glyph" />
-            Required fields to mark as won
+            {t("settings.pipelines.wonDialogTitle")}
           </DialogTitle>
           <DialogDescription>
-            Deals in "{pipeline.name}" can't be marked as won until every field selected
-            here is filled.
+            {tNode("settings.pipelines.wonDialogDescription", {
+              name: <bdi dir="auto">{pipeline.name}</bdi>,
+            })}
           </DialogDescription>
         </DialogHeader>
         <div className="text-body-quiet">
           <div className="mb-1 flex items-center justify-between">
-            <span className="font-medium text-muted-foreground">Required fields</span>
+            <span className="font-medium text-muted-foreground">{t("deals.requiredFields.title")}</span>
             {selectedKeys.length > 0 && (
               <button
                 type="button"
                 onClick={() => setSelectedKeys([])}
                 className="text-caption-quiet text-subtle hover:text-muted-foreground"
               >
-                Clear ({selectedKeys.length})
+                {t("settings.pipelines.clearCount", { count: formatNumber(selectedKeys.length) })}
               </button>
             )}
           </div>
@@ -549,11 +554,11 @@ function WonRequiredFieldsDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={saving}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button onClick={save} disabled={saving} className="gap-2">
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-            Save
+            {t("common.save")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -576,34 +581,37 @@ function ReassignDialog({
   onClose: () => void;
   onConfirm: (targetId: number) => void;
 }) {
+  const { t, tPlural, formatNumber } = useI18n();
   const [target, setTarget] = useState<string>("");
   const options = siblings.filter((s) => s.id !== stage.id && !s.archived);
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Move deals before deleting</DialogTitle>
+          <DialogTitle>{t("settings.pipelines.reassignTitle")}</DialogTitle>
           <DialogDescription>
-            "{stage.name}" has {stage.activeDealCount} active deal
-            {stage.activeDealCount === 1 ? "" : "s"}. Move them to another stage first.
+            {tPlural("settings.pipelines.reassignDescription", stage.activeDealCount, {
+              name: stage.name,
+              count: formatNumber(stage.activeDealCount),
+            })}
           </DialogDescription>
         </DialogHeader>
         <Select value={target} onValueChange={setTarget}>
-          <SelectTrigger><SelectValue placeholder="Choose a stage…" /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder={t("settings.pipelines.chooseStage")} /></SelectTrigger>
           <SelectContent>
             {options.map((s) => (
-              <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+              <SelectItem key={s.id} value={String(s.id)}><span dir="auto">{s.name}</span></SelectItem>
             ))}
           </SelectContent>
         </Select>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" onClick={onClose}>{t("common.cancel")}</Button>
           <Button
             disabled={!target}
             onClick={() => onConfirm(Number(target))}
             className="bg-destructive hover:bg-destructive"
           >
-            Move &amp; delete
+            {t("settings.pipelines.moveAndDelete")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -623,6 +631,7 @@ interface ConfirmState {
 }
 
 function ConfirmDialog({ confirm, onClose }: { confirm: ConfirmState | null; onClose: () => void }) {
+  const { t } = useI18n();
   return (
     <AlertDialog open={!!confirm} onOpenChange={(o) => !o && onClose()}>
       <AlertDialogContent>
@@ -631,7 +640,7 @@ function ConfirmDialog({ confirm, onClose }: { confirm: ConfirmState | null; onC
           <AlertDialogDescription>{confirm?.description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
           <AlertDialogAction
             className="bg-destructive hover:bg-destructive"
             onClick={() => {
@@ -672,6 +681,7 @@ function SortablePipelineItem({
   onArchive: () => void;
   onDelete: () => void;
 }) {
+  const { t, tPlural, formatNumber } = useI18n();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: pipeline.id, disabled: dragDisabled });
   return (
@@ -689,8 +699,8 @@ function SortablePipelineItem({
         {...attributes}
         {...(dragDisabled ? {} : listeners)}
         disabled={dragDisabled}
-        aria-label={`Reorder ${pipeline.name}`}
-        title={dragDisabled ? "Clear the search to reorder" : undefined}
+        aria-label={t("settings.pipelines.reorderAria", { name: pipeline.name })}
+        title={dragDisabled ? t("settings.pipelines.clearSearchToReorder") : undefined}
         className={cn(
           "touch-none rounded-sm p-0.5 text-subtle",
           dragDisabled
@@ -702,15 +712,17 @@ function SortablePipelineItem({
       </button>
       <button type="button" className="min-w-0 flex-1 text-start" onClick={onSelect}>
         <div className="flex items-center gap-1.5">
-          <span className="truncate text-body text-foreground">{pipeline.name}</span>
+          <span dir="auto" className="truncate text-body text-foreground">{pipeline.name}</span>
           {pipeline.isDefault && (
-            <Badge variant="outline" className="border-warning/30 bg-warning-subtle text-[10px] text-warning">
-              Default
+            <Badge variant="outline" className="shrink-0 border-warning/30 bg-warning-subtle text-[10px] text-warning">
+              {t("settings.pipelines.default")}
             </Badge>
           )}
         </div>
-        <span className="text-[10px] text-subtle">
-          {pipeline.activeDealCount} active deal{pipeline.activeDealCount === 1 ? "" : "s"}
+        <span className="block text-[10px] text-subtle">
+          {tPlural("settings.pipelines.activeDeals", pipeline.activeDealCount, {
+            count: formatNumber(pipeline.activeDealCount),
+          })}
         </span>
       </button>
       <DropdownMenu>
@@ -720,7 +732,7 @@ function SortablePipelineItem({
             variant="ghost"
             size="icon"
             className="h-7 w-7 text-subtle hover:text-foreground"
-            aria-label={`Actions for ${pipeline.name}`}
+            aria-label={t("settings.pipelines.actionsFor", { name: pipeline.name })}
           >
             <MoreHorizontal className="h-3.5 w-3.5" />
           </Button>
@@ -728,18 +740,18 @@ function SortablePipelineItem({
         <DropdownMenuContent align="end">
           {!pipeline.isDefault && (
             <DropdownMenuItem onClick={onSetDefault}>
-              <Star className="me-2 h-3.5 w-3.5" /> Set as default
+              <Star className="me-2 h-3.5 w-3.5" /> {t("settings.pipelines.setDefault")}
             </DropdownMenuItem>
           )}
           <DropdownMenuItem onClick={onRename}>
-            <Pencil className="me-2 h-3.5 w-3.5" /> Rename
+            <Pencil className="me-2 h-3.5 w-3.5" /> {t("common.rename")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onArchive}>
-            <Archive className="me-2 h-3.5 w-3.5" /> Archive
+            <Archive className="me-2 h-3.5 w-3.5" /> {t("common.archive")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
-            <Trash2 className="me-2 h-3.5 w-3.5" /> Delete
+            <Trash2 className="me-2 h-3.5 w-3.5" /> {t("common.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -768,8 +780,11 @@ function SortableStageRow({
   onArchive: () => void;
   onDelete: () => void;
 }) {
+  const { t, tPlural, formatNumber } = useI18n();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: stage.id });
+  const requiredCount = stage.requiredFields.length + inheritedRequired.length;
+  const listSep = t("settings.pipelines.listSeparator");
   return (
     <div
       ref={setNodeRef}
@@ -783,29 +798,40 @@ function SortableStageRow({
         type="button"
         {...attributes}
         {...listeners}
-        aria-label={`Reorder ${stage.name}`}
+        aria-label={t("settings.pipelines.reorderAria", { name: stage.name })}
         className="cursor-grab touch-none rounded-sm p-0.5 text-subtle hover:text-muted-foreground active:cursor-grabbing"
       >
         <GripVertical className="h-3.5 w-3.5" />
       </button>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="truncate text-body text-foreground">{stage.name}</span>
-          {stage.requiredFields.length + inheritedRequired.length > 0 && (
+          <span dir="auto" className="truncate text-body text-foreground">{stage.name}</span>
+          {requiredCount > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="inline-flex items-center gap-0.5 rounded-sm border border-border bg-surface-whisper px-1 py-px text-[10px] text-muted-foreground">
+                <span
+                  aria-label={tPlural("settings.pipelines.requiredCountAria", requiredCount, {
+                    count: formatNumber(requiredCount),
+                  })}
+                  className="inline-flex items-center gap-0.5 rounded-sm border border-border bg-surface-whisper px-1 py-px text-[10px] text-muted-foreground"
+                >
                   <ListChecks className="h-3 w-3" />{" "}
-                  {stage.requiredFields.length + inheritedRequired.length}
+                  {formatNumber(requiredCount)}
                 </span>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-xs">
                 {stage.requiredFields.length > 0 && (
-                  <p>Required here: {stage.requiredFields.map(fieldLabel).join(", ")}</p>
+                  <p>
+                    {t("settings.pipelines.requiredHere", {
+                      fields: stage.requiredFields.map(fieldLabel).join(listSep),
+                    })}
+                  </p>
                 )}
                 {inheritedRequired.length > 0 && (
                   <p>
-                    Inherited from earlier stages: {inheritedRequired.map(fieldLabel).join(", ")}
+                    {t("settings.pipelines.inheritedRequired", {
+                      fields: inheritedRequired.map(fieldLabel).join(listSep),
+                    })}
                   </p>
                 )}
               </TooltipContent>
@@ -817,22 +843,27 @@ function SortableStageRow({
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
           <div className="h-full rounded-full bg-brand-500" style={{ width: `${stage.probability}%` }} />
         </div>
-        <span className="w-9 text-end text-caption-quiet tabular-nums text-muted-foreground">{stage.probability}%</span>
+        <span className="w-9 text-end text-caption-quiet tabular-nums text-muted-foreground">
+          {formatNumber(stage.probability / 100, { style: "percent" })}
+        </span>
       </div>
       <div className="w-16 shrink-0 text-end">
         {stage.rottingDays != null ? (
           <span className="inline-flex items-center gap-1 text-caption-quiet tabular-nums text-muted-foreground">
-            <Clock className="h-3 w-3 text-warning-glyph" /> {stage.rottingDays}d
+            <Clock className="h-3 w-3 text-warning-glyph" />{" "}
+            {tPlural("settings.pipelines.rottingDaysShort", stage.rottingDays, {
+              count: formatNumber(stage.rottingDays),
+            })}
           </span>
         ) : (
           <span className="text-caption-quiet text-subtle">—</span>
         )}
       </div>
       <div className="w-12 shrink-0 text-end text-caption-quiet tabular-nums text-muted-foreground">
-        {stage.activeDealCount}
+        {formatNumber(stage.activeDealCount)}
       </div>
       <div className="flex shrink-0 items-center gap-0.5">
-        <IconBtn title="Edit" onClick={onEdit}>
+        <IconBtn title={t("common.edit")} onClick={onEdit}>
           <Pencil className="h-3.5 w-3.5" />
         </IconBtn>
         <DropdownMenu>
@@ -842,18 +873,18 @@ function SortableStageRow({
               variant="ghost"
               size="icon"
               className="h-7 w-7 text-subtle hover:text-foreground"
-              aria-label={`More actions for ${stage.name}`}
+              aria-label={t("settings.pipelines.moreActionsFor", { name: stage.name })}
             >
               <MoreHorizontal className="h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={onArchive}>
-              <Archive className="me-2 h-3.5 w-3.5" /> Archive
+              <Archive className="me-2 h-3.5 w-3.5" /> {t("common.archive")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
-              <Trash2 className="me-2 h-3.5 w-3.5" /> Delete
+              <Trash2 className="me-2 h-3.5 w-3.5" /> {t("common.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -867,6 +898,7 @@ function SortableStageRow({
 // ---------------------------------------------------------------------------
 
 function PipelineFlowPreview({ stages }: { stages: AdminStageRow[] }) {
+  const { t, tPlural, formatNumber } = useI18n();
   if (stages.length === 0) return null;
   return (
     // Cards flex to fill the panel width (with a readable floor); very long
@@ -876,14 +908,17 @@ function PipelineFlowPreview({ stages }: { stages: AdminStageRow[] }) {
         <Fragment key={s.id}>
           {i > 0 && (
             <div className="flex shrink-0 items-center px-1">
-              <ChevronRight className="h-4 w-4 text-subtle" />
+              <ChevronRight
+                aria-label={t("settings.pipelines.flowNext")}
+                className="h-4 w-4 text-subtle"
+              />
             </div>
           )}
           <div className="min-w-[150px] flex-1 overflow-hidden rounded-lg bg-card shadow-card transition-shadow hover:shadow-card-hover">
             <div className="px-3 pb-2 pt-2.5">
               <div className="flex items-center gap-1.5">
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
-                  {i + 1}
+                  {formatNumber(i + 1)}
                 </span>
                 <span
                   dir="auto"
@@ -895,7 +930,7 @@ function PipelineFlowPreview({ stages }: { stages: AdminStageRow[] }) {
               </div>
               <div className="mt-1 flex items-center gap-1.5 text-[11px] tabular-nums">
                 <span className="font-semibold text-brand">
-                  {s.probability}%
+                  {formatNumber(s.probability / 100, { style: "percent" })}
                 </span>
                 <span className="text-subtle">·</span>
                 <span
@@ -905,13 +940,15 @@ function PipelineFlowPreview({ stages }: { stages: AdminStageRow[] }) {
                       : "text-subtle"
                   }
                 >
-                  {s.activeDealCount} deal{s.activeDealCount === 1 ? "" : "s"}
+                  {tPlural("settings.pipelines.stageDeals", s.activeDealCount, {
+                    count: formatNumber(s.activeDealCount),
+                  })}
                 </span>
               </div>
             </div>
             <div className="h-1 bg-muted">
               <div
-                className="h-full rounded-e-full bg-gradient-to-r from-brand-400 to-brand-600"
+                className="h-full rounded-e-full bg-gradient-to-r from-brand-400 to-brand-600 rtl:bg-gradient-to-l"
                 style={{ width: `${s.probability}%` }}
               />
             </div>
@@ -929,7 +966,7 @@ function PipelineFlowPreview({ stages }: { stages: AdminStageRow[] }) {
 export function PipelineStageSettings() {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const { t } = useI18n();
+  const { t, tPlural, tNode, formatNumber } = useI18n();
   const [savingReassign, setSavingReassign] = useState(false);
   const { data: pipelines, isLoading } = useAdminPipelines();
   const [selected, setSelected] = useState<number | null>(null);
@@ -1034,7 +1071,7 @@ export function PipelineStageSettings() {
       invalidatePipelineData(qc);
       setPipelineDialog(null);
     } catch (e) {
-      toast({ title: "Couldn't save pipeline", description: (e as Error).message, variant: "destructive" });
+      toast({ title: t("settings.pipelines.error.savePipeline"), description: (e as Error).message, variant: "destructive" });
     } finally {
       setSavingPipeline(false);
     }
@@ -1053,7 +1090,7 @@ export function PipelineStageSettings() {
     reorderPipelines(next.map((p) => p.id))
       .then(() => invalidatePipelineData(qc))
       .catch((err) => {
-        toast({ title: "Couldn't reorder pipelines", description: (err as Error).message, variant: "destructive" });
+        toast({ title: t("settings.pipelines.error.reorderPipelines"), description: (err as Error).message, variant: "destructive" });
         invalidatePipelineData(qc);
       });
   };
@@ -1069,20 +1106,22 @@ export function PipelineStageSettings() {
     reorderStages(selected, next.map((s) => s.id))
       .then(() => invalidatePipelineData(qc))
       .catch((err) => {
-        toast({ title: "Couldn't reorder stages", description: (err as Error).message, variant: "destructive" });
+        toast({ title: t("settings.pipelines.error.reorderStages"), description: (err as Error).message, variant: "destructive" });
         invalidatePipelineData(qc);
       });
   };
 
   const confirmDeletePipeline = (p: AdminPipelineRow) =>
     setConfirm({
-      title: `Delete "${p.name}"?`,
+      title: t("settings.pipelines.deletePipelineTitle", { name: p.name }),
       description:
         p.activeDealCount > 0
-          ? `This pipeline has ${p.activeDealCount} active deal${p.activeDealCount === 1 ? "" : "s"}. Deleting it removes the pipeline and its stages permanently.`
-          : "This removes the pipeline and its stages permanently. This can't be undone.",
-      confirmLabel: "Delete pipeline",
-      action: () => void run(() => deletePipeline(p.id), "Couldn't delete pipeline"),
+          ? tPlural("settings.pipelines.deletePipelineWithDeals", p.activeDealCount, {
+              count: formatNumber(p.activeDealCount),
+            })
+          : t("settings.pipelines.deletePipelineNoDeals"),
+      confirmLabel: t("settings.pipelines.deletePipelineConfirm"),
+      action: () => void run(() => deletePipeline(p.id), t("settings.pipelines.error.deletePipeline")),
     });
 
   // Delete a stage; if the server says it needs reassignment, open that dialog.
@@ -1096,7 +1135,7 @@ export function PipelineStageSettings() {
         setReassign(s);
         return;
       }
-      toast({ title: "Couldn't delete stage", description: (e as Error).message, variant: "destructive" });
+      toast({ title: t("settings.pipelines.error.deleteStage"), description: (e as Error).message, variant: "destructive" });
     }
   };
 
@@ -1108,9 +1147,9 @@ export function PipelineStageSettings() {
       return;
     }
     setConfirm({
-      title: `Delete stage "${s.name}"?`,
-      description: "This removes the stage permanently. This can't be undone.",
-      confirmLabel: "Delete stage",
+      title: t("settings.pipelines.deleteStageTitle", { name: s.name }),
+      description: t("settings.pipelines.deleteStageDescription"),
+      confirmLabel: t("settings.pipelines.deleteStageConfirm"),
       action: () => void tryDeleteStage(s),
     });
   };
@@ -1118,7 +1157,7 @@ export function PipelineStageSettings() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16 text-body-quiet text-muted-foreground">
-        <Loader2 className="me-2 h-4 w-4 animate-spin" /> Loading pipelines…
+        <Loader2 className="me-2 h-4 w-4 animate-spin" /> {t("settings.pipelines.loading")}
       </div>
     );
   }
@@ -1128,32 +1167,43 @@ export function PipelineStageSettings() {
   return (
     <div className="mx-auto min-w-0 max-w-5xl p-4 md:p-6">
       <div className="mb-5">
-        <h1 className="text-heading-sm text-foreground">Pipelines &amp; Stages</h1>
+        <h1 className="text-heading-sm text-foreground">{t("settings.nav.pipelines")}</h1>
         <p className="text-body-quiet text-muted-foreground">
-          Manage your CRM pipelines and their stages. Drag to reorder; changes apply everywhere immediately.
+          {t("settings.pipelines.subtitle")}
         </p>
       </div>
 
       {activePipelines.length === 0 && archivedPipelines.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-16 text-center">
-          <p className="mb-3 text-body-quiet text-muted-foreground">No pipelines yet.</p>
+          <p className="mb-3 text-body-quiet text-muted-foreground">{t("settings.pipelines.empty")}</p>
           <Button onClick={() => { setPipelineName(""); setPipelineDialog({ editing: null }); }} className="gap-1">
-            <Plus className="h-4 w-4" /> Create your first pipeline
+            <Plus className="h-4 w-4" /> {t("settings.pipelines.createFirst")}
           </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
           {/* Pipelines */}
           <div className="min-w-0">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-body font-semibold text-foreground">
-                Pipelines
-                <span className="ms-1.5 font-normal text-subtle">
-                  {activePipelines.length.toLocaleString()}
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-2 text-body font-semibold text-foreground">
+                <span>{t("settings.pipelines.heading")}</span>
+                <span
+                  aria-label={tPlural("settings.pipelines.countAria", activePipelines.length, {
+                    count: formatNumber(activePipelines.length),
+                  })}
+                  className="rounded-full bg-muted px-2 py-0.5 text-caption font-normal tabular-nums text-muted-foreground"
+                >
+                  {formatNumber(activePipelines.length)}
                 </span>
               </h2>
-              <Button size="sm" variant="outline" className="h-7 gap-1 text-caption-quiet" onClick={() => { setPipelineName(""); setPipelineDialog({ editing: null }); }}>
-                <Plus className="h-3 w-3" /> New
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 gap-1 text-caption-quiet"
+                aria-label={t("settings.pipelines.newPipelineAria")}
+                onClick={() => { setPipelineName(""); setPipelineDialog({ editing: null }); }}
+              >
+                <Plus className="h-3 w-3" /> {t("settings.pipelines.new")}
               </Button>
             </div>
             {activePipelines.length > 6 && (
@@ -1162,7 +1212,7 @@ export function PipelineStageSettings() {
                 <Input
                   value={pipelineQuery}
                   onChange={(e) => setPipelineQuery(e.target.value)}
-                  placeholder="Search pipelines…"
+                  placeholder={t("settings.pipelines.search")}
                   className="h-8 ps-7 text-body-quiet"
                 />
               </div>
@@ -1177,15 +1227,15 @@ export function PipelineStageSettings() {
                       selected={selected === p.id}
                       dragDisabled={pipelineDragDisabled}
                       onSelect={() => setSelected(p.id)}
-                      onSetDefault={() => run(() => setDefaultPipeline(p.id), "Couldn't set default")}
+                      onSetDefault={() => run(() => setDefaultPipeline(p.id), t("settings.pipelines.error.setDefault"))}
                       onRename={() => { setPipelineName(p.name); setPipelineDialog({ editing: p }); }}
-                      onArchive={() => run(() => updatePipeline(p.id, { archived: true }), "Couldn't archive")}
+                      onArchive={() => run(() => updatePipeline(p.id, { archived: true }), t("settings.pipelines.error.archive"))}
                       onDelete={() => confirmDeletePipeline(p)}
                     />
                   ))}
                   {matchingPipelines.length === 0 && (
                     <p className="py-4 text-center text-caption-quiet text-subtle">
-                      No pipelines match "{pipelineQuery.trim()}".
+                      {t("settings.pipelines.noMatch", { query: pipelineQuery.trim() })}
                     </p>
                   )}
                 </div>
@@ -1197,7 +1247,9 @@ export function PipelineStageSettings() {
                 onClick={() => setShowAllPipelines(true)}
                 className="mt-1.5 w-full rounded-md border border-dashed border-border py-1.5 text-caption text-muted-foreground hover:border-input hover:text-foreground"
               >
-                Show all {matchingPipelines.length.toLocaleString()} pipelines
+                {tPlural("settings.pipelines.showAll", matchingPipelines.length, {
+                  count: formatNumber(matchingPipelines.length),
+                })}
               </button>
             )}
             {showAllPipelines && !pipelineFilter && matchingPipelines.length > PIPELINES_CAP && (
@@ -1206,16 +1258,16 @@ export function PipelineStageSettings() {
                 onClick={() => setShowAllPipelines(false)}
                 className="mt-1.5 w-full rounded-md py-1 text-caption-quiet text-subtle hover:text-muted-foreground"
               >
-                Show fewer
+                {t("settings.pipelines.showFewer")}
               </button>
             )}
             {archivedPipelines.length > 0 && (
               <div className="mt-4">
-                <p className="mb-1 text-caption text-subtle">Archived</p>
+                <p className="mb-1 text-caption text-subtle">{t("settings.pipelines.archivedHeading")}</p>
                 {archivedPipelines.map((p) => (
                   <div key={p.id} className="flex items-center justify-between rounded-md px-2 py-1 text-body-quiet text-muted-foreground">
-                    <span className="truncate">{p.name}</span>
-                    <IconBtn title="Restore" onClick={() => run(() => updatePipeline(p.id, { archived: false }), "Couldn't restore")}>
+                    <span dir="auto" className="truncate">{p.name}</span>
+                    <IconBtn title={t("common.restore")} onClick={() => run(() => updatePipeline(p.id, { archived: false }), t("settings.pipelines.error.restore"))}>
                       <ArchiveRestore className="h-3.5 w-3.5" />
                     </IconBtn>
                   </div>
@@ -1226,9 +1278,13 @@ export function PipelineStageSettings() {
 
           {/* Stages */}
           <div>
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-body font-semibold text-foreground">
-                Stages{selectedPipeline ? ` · ${selectedPipeline.name}` : ""}
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h2 className="min-w-0 truncate text-body font-semibold text-foreground">
+                {selectedPipeline
+                  ? tNode("settings.pipelines.stagesHeadingFor", {
+                      pipeline: <bdi dir="auto">{selectedPipeline.name}</bdi>,
+                    })
+                  : t("settings.pipelines.stagesHeading")}
               </h2>
               {selectedPipeline != null && (
                 <div className="flex items-center gap-1.5">
@@ -1238,18 +1294,21 @@ export function PipelineStageSettings() {
                     className="h-7 gap-1 text-caption-quiet"
                     onClick={() => setWonDialog(selectedPipeline)}
                   >
-                    <Trophy className="h-3 w-3" /> Won requirements
-                    {(selectedPipeline.wonRequiredFields?.length ?? 0) > 0 &&
-                      ` (${selectedPipeline.wonRequiredFields.length})`}
+                    <Trophy className="h-3 w-3" />{" "}
+                    {(selectedPipeline.wonRequiredFields?.length ?? 0) > 0
+                      ? t("settings.pipelines.wonRequirementsCount", {
+                          count: formatNumber(selectedPipeline.wonRequiredFields.length),
+                        })
+                      : t("settings.pipelines.wonRequirements")}
                   </Button>
                   <Button size="sm" className="h-7 gap-1 text-caption-quiet" onClick={() => setStageDialog({ editing: null })}>
-                    <Plus className="h-3 w-3" /> New stage
+                    <Plus className="h-3 w-3" /> {t("settings.pipelines.newStage")}
                   </Button>
                 </div>
               )}
             </div>
             {selected == null ? (
-              <p className="py-8 text-center text-body-quiet text-subtle">Select a pipeline.</p>
+              <p className="py-8 text-center text-body-quiet text-subtle">{t("settings.pipelines.selectPipeline")}</p>
             ) : (
               <>
                 {selectedPipeline != null && (
@@ -1283,15 +1342,15 @@ export function PipelineStageSettings() {
                   <div className="min-w-[560px]">
                     <div className="flex items-center gap-2 bg-surface-whisper px-2 py-2 text-caption text-muted-foreground">
                       <span className="w-4 shrink-0" />
-                      <span className="min-w-0 flex-1">Stage</span>
-                      <span className="w-28 shrink-0 text-end">Probability</span>
-                      <span className="w-16 shrink-0 text-end">Rotting</span>
-                      <span className="w-12 shrink-0 text-end">Deals</span>
+                      <span className="min-w-0 flex-1 text-start">{t("common.stage")}</span>
+                      <span className="w-28 shrink-0 text-end">{t("deals.summary.probability")}</span>
+                      <span className="w-16 shrink-0 text-end">{t("settings.pipelines.col.rotting")}</span>
+                      <span className="w-12 shrink-0 text-end">{t("common.deals")}</span>
                       <span className="w-[3.75rem] shrink-0" />
                     </div>
                     {activeStages.length === 0 && (
                       <p className="border-t border-border px-3 py-8 text-center text-body-quiet text-subtle">
-                        No stages yet. Add the first one to start moving deals.
+                        {t("settings.pipelines.noStages")}
                       </p>
                     )}
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onStageDragEnd}>
@@ -1303,7 +1362,7 @@ export function PipelineStageSettings() {
                             inheritedRequired={inheritedByStage.get(s.id) ?? []}
                             fieldLabel={fieldLabel}
                             onEdit={() => setStageDialog({ editing: s })}
-                            onArchive={() => run(() => updateStage(s.id, { archived: true }), "Couldn't archive")}
+                            onArchive={() => run(() => updateStage(s.id, { archived: true }), t("settings.pipelines.error.archive"))}
                             onDelete={() => confirmDeleteStage(s)}
                           />
                         ))}
@@ -1311,11 +1370,11 @@ export function PipelineStageSettings() {
                     </DndContext>
                     {archivedStages.length > 0 && (
                       <div className="border-t border-border bg-surface-whisper/50 px-3 py-2">
-                        <p className="mb-1 text-caption text-subtle">Archived stages</p>
+                        <p className="mb-1 text-caption text-subtle">{t("settings.pipelines.archivedStages")}</p>
                         {archivedStages.map((s) => (
                           <div key={s.id} className="flex items-center justify-between py-0.5 text-caption-quiet text-muted-foreground">
-                            <span>{s.name}</span>
-                            <IconBtn title="Restore" onClick={() => run(() => updateStage(s.id, { archived: false }), "Couldn't restore")}>
+                            <span dir="auto">{s.name}</span>
+                            <IconBtn title={t("common.restore")} onClick={() => run(() => updateStage(s.id, { archived: false }), t("settings.pipelines.error.restore"))}>
                               <ArchiveRestore className="h-3.5 w-3.5" />
                             </IconBtn>
                           </div>
@@ -1334,20 +1393,21 @@ export function PipelineStageSettings() {
       <Dialog open={!!pipelineDialog} onOpenChange={(o) => !o && setPipelineDialog(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{pipelineDialog?.editing ? "Rename pipeline" : "New pipeline"}</DialogTitle>
+            <DialogTitle>{pipelineDialog?.editing ? t("settings.pipelines.renamePipeline") : t("settings.pipelines.newPipeline")}</DialogTitle>
           </DialogHeader>
           <Input
             autoFocus
             value={pipelineName}
             onChange={(e) => setPipelineName(e.target.value)}
-            placeholder="Pipeline name"
+            dir="auto"
+            placeholder={t("settings.pipelines.pipelineNamePlaceholder")}
             onKeyDown={(e) => e.key === "Enter" && savePipelineName()}
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPipelineDialog(null)} disabled={savingPipeline}>Cancel</Button>
+            <Button variant="outline" onClick={() => setPipelineDialog(null)} disabled={savingPipeline}>{t("common.cancel")}</Button>
             <Button onClick={savePipelineName} disabled={savingPipeline} className="gap-2">
               {savingPipeline && <Loader2 className="h-4 w-4 animate-spin" />}
-              {pipelineDialog?.editing ? "Save" : "Create"}
+              {pipelineDialog?.editing ? t("common.save") : t("common.create")}
             </Button>
           </DialogFooter>
         </DialogContent>

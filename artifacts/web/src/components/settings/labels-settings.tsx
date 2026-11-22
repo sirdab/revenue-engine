@@ -57,23 +57,59 @@ import {
   labelColorClasses,
 } from "@/lib/label-colors";
 import type { LabelEntity } from "@/components/shared/labels-editor";
+import {
+  useI18n,
+  type MessageKey,
+  type PluralKey,
+  type Translate,
+  type TranslatePlural,
+} from "@/lib/i18n/i18n";
 
 // Settings → Labels: one place to curate the shared taxonomy — colored labels
 // for deals / people / organizations and the managed lost-reason list. Registry mutations rewrite the denormalized values on
 // records server-side, so renames/merges/deletes here propagate everywhere.
 
-const ENTITY_TABS: Array<{ value: LabelEntity; label: string; noun: string }> =
-  [
-    { value: "deal", label: "Deals", noun: "deal" },
-    { value: "person", label: "People", noun: "person" },
-    { value: "organization", label: "Organizations", noun: "organization" },
-  ];
+// Message keys, not words: this table is module-level, so the labels are
+// resolved at render through t().
+const ENTITY_TABS: Array<{ value: LabelEntity; labelKey: MessageKey }> = [
+  { value: "deal", labelKey: "settings.labels.tab.deal" },
+  { value: "person", labelKey: "settings.labels.tab.person" },
+  { value: "organization", labelKey: "settings.labels.tab.organization" },
+];
 
-function usageText(count: number, noun: string): string {
-  if (count === 0) return "Not in use";
-  const plural =
-    noun === "person" ? "people" : noun === "deal" ? "deals" : "organizations";
-  return `${count.toLocaleString()} ${count === 1 ? noun : plural}`;
+const USAGE_KEYS: Record<LabelEntity, PluralKey> = {
+  deal: "settings.labels.usage.deal",
+  person: "settings.labels.usage.person",
+  organization: "settings.labels.usage.organization",
+};
+
+const DELETE_USED_KEYS: Record<LabelEntity, PluralKey> = {
+  deal: "settings.labels.deleteUsed.deal",
+  person: "settings.labels.deleteUsed.person",
+  organization: "settings.labels.deleteUsed.organization",
+};
+
+const COLOR_KEYS: Record<string, MessageKey> = {
+  slate: "settings.labels.color.slate",
+  red: "settings.labels.color.red",
+  orange: "settings.labels.color.orange",
+  amber: "settings.labels.color.amber",
+  green: "settings.labels.color.green",
+  teal: "settings.labels.color.teal",
+  blue: "settings.labels.color.blue",
+  indigo: "settings.labels.color.indigo",
+  purple: "settings.labels.color.purple",
+  pink: "settings.labels.color.pink",
+};
+
+function usageText(
+  count: number,
+  entity: LabelEntity,
+  t: Translate,
+  tPlural: TranslatePlural,
+): string {
+  if (count === 0) return t("settings.labels.notInUse");
+  return tPlural(USAGE_KEYS[entity], count);
 }
 
 // Swatch that opens the palette; picking commits immediately.
@@ -86,6 +122,7 @@ function ColorPicker({
   onPick: (token: string) => void;
   disabled?: boolean;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -93,7 +130,7 @@ function ColorPicker({
         <button
           type="button"
           disabled={disabled}
-          aria-label="Change color"
+          aria-label={t("settings.labels.changeColor")}
           className={cn(
             "h-5 w-5 shrink-0 rounded-full transition-transform hover:scale-110 disabled:opacity-50",
             labelColorClasses(color).swatch,
@@ -106,8 +143,8 @@ function ColorPicker({
             <button
               key={token}
               type="button"
-              aria-label={token}
-              title={token}
+              aria-label={COLOR_KEYS[token] ? t(COLOR_KEYS[token]) : token}
+              title={COLOR_KEYS[token] ? t(COLOR_KEYS[token]) : token}
               onClick={() => {
                 onPick(token);
                 setOpen(false);
@@ -132,19 +169,20 @@ function ColorPicker({
 
 function LabelRow({
   label,
-  noun,
+  entity,
   onRename,
   onRecolor,
   onDelete,
   busy,
 }: {
   label: Label;
-  noun: string;
+  entity: LabelEntity;
   onRename: (name: string) => void;
   onRecolor: (color: string) => void;
   onDelete: () => void;
   busy: boolean;
 }) {
+  const { t, tPlural } = useI18n();
   return (
     <li className="group flex items-center gap-3 px-5 py-2.5">
       <ColorPicker color={label.color} onPick={onRecolor} disabled={busy} />
@@ -156,7 +194,7 @@ function LabelRow({
         />
       </div>
       <span className="shrink-0 text-caption-quiet tabular-nums text-subtle">
-        {usageText(label.usageCount, noun)}
+        {usageText(label.usageCount, entity, t, tPlural)}
       </span>
       <AlertDialog>
         <AlertDialogTrigger asChild>
@@ -164,7 +202,7 @@ function LabelRow({
             variant="ghost"
             size="icon"
             disabled={busy}
-            aria-label={`Delete ${label.name}`}
+            aria-label={t("settings.labels.deleteAria", { name: label.name })}
             className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -172,20 +210,22 @@ function LabelRow({
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete “{label.name}”?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("settings.labels.deleteTitle", { name: label.name })}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {label.usageCount > 0
-                ? `The label will be removed from ${usageText(label.usageCount, noun)}. This cannot be undone.`
-                : "The label isn't on any record; it will simply disappear from the pickers."}
+                ? tPlural(DELETE_USED_KEYS[entity], label.usageCount)
+                : t("settings.labels.deleteUnused")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={onDelete}
               className="bg-destructive text-white hover:bg-destructive"
             >
-              Delete label
+              {t("settings.labels.deleteConfirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -196,15 +236,14 @@ function LabelRow({
 
 function LabelsPanel({
   entity,
-  noun,
   adding,
   setAdding,
 }: {
   entity: LabelEntity;
-  noun: string;
   adding: boolean;
   setAdding: (next: boolean) => void;
 }) {
+  const { t, tPlural } = useI18n();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [draft, setDraft] = useState("");
@@ -238,7 +277,7 @@ function LabelsPanel({
         invalidate();
         if (result.removedFrom > 0) {
           toast({
-            title: `Label deleted, removed from ${result.removedFrom.toLocaleString()} record${result.removedFrom === 1 ? "" : "s"}.`,
+            title: tPlural("settings.labels.deleted", result.removedFrom),
           });
         }
       },
@@ -264,14 +303,14 @@ function LabelsPanel({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center gap-2 px-5 py-10 text-body-quiet text-subtle">
-        <Loader2 className="h-4 w-4 animate-spin" /> Loading labels…
+        <Loader2 className="h-4 w-4 animate-spin" /> {t("settings.labels.loading")}
       </div>
     );
   }
   if (isError || !data) {
     return (
       <div className="px-5 py-10 text-center text-body-quiet text-destructive">
-        Failed to load labels.
+        {t("settings.labels.loadFailed")}
       </div>
     );
   }
@@ -289,7 +328,8 @@ function LabelsPanel({
               if (e.key === "Enter") submitDraft();
               if (e.key === "Escape") setAdding(false);
             }}
-            placeholder="Label name…"
+            placeholder={t("settings.labels.namePlaceholder")}
+            dir="auto"
             className="h-8 max-w-xs"
             maxLength={60}
           />
@@ -299,7 +339,7 @@ function LabelsPanel({
             disabled={!draft.trim() || busy}
             className="h-8 bg-primary text-primary-foreground hover:bg-primary-hover"
           >
-            Add
+            {t("common.add")}
           </Button>
           <Button
             size="sm"
@@ -307,7 +347,7 @@ function LabelsPanel({
             onClick={() => setAdding(false)}
             className="h-8"
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
         </div>
       )}
@@ -315,10 +355,11 @@ function LabelsPanel({
       {data.labels.length === 0 && data.unregistered.length === 0 ? (
         <div className="px-5 py-10 text-center">
           <Tag className="mx-auto mb-2 h-6 w-6 text-subtle" />
-          <p className="text-body-quiet text-muted-foreground">No labels yet.</p>
+          <p className="text-body-quiet text-muted-foreground">
+            {t("settings.labels.empty")}
+          </p>
           <p className="mt-1 text-caption-quiet text-subtle">
-            Create one here, or add labels directly on records; they'll show
-            up here so you can add them to your list.
+            {t("settings.labels.emptyHint")}
           </p>
         </div>
       ) : (
@@ -328,7 +369,7 @@ function LabelsPanel({
               <LabelRow
                 key={label.id}
                 label={label}
-                noun={noun}
+                entity={entity}
                 busy={busy}
                 onRename={(name) =>
                   update.mutate({ id: label.id, data: { name } })
@@ -344,7 +385,7 @@ function LabelsPanel({
           {data.unregistered.length > 0 && (
             <div className="border-t border-border bg-surface-whisper/40">
               <p className="px-5 pb-1 pt-3 text-caption text-subtle">
-                In use, not in your list
+                {t("settings.labels.unregistered")}
               </p>
               <ul className="divide-y divide-border">
                 {data.unregistered.map((u: UnregisteredLabel) => (
@@ -358,11 +399,14 @@ function LabelsPanel({
                         labelColorClasses("slate").swatch,
                       )}
                     />
-                    <span className="min-w-0 flex-1 truncate text-body-quiet text-foreground">
+                    <span
+                      dir="auto"
+                      className="min-w-0 flex-1 truncate text-body-quiet text-foreground"
+                    >
                       {u.name}
                     </span>
                     <span className="shrink-0 text-caption-quiet tabular-nums text-subtle">
-                      {usageText(u.usageCount, noun)}
+                      {usageText(u.usageCount, entity, t, tPlural)}
                     </span>
                     <Button
                       variant="outline"
@@ -373,7 +417,7 @@ function LabelsPanel({
                       }
                       className="h-7 px-2.5 text-caption-quiet"
                     >
-                      <Plus className="me-1 h-3 w-3" /> Add to list
+                      <Plus className="me-1 h-3 w-3" /> {t("settings.labels.addToList")}
                     </Button>
                   </li>
                 ))}
@@ -384,23 +428,21 @@ function LabelsPanel({
       )}
 
       <p className="border-t border-border px-5 py-3 text-[11px] leading-relaxed text-subtle">
-        Renaming a label updates every record carrying it; renaming it to an
-        existing label's name merges the two. Deleting strips it from all
-        records.
+        {t("settings.labels.footnote")}
       </p>
     </div>
   );
 }
 
 function LabelsSection() {
+  const { t } = useI18n();
   const [entity, setEntity] = useState<LabelEntity>("deal");
   const [adding, setAdding] = useState(false);
-  const tab = ENTITY_TABS.find((t) => t.value === entity)!;
 
   return (
     <SectionCard
-      title="Labels"
-      description="Colored tags shared across the workspace. One set per record type; reps pick from it everywhere labels appear."
+      title={t("settings.labels.labelsTitle")}
+      description={t("settings.labels.labelsDescription")}
       actions={
         <div className="flex items-center gap-2">
           <Tabs
@@ -411,9 +453,9 @@ function LabelsSection() {
             }}
           >
             <TabsList className="h-8">
-              {ENTITY_TABS.map((t) => (
-                <TabsTrigger key={t.value} value={t.value} className="text-caption-quiet">
-                  {t.label}
+              {ENTITY_TABS.map((tab) => (
+                <TabsTrigger key={tab.value} value={tab.value} className="text-caption-quiet">
+                  {t(tab.labelKey)}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -423,7 +465,7 @@ function LabelsSection() {
             onClick={() => setAdding(true)}
             className="h-8 bg-primary text-primary-foreground hover:bg-primary-hover"
           >
-            <Plus className="me-1 h-3.5 w-3.5" /> New label
+            <Plus className="me-1 h-3.5 w-3.5" /> {t("settings.labels.new")}
           </Button>
         </div>
       }
@@ -432,7 +474,6 @@ function LabelsSection() {
       <LabelsPanel
         key={entity}
         entity={entity}
-        noun={tab.noun}
         adding={adding}
         setAdding={setAdding}
       />
@@ -457,6 +498,7 @@ function LostReasonRow({
   onDelete: () => void;
   busy: boolean;
 }) {
+  const { t, tPlural } = useI18n();
   return (
     <li
       className={cn(
@@ -473,21 +515,29 @@ function LostReasonRow({
       </div>
       {!reason.active && (
         <span className="shrink-0 rounded-full border border-border bg-muted px-2 py-0.5 text-caption font-medium text-muted-foreground">
-          Archived
+          {t("common.archived")}
         </span>
       )}
       <span className="shrink-0 text-caption-quiet tabular-nums text-subtle">
         {reason.usageCount === 0
-          ? "No deals"
-          : `${reason.usageCount.toLocaleString()} ${reason.usageCount === 1 ? "deal" : "deals"}`}
+          ? t("settings.labels.noDeals")
+          : tPlural("settings.labels.usage.deal", reason.usageCount)}
       </span>
       <Button
         variant="ghost"
         size="icon"
         disabled={busy}
         onClick={onToggle}
-        aria-label={reason.active ? "Archive reason" : "Restore reason"}
-        title={reason.active ? "Archive (hide from picker)" : "Restore"}
+        aria-label={
+          reason.active
+            ? t("settings.labels.reasons.archive")
+            : t("settings.labels.reasons.restore")
+        }
+        title={
+          reason.active
+            ? t("settings.labels.reasons.archiveHint")
+            : t("common.restore")
+        }
         className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity hover:text-muted-foreground group-hover:opacity-100"
       >
         {reason.active ? (
@@ -502,7 +552,7 @@ function LostReasonRow({
             variant="ghost"
             size="icon"
             disabled={busy}
-            aria-label={`Delete ${reason.name}`}
+            aria-label={t("settings.labels.deleteAria", { name: reason.name })}
             className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -510,20 +560,20 @@ function LostReasonRow({
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete “{reason.name}”?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("settings.labels.deleteTitle", { name: reason.name })}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Deals that were lost with this reason keep it; only the managed
-              list changes. If it's still on lost deals it will reappear below
-              under “Found on lost deals”.
+              {t("settings.labels.reasons.deleteDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={onDelete}
               className="bg-destructive text-white hover:bg-destructive"
             >
-              Delete reason
+              {t("settings.labels.reasons.deleteConfirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -533,6 +583,7 @@ function LostReasonRow({
 }
 
 function LostReasonsSection() {
+  const { t, tPlural } = useI18n();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [draft, setDraft] = useState("");
@@ -569,15 +620,16 @@ function LostReasonsSection() {
 
   return (
     <SectionCard
-      title="Lost reasons"
-      description="The list reps pick from when marking a deal lost. They can still type a one-off custom reason; recurring ones surface below so you can promote them."
+      title={t("settings.labels.reasons.title")}
+      description={t("settings.labels.reasons.description")}
     >
       <div className="flex items-center gap-2 border-b border-border px-5 py-3">
         <Input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
-          placeholder="Add a reason, e.g. “Price too high”…"
+          placeholder={t("settings.labels.reasons.addPlaceholder")}
+          dir="auto"
           className="h-8 max-w-sm"
           maxLength={120}
         />
@@ -587,23 +639,24 @@ function LostReasonsSection() {
           disabled={!draft.trim() || busy}
           className="h-8 bg-primary text-primary-foreground hover:bg-primary-hover"
         >
-          <Plus className="me-1 h-3.5 w-3.5" /> Add
+          <Plus className="me-1 h-3.5 w-3.5" /> {t("common.add")}
         </Button>
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 px-5 py-10 text-body-quiet text-subtle">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading reasons…
+          <Loader2 className="h-4 w-4 animate-spin" />{" "}
+          {t("settings.labels.reasons.loading")}
         </div>
       ) : isError || !data ? (
         <div className="px-5 py-10 text-center text-body-quiet text-destructive">
-          Failed to load lost reasons.
+          {t("settings.labels.reasons.loadFailed")}
         </div>
       ) : (
         <>
           {data.reasons.length === 0 ? (
             <div className="px-5 py-8 text-center text-body-quiet text-muted-foreground">
-              No managed reasons yet. Add your first above.
+              {t("settings.labels.reasons.empty")}
             </div>
           ) : (
             <ul className="divide-y divide-border">
@@ -630,7 +683,7 @@ function LostReasonsSection() {
           {data.unmanaged.length > 0 && (
             <div className="border-t border-border bg-surface-whisper/40">
               <p className="px-5 pb-1 pt-3 text-caption text-subtle">
-                Found on lost deals
+                {t("settings.labels.reasons.unmanaged")}
               </p>
               <ul className="divide-y divide-border">
                 {data.unmanaged.map((u: UnmanagedLostReason) => (
@@ -639,14 +692,14 @@ function LostReasonsSection() {
                     className="flex items-center gap-3 px-5 py-2"
                   >
                     <span
+                      dir="auto"
                       className="min-w-0 flex-1 truncate text-body-quiet text-foreground"
                       title={u.name}
                     >
                       {u.name}
                     </span>
                     <span className="shrink-0 text-caption-quiet tabular-nums text-subtle">
-                      {u.usageCount.toLocaleString()}{" "}
-                      {u.usageCount === 1 ? "deal" : "deals"}
+                      {tPlural("settings.labels.usage.deal", u.usageCount)}
                     </span>
                     <Button
                       variant="outline"
@@ -655,7 +708,7 @@ function LostReasonsSection() {
                       onClick={() => create.mutate({ data: { name: u.name } })}
                       className="h-7 px-2.5 text-caption-quiet"
                     >
-                      <Plus className="me-1 h-3 w-3" /> Add to list
+                      <Plus className="me-1 h-3 w-3" /> {t("settings.labels.addToList")}
                     </Button>
                   </li>
                 ))}
@@ -664,8 +717,7 @@ function LostReasonsSection() {
           )}
 
           <p className="border-t border-border px-5 py-3 text-[11px] leading-relaxed text-subtle">
-            Renaming a reason updates every deal that carries it. Archiving
-            hides it from the picker without touching history.
+            {t("settings.labels.reasons.footnote")}
           </p>
         </>
       )}
@@ -676,15 +728,15 @@ function LostReasonsSection() {
 // ---------------------------------------------------------------------------
 
 export function LabelsSettings() {
+  const { t } = useI18n();
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-6">
       <header className="mb-5">
         <h1 className="text-heading-sm text-foreground">
-          Labels &amp; lost reasons
+          {t("settings.labels.title")}
         </h1>
         <p className="mt-1 text-body-quiet text-muted-foreground">
-          Curate the shared vocabulary your team uses to classify deals,
-          contacts and losses.
+          {t("settings.labels.subtitle")}
         </p>
       </header>
       <div className="flex flex-col gap-4">

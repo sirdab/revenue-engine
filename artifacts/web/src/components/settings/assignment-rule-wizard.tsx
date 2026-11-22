@@ -45,6 +45,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { errorMessage } from "@/lib/api-error";
 import { cn } from "@/lib/utils";
+import { useI18n, type MessageKey } from "@/lib/i18n/i18n";
 
 // 3-step wizard to create/edit an auto-assignment rule (Pipedrive parity):
 //   1. entity (Deal, fixed) + trigger event
@@ -55,11 +56,15 @@ import { cn } from "@/lib/utils";
 // round-robin target is "no specific assignee" (null); the server distributes to
 // the least-loaded active member of the team.
 
+// Labels are message keys, resolved at render through t().
 const STEPS = [
-  { id: "event", label: "Trigger" },
-  { id: "conditions", label: "Conditions & assignee" },
-  { id: "name", label: "Name" },
-] as const;
+  { id: "event", labelKey: "settings.assignmentRules.wizard.step.event" },
+  {
+    id: "conditions",
+    labelKey: "settings.assignmentRules.wizard.step.conditions",
+  },
+  { id: "name", labelKey: "settings.assignmentRules.wizard.step.name" },
+] as const satisfies ReadonlyArray<{ id: string; labelKey: MessageKey }>;
 type StepId = (typeof STEPS)[number]["id"];
 
 // Combobox sentinel for "no fixed assignee" (round-robin). Combobox values are
@@ -75,6 +80,7 @@ export function AssignmentRuleWizard({
   onOpenChange: (open: boolean) => void;
   editingRule?: AssignmentRule | null;
 }) {
+  const { t, formatNumber } = useI18n();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -125,7 +131,7 @@ export function AssignmentRuleWizard({
   });
 
   const teams = teamsData?.teams ?? [];
-  const selectedTeam = teams.find((t) => t.id === teamId) ?? null;
+  const selectedTeam = teams.find((team) => team.id === teamId) ?? null;
   // Rules evaluate in memory against DealFacts — restrict the picker to the
   // fields that evaluator supports (list-only fields would be rejected on save).
   const ctx: BuilderCtx = {
@@ -150,7 +156,7 @@ export function AssignmentRuleWizard({
 
   const save = () => {
     if (teamId == null) {
-      toast({ title: "Pick a team to assign to.", variant: "destructive" });
+      toast({ title: t("settings.assignmentRules.wizard.pickTeamError"), variant: "destructive" });
       setStep("conditions");
       return;
     }
@@ -181,11 +187,10 @@ export function AssignmentRuleWizard({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {editingRule ? "Edit assignment rule" : "New assignment rule"}
+            {editingRule ? t("settings.assignmentRules.wizard.editTitle") : t("settings.assignmentRules.wizard.newTitle")}
           </DialogTitle>
           <DialogDescription>
-            Route deals to a team or person automatically when they match these
-            conditions.
+            {t("settings.assignmentRules.wizard.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -201,14 +206,14 @@ export function AssignmentRuleWizard({
                     : "bg-muted text-subtle",
                 )}
               >
-                {i + 1}
+                {formatNumber(i + 1)}
               </span>
               <span
                 className={cn(
                   i === stepIdx ? "font-medium text-foreground" : "text-subtle",
                 )}
               >
-                {s.label}
+                {t(s.labelKey)}
               </span>
               {i < STEPS.length - 1 && (
                 <span className="mx-1 h-px w-6 bg-gray-200" />
@@ -221,14 +226,18 @@ export function AssignmentRuleWizard({
           {step === "event" && (
             <div className="space-y-4">
               <div>
-                <Label className="text-caption-quiet text-muted-foreground">Entity</Label>
-                <p className="mt-1 text-body text-foreground">Deal</p>
+                <Label className="text-caption-quiet text-muted-foreground">
+                  {t("settings.assignmentRules.wizard.entity")}
+                </Label>
+                <p className="mt-1 text-body text-foreground">{t("common.deal")}</p>
                 <p className="text-caption-quiet text-subtle">
-                  Lead-entity rules aren&apos;t supported yet.
+                  {t("settings.assignmentRules.wizard.leadUnsupported")}
                 </p>
               </div>
               <div>
-                <Label className="text-caption-quiet text-muted-foreground">Trigger event</Label>
+                <Label className="text-caption-quiet text-muted-foreground">
+                  {t("settings.assignmentRules.wizard.triggerEvent")}
+                </Label>
                 <RadioGroup
                   value={event}
                   onValueChange={(v) =>
@@ -240,11 +249,10 @@ export function AssignmentRuleWizard({
                     <RadioGroupItem value="deal_added" className="mt-0.5" />
                     <span>
                       <span className="block text-body text-foreground">
-                        Deal added
+                        {t("settings.assignmentRules.trigger.added")}
                       </span>
                       <span className="block text-caption-quiet text-muted-foreground">
-                        Assign when a new deal is created (including inbound
-                        leads).
+                        {t("settings.assignmentRules.wizard.addedHint")}
                       </span>
                     </span>
                   </label>
@@ -252,12 +260,10 @@ export function AssignmentRuleWizard({
                     <RadioGroupItem value="deal_updated" className="mt-0.5" />
                     <span>
                       <span className="block text-body text-foreground">
-                        Deal updated
+                        {t("settings.assignmentRules.trigger.updated")}
                       </span>
                       <span className="block text-caption-quiet text-muted-foreground">
-                        Assign on a pipeline or stage change. Ownerless deals
-                        only, unless the rule may take over owned deals (next
-                        step).
+                        {t("settings.assignmentRules.wizard.updatedHint")}
                       </span>
                     </span>
                   </label>
@@ -270,11 +276,10 @@ export function AssignmentRuleWizard({
             <div className="space-y-4">
               <div>
                 <Label className="text-caption-quiet text-muted-foreground">
-                  Assignment conditions
+                  {t("settings.assignmentRules.wizard.conditions")}
                 </Label>
                 <p className="mb-2 text-caption-quiet text-subtle">
-                  The deal must match these to be routed by this rule. Leave
-                  empty to match every deal of this trigger.
+                  {t("settings.assignmentRules.wizard.conditionsHint")}
                 </p>
                 <GroupEditor
                   group={conditions}
@@ -285,11 +290,13 @@ export function AssignmentRuleWizard({
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <Label className="text-caption-quiet text-muted-foreground">Team</Label>
+                  <Label className="text-caption-quiet text-muted-foreground">
+                    {t("common.team")}
+                  </Label>
                   <Combobox
-                    items={teams.map((t) => ({
-                      value: String(t.id),
-                      label: t.name,
+                    items={teams.map((team) => ({
+                      value: String(team.id),
+                      label: team.name,
                     }))}
                     value={teamId == null ? "" : String(teamId)}
                     onChange={(v) => {
@@ -297,17 +304,19 @@ export function AssignmentRuleWizard({
                       // Assignee must belong to the chosen team; reset on change.
                       setAssigneeId(null);
                     }}
-                    placeholder="Select a team…"
+                    placeholder={t("settings.assignmentRules.wizard.selectTeam")}
                     triggerClassName="mt-1 h-9 w-full"
                   />
                 </div>
                 <div>
-                  <Label className="text-caption-quiet text-muted-foreground">Assignee</Label>
+                  <Label className="text-caption-quiet text-muted-foreground">
+                    {t("settings.assignmentRules.assignee")}
+                  </Label>
                   <Combobox
                     items={[
                       {
                         value: ROUND_ROBIN,
-                        label: "Round-robin (any active member)",
+                        label: t("settings.assignmentRules.wizard.roundRobin"),
                       },
                       ...(selectedTeam?.members ?? []).map((m) => ({
                         value: String(m.id),
@@ -318,12 +327,12 @@ export function AssignmentRuleWizard({
                     onChange={(v) =>
                       setAssigneeId(v === ROUND_ROBIN || !v ? null : Number(v))
                     }
-                    placeholder="Round-robin (any active member)"
+                    placeholder={t("settings.assignmentRules.wizard.roundRobin")}
                     triggerClassName="mt-1 h-9 w-full"
                   />
                   {teamId == null && (
                     <p className="mt-1 text-caption-quiet text-subtle">
-                      Pick a team first to choose a specific person.
+                      {t("settings.assignmentRules.wizard.pickTeamFirst")}
                     </p>
                   )}
                 </div>
@@ -337,13 +346,10 @@ export function AssignmentRuleWizard({
                   />
                   <span>
                     <span className="block text-body text-foreground">
-                      May take over owned deals
+                      {t("settings.assignmentRules.wizard.takeover")}
                     </span>
                     <span className="block text-caption-quiet text-muted-foreground">
-                      Off (default): this rule only routes deals that have no
-                      owner. On: when the pipeline or stage changes, this rule
-                      reassigns the deal even if someone already owns it. Use
-                      it for handovers between teams.
+                      {t("settings.assignmentRules.wizard.takeoverHint")}
                     </span>
                   </span>
                 </label>
@@ -354,19 +360,20 @@ export function AssignmentRuleWizard({
           {step === "name" && (
             <div className="space-y-2">
               <Label htmlFor="rule-name" className="text-caption-quiet text-muted-foreground">
-                Rule name
+                {t("settings.assignmentRules.wizard.ruleName")}
               </Label>
               <Input
                 id="rule-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && name.trim() && save()}
-                placeholder="e.g. “Enterprise deals → Enterprise team”"
+                placeholder={t("settings.assignmentRules.wizard.namePlaceholder")}
+                dir="auto"
                 maxLength={200}
                 autoFocus
               />
               <p className="text-caption-quiet text-subtle">
-                A clear name helps you recognize this rule in the list.
+                {t("settings.assignmentRules.wizard.nameHint")}
               </p>
             </div>
           )}
@@ -380,7 +387,7 @@ export function AssignmentRuleWizard({
             }
             disabled={stepIdx === 0 || busy}
           >
-            Back
+            {t("settings.assignmentRules.wizard.back")}
           </Button>
           {step === "name" ? (
             <Button
@@ -389,7 +396,7 @@ export function AssignmentRuleWizard({
               className="bg-primary text-primary-foreground hover:bg-primary-hover"
             >
               {busy && <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />}
-              {editingRule ? "Save changes" : "Create rule"}
+              {editingRule ? t("settings.assignmentRules.wizard.saveChanges") : t("settings.assignmentRules.wizard.create")}
             </Button>
           ) : (
             <Button
@@ -397,7 +404,7 @@ export function AssignmentRuleWizard({
               disabled={!canAdvance || busy}
               className="bg-primary text-primary-foreground hover:bg-primary-hover"
             >
-              Next
+              {t("common.next")}
             </Button>
           )}
         </DialogFooter>

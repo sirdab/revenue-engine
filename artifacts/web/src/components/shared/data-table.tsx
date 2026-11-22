@@ -403,7 +403,7 @@ export function DataTable<T>({
   // on each visit rather than silently reopening a sort from another session
   // or device. In server mode the parent owns sorting (it may persist it via
   // useServerTablePreferences) and passes it through `server`.
-  const { t } = useI18n();
+  const { t, tPlural, formatNumber } = useI18n();
   const loadingMessage = loadingMessageProp ?? t("common.loading");
   const errorMessage = errorMessageProp ?? t("common.loadFailedDot");
   const emptyMessage = emptyMessageProp ?? t("table.noMatches");
@@ -589,7 +589,9 @@ export function DataTable<T>({
             <Skeleton className="h-3 w-16" />
           ) : (
             <>
-              {total.toLocaleString()} {serverMode ? "total" : "shown"}
+              {tPlural(serverMode ? "table.totalCount" : "table.shownCount", total, {
+                count: formatNumber(total),
+              })}
             </>
           )}
         </div>
