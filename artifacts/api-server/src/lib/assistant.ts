@@ -3,7 +3,7 @@ import { logger } from "./logger";
 import { ASSISTANT_TOOL_DEFS, executeTool } from "./assistant-tools";
 import { analyzeAssistantQuery, resolveAssistantCandidates } from "./assistant-planner";
 import type { AssistantSearchCandidate } from "./assistant-search-ranking";
-import { APP_TIMEZONE, appTodayIso } from "./assistant-dates";
+import { appTimeZone, appTodayIso } from "./assistant-dates";
 
 // ---------------------------------------------------------------------------
 // Ask AI assistant: a tool-use loop around the workspace's AI provider
@@ -233,7 +233,7 @@ function buildDynamicSystemPrompt(
   // Always tell the model "now" so it can turn relative ranges ("last 7 days",
   // "this quarter") into absolute dates for the date filters. Lives in the
   // uncached dynamic block because it changes daily.
-  let dynamic = `Today's date in the ${APP_TIMEZONE} time zone (the app time zone) is ${appTodayIso()}. When the user asks for a relative range ("last 7 days", "this month", "this quarter"), pass a symbolic period (e.g. this_month) or compute the absolute start and end calendar dates from this date, as the dateFrom/dateTo (YYYY-MM-DD) filters.`;
+  let dynamic = `Today's date in the ${appTimeZone()} time zone (the workspace time zone) is ${appTodayIso()}. When the user asks for a relative range ("last 7 days", "this month", "this quarter"), pass a symbolic period (e.g. this_month) or compute the absolute start and end calendar dates from this date, as the dateFrom/dateTo (YYYY-MM-DD) filters.`;
   if (context) {
     const userName = context.userName?.trim() || "the current user";
     dynamic += `

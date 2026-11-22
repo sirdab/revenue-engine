@@ -4,6 +4,7 @@ import {
   serial,
   text,
   integer,
+  smallint,
   timestamp,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
@@ -27,6 +28,20 @@ export const tenantsTable = pgTable("tenants", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  // Regional settings (Settings › Workspace). NULL means "the server default"
+  // (APP_TIMEZONE / PHONE_COUNTRY_CODE, else UTC, Monday, USD), so a workspace
+  // that never sets them behaves exactly as before they existed. Validated on
+  // write in api-server/src/lib/workspace-settings.ts.
+  /** IANA zone for dates, "today", report buckets and how times display. */
+  timezone: text("timezone"),
+  /** First day of the week: 0 Sunday, 1 Monday, 6 Saturday. */
+  weekStart: smallint("week_start"),
+  /** ISO 4217 code for amounts that name no currency (new deals, imports). */
+  defaultCurrency: text("default_currency"),
+  /** Calling code without "+", e.g. "966", for phone search and import dedupe. */
+  phoneCountryCode: text("phone_country_code"),
+  /** Interface language for members who haven't chosen one: "en" or "ar". */
+  defaultLocale: text("default_locale"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

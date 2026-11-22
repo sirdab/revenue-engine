@@ -16,9 +16,9 @@ import {
   stagesTable,
   usersTable,
   labelsTable,
-  runWithTenant,
   type DealField,
 } from "@workspace/db";
+import { runInWorkspace } from "../lib/workspace-settings";
 import {
   presentedSecret,
   tenantIdForWebhookSecret,
@@ -40,6 +40,7 @@ import { fireSlackMessages, type SlackIntent } from "../lib/slack";
 import { loadDealById } from "../lib/queries";
 import { logger } from "../lib/logger";
 import { notify } from "../lib/notifications";
+import { currencyForNewAmount } from "../lib/regional-context";
 
 const router: IRouter = Router();
 
@@ -60,7 +61,7 @@ router.use(
       res.status(401).json({ error: "Invalid or missing webhook secret" });
       return;
     }
-    runWithTenant(tenantId, () => next());
+    await runInWorkspace(tenantId, () => next());
   },
 );
 
@@ -412,7 +413,7 @@ router.post("/webhooks/leads", async (req, res): Promise<void> => {
         .values({
           title,
           value: b.value ?? 0,
-          currency: b.currency ?? owner.defaultCurrency ?? "USD",
+          currency: b.currency ?? currencyForNewAmount(owner.defaultCurrency),
           pipelineId: pipeline.id,
           stageId,
           ownerId: dealOwnerId,

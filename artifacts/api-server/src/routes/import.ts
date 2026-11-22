@@ -21,6 +21,7 @@ import { currentUser, requireAdmin } from "../lib/auth";
 import { logDealCreated } from "../lib/change-events";
 import { isRealIsoDate } from "../lib/assistant-dates";
 import { phoneNsn, phoneDigitsSql, phoneDigitsVariants, PHONE_MIN_NSN } from "../lib/queries";
+import { currencyForNewAmount } from "../lib/regional-context";
 
 // ---------------------------------------------------------------------------
 // Bulk CSV import for organizations, persons and deals.
@@ -467,7 +468,7 @@ router.post("/import/deals", requireAdmin, async (req, res): Promise<void> => {
     values.push({
       title: r.title.trim(),
       value: r.value ?? 0,
-      currency: r.currency ?? user.defaultCurrency ?? "USD",
+      currency: r.currency ?? currencyForNewAmount(user.defaultCurrency),
       pipelineId: r.pipelineId,
       stageId: r.stageId,
       ownerId: r.ownerId ?? user.id,

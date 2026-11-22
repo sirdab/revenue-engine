@@ -5,11 +5,26 @@
  * Revenue Engine API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { WorkspaceUpdateDefaultLocale } from './workspaceUpdateDefaultLocale';
+import type { WorkspaceUpdateWeekStart } from './workspaceUpdateWeekStart';
 
+/**
+ * Send only the fields to change. A regional field set to null returns it to the server default.
+ */
 export interface WorkspaceUpdate {
   /**
      * @minLength 1
      * @maxLength 120
      */
-  name: string;
+  name?: string;
+  /** @nullable */
+  timezone?: string | null;
+  /** @nullable */
+  weekStart?: WorkspaceUpdateWeekStart;
+  /** @nullable */
+  defaultCurrency?: string | null;
+  /** @nullable */
+  phoneCountryCode?: string | null;
+  /** @nullable */
+  defaultLocale?: WorkspaceUpdateDefaultLocale;
 }

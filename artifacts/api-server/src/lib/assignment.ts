@@ -13,6 +13,7 @@ import {
 } from "@workspace/deals-filter";
 import { logDealChanges, type Tx } from "./change-events";
 import { logger } from "./logger";
+import { currentTimeZone } from "./regional-context";
 
 // Auto-assignment engine. Given a trigger event and a deal, resolve
 // the owner from the active rules: evaluate rules in priority order and take the
@@ -191,7 +192,7 @@ export async function resolveAutoAssignment(
     // write this runs inside — treat a throwing rule as a non-match and log it.
     let matches: boolean;
     try {
-      matches = evaluate(rule.conditions, facts);
+      matches = evaluate(rule.conditions, facts, { timeZone: currentTimeZone() });
     } catch (err) {
       logger.error(
         { err, event },

@@ -3,17 +3,19 @@
  *
  * Validates `dateFrom`/`dateTo` tool inputs: each must be either a strict, real
  * ISO date ("2026-07-01") or a small set of symbolic periods ("today",
- * "last_month", …) resolved server-side in the app time zone (APP_TIMEZONE).
+ * "last_month", …) resolved server-side in the workspace time zone.
  * A garbage value fails Zod validation, and `executeTool`'s catch surfaces the
  * issue message into the `{ ok:false, message }` envelope — a recoverable
  * `is_error` the model repairs and retries, instead of a Postgres `::date` cast
  * error caught as a generic "temporarily unavailable" failure.
  *
- * This module imports NO DB module (only `zod`), so its unit tests run in the
- * normal suite with `DATABASE_URL` unset (the `assistant-*.test.ts` constraint).
+ * This module imports NO DB module (only `zod` and the DB-free regional
+ * context), so its unit tests run in the normal suite with `DATABASE_URL`
+ * unset (the `assistant-*.test.ts` constraint).
  */
 
 import { z } from "zod";
+import { currentTimeZone, currentWeekStart } from "./regional-context";
 
 // ---------------------------------------------------------------------------
 // "Today" in the app time zone. Single source of truth, using
@@ -22,17 +24,32 @@ import { z } from "zod";
 // copy, so there is exactly one definition of "today".
 // ---------------------------------------------------------------------------
 
-/** The IANA time zone the business runs in; calendar days are counted here. */
-export const APP_TIMEZONE = process.env.APP_TIMEZONE || "UTC";
-const appFmt = new Intl.DateTimeFormat("en-CA", { timeZone: APP_TIMEZONE });
+/**
+ * The IANA time zone the business runs in; calendar days are counted here.
+ * The current workspace's (Settings › Workspace), else APP_TIMEZONE, else UTC.
+ */
+export function appTimeZone(): string {
+  return currentTimeZone();
+}
 
-/** Today's calendar date in APP_TIMEZONE, as "YYYY-MM-DD". */
+// One formatter per zone: building them is not free, and there are few zones.
+const formatters = new Map<string, Intl.DateTimeFormat>();
+function dateFormatter(zone: string): Intl.DateTimeFormat {
+  let f = formatters.get(zone);
+  if (!f) {
+    f = new Intl.DateTimeFormat("en-CA", { timeZone: zone });
+    formatters.set(zone, f);
+  }
+  return f;
+}
+
+/** Today's calendar date in the workspace time zone, as "YYYY-MM-DD". */
 export function appTodayIso(now: Date = new Date()): string {
-  return appFmt.format(now);
+  return dateFormatter(appTimeZone()).format(now);
 }
 
 /**
- * Today's calendar date in APP_TIMEZONE as a UTC-midnight `Date`, for date
+ * Today's calendar date in the workspace time zone as a UTC-midnight `Date`, for date
  * arithmetic in `resolveSymbolicRange` (UTC getters/`Date.UTC` keep the math
  * timezone-stable).
  */
@@ -42,7 +59,7 @@ export function appToday(now: Date = new Date()): Date {
 }
 
 /**
- * The APP_TIMEZONE calendar date `days` from today, as "YYYY-MM-DD" — what
+ * The workspace-time-zone calendar date `days` from today, as "YYYY-MM-DD" — what
  * "due in N days" means to the team. Server clocks run in UTC, whose date can
  * differ from the local one around midnight, so a UTC-derived "today" can land
  * a day off.
@@ -82,11 +99,9 @@ export function isRealIsoDate(value: string): boolean {
 
 // ---------------------------------------------------------------------------
 // Symbolic periods, resolved server-side so the model never does date math.
-// Weeks run Sunday–Saturday.
+// Weeks start on the workspace's first day of the week (Saturday, Sunday or
+// Monday; Monday when unset), the same as the Insights week buckets.
 // ---------------------------------------------------------------------------
-
-/** Start-of-week day-of-week: 0 = Sunday, so a week runs Sun–Sat. */
-const WEEK_START_DOW = 0;
 
 export const SYMBOLIC_PERIODS = [
   "today",
@@ -118,14 +133,14 @@ export function resolveSymbolicRange(
       return { dateFrom: iso(d), dateTo: iso(d) };
     }
     case "this_week": {
-      // Days since the most recent week-start (Sunday). `% 7` makes a Sunday
+      // Days since the most recent week start. `% 7` makes a week-start day
       // today resolve to a zero shift → the week starts on the same day.
-      const back = (today.getUTCDay() - WEEK_START_DOW + 7) % 7;
+      const back = (today.getUTCDay() - currentWeekStart() + 7) % 7;
       const start = addDays(today, -back);
       return { dateFrom: iso(start), dateTo: iso(addDays(start, 6)) };
     }
     case "last_week": {
-      const back = (today.getUTCDay() - WEEK_START_DOW + 7) % 7;
+      const back = (today.getUTCDay() - currentWeekStart() + 7) % 7;
       const start = addDays(addDays(today, -back), -7);
       return { dateFrom: iso(start), dateTo: iso(addDays(start, 6)) };
     }
@@ -178,7 +193,7 @@ export function resolveSymbolicRange(
 
 const dateErrorMessage =
   `must be a real date in YYYY-MM-DD format, or one of these symbolic periods ` +
-  `(resolved in the ${APP_TIMEZONE} time zone): ${SYMBOLIC_PERIODS.join(", ")}.`;
+  `(resolved in the workspace time zone): ${SYMBOLIC_PERIODS.join(", ")}.`;
 
 function makeToolDateSchema(edge: "from" | "to") {
   const fieldName = edge === "from" ? "dateFrom" : "dateTo";

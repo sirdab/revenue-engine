@@ -415,5 +415,6 @@ export function decodeFilters(encoded: string): FilterGroup {
 // the SQL compiler in the api-server. See evaluate.ts.
 export {
   evaluate,
+  type EvaluateOptions,
   type DealFacts,
 } from "./evaluate";

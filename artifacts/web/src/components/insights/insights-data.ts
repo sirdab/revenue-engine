@@ -21,7 +21,7 @@ import {
   type InsightsWidgetSpec,
 } from "@workspace/api-client-react";
 import { tStatic, type MessageKey } from "@/lib/i18n/static";
-import { getDisplayTimeZone } from "@/lib/format";
+import { getDisplayTimeZone, getWeekStart } from "@/lib/format";
 
 // ---------------------------------------------------------------------------
 // Batched query transport: every widget on a board mounts in the same tick,
@@ -169,7 +169,7 @@ function userToday(): Date {
   return parseISO(iso);
 }
 
-/** Resolve a preset to a concrete date range (weeks start Monday). */
+/** Resolve a preset to a concrete date range (weeks start on the workspace's day). */
 export function presetRange(preset: DatePresetKey): { from: string; to: string } {
   const now = userToday();
   const day = (d: Date) => format(d, "yyyy-MM-dd");
@@ -182,8 +182,8 @@ export function presetRange(preset: DatePresetKey): { from: string; to: string }
     }
     case "thisWeek":
       return {
-        from: day(startOfWeek(now, { weekStartsOn: 1 })),
-        to: day(endOfWeek(now, { weekStartsOn: 1 })),
+        from: day(startOfWeek(now, { weekStartsOn: getWeekStart() })),
+        to: day(endOfWeek(now, { weekStartsOn: getWeekStart() })),
       };
     case "last7":
       return { from: day(subDays(now, 6)), to: day(now) };

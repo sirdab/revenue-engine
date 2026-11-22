@@ -5,6 +5,8 @@
  * Revenue Engine API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { WorkspaceEffectiveRegionalSettings } from './workspaceEffectiveRegionalSettings';
+import type { WorkspaceRegionalSettings } from './workspaceRegionalSettings';
 
 /**
  * A tenant — one customer's isolated CRM workspace.
@@ -13,4 +15,6 @@ export interface Workspace {
   id: number;
   name: string;
   slug: string;
+  regional: WorkspaceRegionalSettings;
+  effectiveRegional: WorkspaceEffectiveRegionalSettings;
 }

@@ -35,6 +35,7 @@ import {
   forgotPasswordRateLimiter,
   signupRateLimiter,
 } from "../lib/rate-limit";
+import { toWorkspaceDto } from "../lib/workspace-settings";
 
 const router: IRouter = Router();
 
@@ -106,7 +107,7 @@ router.post(
       res.status(201).json(
         GetCurrentUserResponse.parse({
           ...toSafeUser(user),
-          workspace: { id: tenant.id, name: tenant.name, slug: tenant.slug },
+          workspace: toWorkspaceDto(tenant),
         }),
       );
     } catch (err) {
@@ -130,9 +131,7 @@ router.get("/auth/me", requireAuth, async (_req, res): Promise<void> => {
   res.json(
     GetCurrentUserResponse.parse({
       ...user,
-      workspace: tenant
-        ? { id: tenant.id, name: tenant.name, slug: tenant.slug }
-        : undefined,
+      workspace: tenant ? toWorkspaceDto(tenant) : undefined,
     }),
   );
 });

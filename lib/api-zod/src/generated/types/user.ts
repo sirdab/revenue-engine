@@ -17,7 +17,9 @@ export interface User {
   roleId?: number | null;
   isAdmin: boolean;
   activeFlag: boolean;
+  /** Legacy per-user default. New amounts use the workspace's default currency when it sets one (Workspace.regional.defaultCurrency). */
   defaultCurrency: string;
+  /** Legacy per-user zone, no longer used for display; the app shows times in the workspace's zone (Workspace.effectiveRegional.timezone). */
   timezoneName: string;
   created: Date;
   /** @nullable */

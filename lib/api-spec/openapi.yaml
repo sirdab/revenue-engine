@@ -3503,8 +3503,14 @@ components:
           type: boolean
         defaultCurrency:
           type: string
+          description: >-
+            Legacy per-user default. New amounts use the workspace's default
+            currency when it sets one (Workspace.regional.defaultCurrency).
         timezoneName:
           type: string
+          description: >-
+            Legacy per-user zone, no longer used for display; the app shows
+            times in the workspace's zone (Workspace.effectiveRegional.timezone).
         created:
           type: string
           format: date-time
@@ -3524,7 +3530,7 @@ components:
     Workspace:
       type: object
       description: A tenant — one customer's isolated CRM workspace.
-      required: [id, name, slug]
+      required: [id, name, slug, regional, effectiveRegional]
       properties:
         id:
           type: integer
@@ -3532,15 +3538,77 @@ components:
           type: string
         slug:
           type: string
+        regional:
+          $ref: "#/components/schemas/WorkspaceRegionalSettings"
+        effectiveRegional:
+          $ref: "#/components/schemas/WorkspaceEffectiveRegionalSettings"
+
+    WorkspaceRegionalSettings:
+      type: object
+      description: >-
+        The workspace's regional settings as stored. null means "use the server
+        default" (APP_TIMEZONE / PHONE_COUNTRY_CODE, else UTC, Monday, USD, and
+        each member's own language).
+      required: [timezone, weekStart, defaultCurrency, phoneCountryCode, defaultLocale]
+      properties:
+        timezone:
+          type: ["string", "null"]
+          description: IANA time zone, e.g. Asia/Riyadh.
+        weekStart:
+          type: ["integer", "null"]
+          enum: [0, 1, 6, null]
+          description: First day of the week — 0 Sunday, 1 Monday, 6 Saturday.
+        defaultCurrency:
+          type: ["string", "null"]
+          description: ISO 4217 code for amounts that name no currency.
+        phoneCountryCode:
+          type: ["string", "null"]
+          description: Calling code without "+", e.g. "966".
+        defaultLocale:
+          type: ["string", "null"]
+          enum: [en, ar, null]
+          description: Interface language for members who haven't chosen one.
+
+    WorkspaceEffectiveRegionalSettings:
+      type: object
+      description: The regional settings that apply, with server defaults filled in.
+      required: [timezone, weekStart, defaultCurrency, phoneCountryCode, defaultLocale]
+      properties:
+        timezone:
+          type: string
+        weekStart:
+          type: integer
+          enum: [0, 1, 6]
+        defaultCurrency:
+          type: string
+        phoneCountryCode:
+          type: ["string", "null"]
+        defaultLocale:
+          type: ["string", "null"]
+          enum: [en, ar, null]
 
     WorkspaceUpdate:
       type: object
-      required: [name]
+      description: >-
+        Send only the fields to change. A regional field set to null returns it
+        to the server default.
       properties:
         name:
           type: string
           minLength: 1
           maxLength: 120
+        timezone:
+          type: ["string", "null"]
+        weekStart:
+          type: ["integer", "null"]
+          enum: [0, 1, 6, null]
+        defaultCurrency:
+          type: ["string", "null"]
+        phoneCountryCode:
+          type: ["string", "null"]
+        defaultLocale:
+          type: ["string", "null"]
+          enum: [en, ar, null]
 
     SignupInput:
       type: object

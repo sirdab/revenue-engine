@@ -34,7 +34,7 @@ import {
   type FilterFieldName,
   groupReferencesField,
 } from "@workspace/deals-filter";
-import { APP_TIMEZONE } from "./assistant-dates";
+import { currentPhoneCountryCode, currentWeekStart, timeZoneSql } from "./regional-context";
 
 // ---------------------------------------------------------------------------
 // Phone normalization — make search format-insensitive.
@@ -50,12 +50,11 @@ import { APP_TIMEZONE } from "./assistant-dates";
 // set (e.g. `44`), a leading country code is dropped too, giving the national
 // number `7700900123`. A substring match of that against the stored digits
 // finds the contact whether it was saved as `07700 900123` or `+44 7700 900123`.
-// Without PHONE_COUNTRY_CODE nothing is assumed about the country, so a
+// The code is the workspace's setting (Settings › Workspace), else the server's
+// PHONE_COUNTRY_CODE. Without either, nothing is assumed about the country, so a
 // national-format search still finds international-format numbers, but not
 // the other way round.
 // ---------------------------------------------------------------------------
-
-const PHONE_COUNTRY_CODE = (process.env.PHONE_COUNTRY_CODE ?? "").replace(/[^0-9]/g, "");
 
 export function phoneDigits(raw: string | null | undefined): string {
   if (!raw) return "";
@@ -65,15 +64,17 @@ export function phoneDigits(raw: string | null | undefined): string {
 /** `phoneDigits` with the configured country code (if any) dropped. */
 export function phoneNsn(raw: string | null | undefined): string {
   const digits = phoneDigits(raw);
-  if (PHONE_COUNTRY_CODE && digits.startsWith(PHONE_COUNTRY_CODE)) {
-    return digits.slice(PHONE_COUNTRY_CODE.length).replace(/^0+/, "");
+  const code = currentPhoneCountryCode();
+  if (code && digits.startsWith(code)) {
+    return digits.slice(code.length).replace(/^0+/, "");
   }
   return digits;
 }
 
 /** The forms `nsn` is stored under: national, and with the country code. */
 export function phoneDigitsVariants(nsn: string): string[] {
-  return PHONE_COUNTRY_CODE ? [nsn, PHONE_COUNTRY_CODE + nsn] : [nsn];
+  const code = currentPhoneCountryCode();
+  return code ? [nsn, code + nsn] : [nsn];
 }
 
 /**
@@ -352,10 +353,10 @@ export async function dealStats(
   const pipelineFilter =
     filters.pipelineId != null ? sql` and d.pipeline_id = ${filters.pipelineId}` : sql``;
   const fromFilter = filters.dateFrom
-    ? sql` and (${dateCol} at time zone ${APP_TZ_SQL})::date >= ${filters.dateFrom}::date`
+    ? sql` and (${dateCol} at time zone ${appTzSql()})::date >= ${filters.dateFrom}::date`
     : sql``;
   const toFilter = filters.dateTo
-    ? sql` and (${dateCol} at time zone ${APP_TZ_SQL})::date <= ${filters.dateTo}::date`
+    ? sql` and (${dateCol} at time zone ${appTzSql()})::date <= ${filters.dateTo}::date`
     : sql``;
 
   const dim =
@@ -367,8 +368,8 @@ export async function dealStats(
           ? { key: sql`d.status::text`, label: sql`d.status::text` }
           : groupBy === "month"
             ? {
-                key: sql`to_char((${dateCol} at time zone ${APP_TZ_SQL}), 'YYYY-MM')`,
-                label: sql`to_char((${dateCol} at time zone ${APP_TZ_SQL}), 'YYYY-MM')`,
+                key: sql`to_char((${dateCol} at time zone ${appTzSql()}), 'YYYY-MM')`,
+                label: sql`to_char((${dateCol} at time zone ${appTzSql()}), 'YYYY-MM')`,
               }
             : null;
 
@@ -408,8 +409,8 @@ export function dealDateRangeCondition(
 ): SQL | undefined {
   const col = dateField === "won" ? dealsTable.wonTime : dealsTable.addTime;
   const parts: SQL[] = [];
-  if (dateFrom) parts.push(sql`(${col} at time zone ${APP_TZ_SQL})::date >= ${dateFrom}::date`);
-  if (dateTo) parts.push(sql`(${col} at time zone ${APP_TZ_SQL})::date <= ${dateTo}::date`);
+  if (dateFrom) parts.push(sql`(${col} at time zone ${appTzSql()})::date >= ${dateFrom}::date`);
+  if (dateTo) parts.push(sql`(${col} at time zone ${appTzSql()})::date <= ${dateTo}::date`);
   return parts.length ? and(...parts) : undefined;
 }
 
@@ -782,21 +783,29 @@ function reqBool(v: unknown): boolean {
   if (v === "false") return false;
   throw new DealFilterError("Expected a boolean value");
 }
-/** Every date bucket and date filter resolves against the app time zone
- *  (APP_TIMEZONE, default UTC). One constant — the literals must never drift
- *  apart across compilers. */
-export const APP_TZ = APP_TIMEZONE;
-if (!/^[A-Za-z0-9_+\-/]+$/.test(APP_TZ)) {
-  throw new Error(`APP_TIMEZONE is not a valid time zone name: ${APP_TZ}`);
+/** Every date bucket and date filter resolves against the workspace's time
+ *  zone (Settings › Workspace, else APP_TIMEZONE, else UTC). One helper — the
+ *  literals must never drift apart across compilers. */
+export const appTzSql = timeZoneSql;
+
+/**
+ * `date_trunc(bucket, value)::date`, except that a week starts on the
+ * workspace's first day of the week. Postgres's 'week' always starts on
+ * Monday, so the value is shifted forward to make the chosen day a Monday,
+ * truncated, and shifted back: with Sunday weeks a Sunday moves to Monday,
+ * truncates to itself, and returns to that Sunday.
+ */
+export function bucketDate(bucket: string, value: SQL): SQL {
+  if (bucket !== "week") return sql`date_trunc(${bucket}, ${value})::date`;
+  const shift = (1 - currentWeekStart() + 7) % 7;
+  if (shift === 0) return sql`date_trunc('week', ${value})::date`;
+  const days = sql.raw(String(shift));
+  return sql`(date_trunc('week', (${value}) + ${days} * interval '1 day') - ${days} * interval '1 day')::date`;
 }
-/** Escaped SQL literal (not a bind param) so expressions stay
- *  index-matchable; the value comes from configuration (validated above),
- *  never from user input. */
-export const APP_TZ_SQL: SQL = sql.raw(`'${APP_TZ}'`);
 
 /** Exported for the Insights compilers, which bucket on the same calendar. */
 export function localDate(col: AnyColumn | SQL): SQL {
-  return sql`(${col} AT TIME ZONE ${APP_TZ_SQL})::date`;
+  return sql`(${col} AT TIME ZONE ${appTzSql()})::date`;
 }
 
 /** Compile one native-field condition. Exported for the Insights compiler,

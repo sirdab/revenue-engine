@@ -47,7 +47,7 @@ const RECORD_TYPES = [
 ] as const;
 
 // Shared by every date-filtered tool: symbolic periods and calendar days are
-// resolved in the app time zone (APP_TIMEZONE), which the system prompt names.
+// resolved in the workspace time zone, which the system prompt names.
 const SYMBOLIC_DATE_HELP =
   "dateFrom/dateTo accept YYYY-MM-DD or a symbolic period (today, yesterday, this_week, last_week, this_month, last_month, this_quarter, last_quarter, this_year, last_year) resolved in the app time zone — prefer a symbolic period for relative-date questions.";
 

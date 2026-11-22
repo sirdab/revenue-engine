@@ -24,6 +24,8 @@ import {
   type ReactNode,
 } from "react";
 import { usePreference } from "@/hooks/use-user-preferences";
+import { useAuth } from "@/hooks/use-auth";
+import { useGetUserPreferences } from "@workspace/api-client-react";
 import {
   DEFAULT_LOCALE,
   LOCALE_INFO,
@@ -137,7 +139,19 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     "layout.locale",
     guessedLocale(),
   );
-  const locale = sanitizeLocale(rawLocale) ?? DEFAULT_LOCALE;
+  // A member who never chose a language gets the workspace's default
+  // (Settings › Workspace) — applied, not saved, so they follow it if an admin
+  // changes it later. Their own saved choice, or a `?lang=` link, wins.
+  const { user } = useAuth();
+  // The same query usePreference already runs: deduplicated, no extra request.
+  const { data: prefs } = useGetUserPreferences();
+  const workspaceDefault = sanitizeLocale(user?.workspace?.effectiveRegional.defaultLocale ?? null);
+  const savedChoice = sanitizeLocale(prefs?.layout?.locale ?? null);
+  const useWorkspaceDefault =
+    prefs != null && savedChoice == null && workspaceDefault != null && requestedLocale() == null;
+  const locale = useWorkspaceDefault
+    ? workspaceDefault
+    : (sanitizeLocale(rawLocale) ?? DEFAULT_LOCALE);
 
   useEffect(() => {
     applyLocale(locale);

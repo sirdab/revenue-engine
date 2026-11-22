@@ -5,11 +5,23 @@ import {
   resolveSymbolicRange,
   datesOrderError,
   appDateInDays,
-  APP_TIMEZONE,
+  appTimeZone,
+  appTodayIso,
+  appToday,
   toolDateFromSchema,
   toolDateToSchema,
   SYMBOLIC_PERIODS,
 } from "./assistant-dates.ts";
+import { runWithRegionalSettings, serverDefaults, type WeekStart } from "./regional-context.ts";
+
+/** Run `fn` as a workspace with these regional settings. */
+function asWorkspace<T>(s: { timeZone?: string; weekStart?: WeekStart }, fn: () => T): T {
+  const d = serverDefaults();
+  return runWithRegionalSettings(
+    { ...d, timezone: s.timeZone ?? d.timezone, weekStart: s.weekStart ?? d.weekStart },
+    fn,
+  );
+}
 
 // A fixed "today" (2026-07-16, in Q3) so range math is deterministic and
 // independent of when the suite runs. resolveSymbolicRange takes the day as a
@@ -120,28 +132,54 @@ test("every symbolic period resolves to a valid, ordered range", () => {
   }
 });
 
-// Weeks run Sunday–Saturday (WEEK_START_DOW = 0).
-test("resolveSymbolicRange: this_week spans Sun–Sat for a mid-week today", () => {
+// Weeks start on the workspace's first day of the week.
+test("resolveSymbolicRange: this_week spans Sun–Sat in a Sunday-week workspace", () => {
   // 2026-07-15 is a Wednesday.
-  assert.deepEqual(resolveSymbolicRange("this_week", new Date(Date.UTC(2026, 6, 15))), {
-    dateFrom: "2026-07-12", // Sunday
-    dateTo: "2026-07-18", // Saturday
-  });
+  asWorkspace({ weekStart: 0 }, () =>
+    assert.deepEqual(resolveSymbolicRange("this_week", new Date(Date.UTC(2026, 6, 15))), {
+      dateFrom: "2026-07-12", // Sunday
+      dateTo: "2026-07-18", // Saturday
+    }),
+  );
 });
 
-test("resolveSymbolicRange: this_week starts the same day when today is Sunday", () => {
-  // 2026-07-19 is a Sunday — the (dow - WEEK_START_DOW) % 7 == 0 edge.
-  assert.deepEqual(resolveSymbolicRange("this_week", new Date(Date.UTC(2026, 6, 19))), {
-    dateFrom: "2026-07-19",
-    dateTo: "2026-07-25",
-  });
+test("resolveSymbolicRange: this_week starts the same day when today is the week start", () => {
+  // 2026-07-19 is a Sunday — the (dow - weekStart) % 7 == 0 edge.
+  asWorkspace({ weekStart: 0 }, () =>
+    assert.deepEqual(resolveSymbolicRange("this_week", new Date(Date.UTC(2026, 6, 19))), {
+      dateFrom: "2026-07-19",
+      dateTo: "2026-07-25",
+    }),
+  );
 });
 
 test("resolveSymbolicRange: last_week crosses a month boundary", () => {
   // 2026-07-05 is a Sunday; the prior Sun–Sat week straddles June/July.
-  assert.deepEqual(resolveSymbolicRange("last_week", new Date(Date.UTC(2026, 6, 5))), {
-    dateFrom: "2026-06-28",
-    dateTo: "2026-07-04",
+  asWorkspace({ weekStart: 0 }, () =>
+    assert.deepEqual(resolveSymbolicRange("last_week", new Date(Date.UTC(2026, 6, 5))), {
+      dateFrom: "2026-06-28",
+      dateTo: "2026-07-04",
+    }),
+  );
+});
+
+test("resolveSymbolicRange: Monday weeks (the default) and Saturday weeks", () => {
+  const wed = new Date(Date.UTC(2026, 6, 15)); // Wednesday
+  // No workspace setting: Monday–Sunday.
+  assert.deepEqual(resolveSymbolicRange("this_week", wed), {
+    dateFrom: "2026-07-13",
+    dateTo: "2026-07-19",
+  });
+  asWorkspace({ weekStart: 6 }, () => {
+    assert.deepEqual(resolveSymbolicRange("this_week", wed), {
+      dateFrom: "2026-07-11", // Saturday
+      dateTo: "2026-07-17", // Friday
+    });
+    // A Saturday today starts its own week.
+    assert.deepEqual(resolveSymbolicRange("this_week", new Date(Date.UTC(2026, 6, 18))), {
+      dateFrom: "2026-07-18",
+      dateTo: "2026-07-24",
+    });
   });
 });
 
@@ -189,42 +227,31 @@ test("toolDate schemas: a symbolic value resolves to a real date, from<=to", () 
   assert.ok(from! <= to!, "from edge is on/before to edge");
 });
 
-// --- App-time-zone "today" helpers -----------------------------------------
+// --- Workspace-time-zone "today" helpers -----------------------------------
 
-test("APP_TIMEZONE comes from the APP_TIMEZONE env var, defaulting to UTC", () => {
-  assert.equal(APP_TIMEZONE, process.env.APP_TIMEZONE || "UTC");
+test("appTimeZone is the workspace's, else APP_TIMEZONE, else UTC", () => {
+  assert.equal(appTimeZone(), process.env.APP_TIMEZONE || "UTC");
+  asWorkspace({ timeZone: "Asia/Riyadh" }, () => assert.equal(appTimeZone(), "Asia/Riyadh"));
 });
 
-// The zone is read once at module load, so a non-default zone needs a fresh
-// module instance: set the env var, then import under a cache-busting query.
-async function loadDatesIn(timeZone: string): Promise<typeof import("./assistant-dates.ts")> {
-  const previous = process.env.APP_TIMEZONE;
-  process.env.APP_TIMEZONE = timeZone;
-  try {
-    return await import(`./assistant-dates.ts?tz=${encodeURIComponent(timeZone)}`);
-  } finally {
-    if (previous === undefined) delete process.env.APP_TIMEZONE;
-    else process.env.APP_TIMEZONE = previous;
-  }
-}
-
-test("appTodayIso / appToday agree and follow the configured zone", async () => {
+test("appTodayIso / appToday agree and follow the workspace zone", () => {
   const fixedNow = new Date("2026-07-16T22:30:00.000Z"); // 01:30 next day at UTC+3
-  const utc = await loadDatesIn("UTC");
-  assert.equal(utc.appTodayIso(fixedNow), "2026-07-16");
-  const plus3 = await loadDatesIn("Europe/Istanbul");
-  const isoStr = plus3.appTodayIso(fixedNow);
-  assert.match(isoStr, /^\d{4}-\d{2}-\d{2}$/);
-  assert.equal(isoStr, "2026-07-17"); // crossed midnight at UTC+3
-  assert.equal(plus3.appToday(fixedNow).toISOString().slice(0, 10), "2026-07-17");
+  asWorkspace({ timeZone: "UTC" }, () => assert.equal(appTodayIso(fixedNow), "2026-07-16"));
+  asWorkspace({ timeZone: "Asia/Riyadh" }, () => {
+    const isoStr = appTodayIso(fixedNow);
+    assert.match(isoStr, /^\d{4}-\d{2}-\d{2}$/);
+    assert.equal(isoStr, "2026-07-17"); // crossed midnight at UTC+3
+    assert.equal(appToday(fixedNow).toISOString().slice(0, 10), "2026-07-17");
+  });
 });
 
-test("appDateInDays counts from the local day, not the UTC one", async () => {
+test("appDateInDays counts from the local day, not the UTC one", () => {
   // 01:30 on the 17th at UTC+3, still the 16th in UTC: "due today" is the 17th.
   const earlyMorning = new Date("2026-07-16T22:30:00.000Z");
-  const plus3 = await loadDatesIn("Europe/Istanbul");
-  assert.equal(plus3.appDateInDays(0, earlyMorning), "2026-07-17");
-  assert.equal(plus3.appDateInDays(3, earlyMorning), "2026-07-20");
+  asWorkspace({ timeZone: "Asia/Riyadh" }, () => {
+    assert.equal(appDateInDays(0, earlyMorning), "2026-07-17");
+    assert.equal(appDateInDays(3, earlyMorning), "2026-07-20");
+  });
   // Month and year boundaries roll over.
   assert.equal(appDateInDays(1, new Date("2026-12-31T12:00:00.000Z")), "2027-01-01");
 });

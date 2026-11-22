@@ -37,8 +37,8 @@ export const LoginResponse = zod.object({
   "roleId": zod.number().nullish(),
   "isAdmin": zod.boolean(),
   "activeFlag": zod.boolean(),
-  "defaultCurrency": zod.string(),
-  "timezoneName": zod.string(),
+  "defaultCurrency": zod.string().describe('Legacy per-user default. New amounts use the workspace\'s default currency when it sets one (Workspace.regional.defaultCurrency).'),
+  "timezoneName": zod.string().describe('Legacy per-user zone, no longer used for display; the app shows times in the workspace\'s zone (Workspace.effectiveRegional.timezone).'),
   "created": zod.coerce.date(),
   "lastLogin": zod.coerce.date().nullish(),
   "teamId": zod.number().nullish(),
@@ -47,7 +47,21 @@ export const LoginResponse = zod.object({
   "workspace": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "slug": zod.string()
+  "slug": zod.string(),
+  "regional": zod.object({
+  "timezone": zod.string().nullable().describe('IANA time zone, e.g. Asia\/Riyadh.'),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6),zod.literal(null)]).nullable().describe('First day of the week — 0 Sunday, 1 Monday, 6 Saturday.'),
+  "defaultCurrency": zod.string().nullable().describe('ISO 4217 code for amounts that name no currency.'),
+  "phoneCountryCode": zod.string().nullable().describe('Calling code without \"+\", e.g. \"966\".'),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable().describe('Interface language for members who haven\'t chosen one.')
+}).describe('The workspace\'s regional settings as stored. null means \"use the server default\" (APP_TIMEZONE \/ PHONE_COUNTRY_CODE, else UTC, Monday, USD, and each member\'s own language).'),
+  "effectiveRegional": zod.object({
+  "timezone": zod.string(),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6)]),
+  "defaultCurrency": zod.string(),
+  "phoneCountryCode": zod.string().nullable(),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
+}).describe('The regional settings that apply, with server defaults filled in.')
 }).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 
@@ -79,8 +93,8 @@ export const SignupResponse = zod.object({
   "roleId": zod.number().nullish(),
   "isAdmin": zod.boolean(),
   "activeFlag": zod.boolean(),
-  "defaultCurrency": zod.string(),
-  "timezoneName": zod.string(),
+  "defaultCurrency": zod.string().describe('Legacy per-user default. New amounts use the workspace\'s default currency when it sets one (Workspace.regional.defaultCurrency).'),
+  "timezoneName": zod.string().describe('Legacy per-user zone, no longer used for display; the app shows times in the workspace\'s zone (Workspace.effectiveRegional.timezone).'),
   "created": zod.coerce.date(),
   "lastLogin": zod.coerce.date().nullish(),
   "teamId": zod.number().nullish(),
@@ -89,7 +103,21 @@ export const SignupResponse = zod.object({
   "workspace": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "slug": zod.string()
+  "slug": zod.string(),
+  "regional": zod.object({
+  "timezone": zod.string().nullable().describe('IANA time zone, e.g. Asia\/Riyadh.'),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6),zod.literal(null)]).nullable().describe('First day of the week — 0 Sunday, 1 Monday, 6 Saturday.'),
+  "defaultCurrency": zod.string().nullable().describe('ISO 4217 code for amounts that name no currency.'),
+  "phoneCountryCode": zod.string().nullable().describe('Calling code without \"+\", e.g. \"966\".'),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable().describe('Interface language for members who haven\'t chosen one.')
+}).describe('The workspace\'s regional settings as stored. null means \"use the server default\" (APP_TIMEZONE \/ PHONE_COUNTRY_CODE, else UTC, Monday, USD, and each member\'s own language).'),
+  "effectiveRegional": zod.object({
+  "timezone": zod.string(),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6)]),
+  "defaultCurrency": zod.string(),
+  "phoneCountryCode": zod.string().nullable(),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
+}).describe('The regional settings that apply, with server defaults filled in.')
 }).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 
@@ -100,7 +128,21 @@ export const SignupResponse = zod.object({
 export const GetWorkspaceResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "slug": zod.string()
+  "slug": zod.string(),
+  "regional": zod.object({
+  "timezone": zod.string().nullable().describe('IANA time zone, e.g. Asia\/Riyadh.'),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6),zod.literal(null)]).nullable().describe('First day of the week — 0 Sunday, 1 Monday, 6 Saturday.'),
+  "defaultCurrency": zod.string().nullable().describe('ISO 4217 code for amounts that name no currency.'),
+  "phoneCountryCode": zod.string().nullable().describe('Calling code without \"+\", e.g. \"966\".'),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable().describe('Interface language for members who haven\'t chosen one.')
+}).describe('The workspace\'s regional settings as stored. null means \"use the server default\" (APP_TIMEZONE \/ PHONE_COUNTRY_CODE, else UTC, Monday, USD, and each member\'s own language).'),
+  "effectiveRegional": zod.object({
+  "timezone": zod.string(),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6)]),
+  "defaultCurrency": zod.string(),
+  "phoneCountryCode": zod.string().nullable(),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
+}).describe('The regional settings that apply, with server defaults filled in.')
 }).describe('A tenant — one customer\'s isolated CRM workspace.')
 
 
@@ -112,13 +154,32 @@ export const updateWorkspaceBodyNameMax = 120;
 
 
 export const UpdateWorkspaceBody = zod.object({
-  "name": zod.string().min(1).max(updateWorkspaceBodyNameMax)
-})
+  "name": zod.string().min(1).max(updateWorkspaceBodyNameMax).optional(),
+  "timezone": zod.string().nullish(),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6),zod.literal(null)]).nullish(),
+  "defaultCurrency": zod.string().nullish(),
+  "phoneCountryCode": zod.string().nullish(),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullish()
+}).describe('Send only the fields to change. A regional field set to null returns it to the server default.')
 
 export const UpdateWorkspaceResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "slug": zod.string()
+  "slug": zod.string(),
+  "regional": zod.object({
+  "timezone": zod.string().nullable().describe('IANA time zone, e.g. Asia\/Riyadh.'),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6),zod.literal(null)]).nullable().describe('First day of the week — 0 Sunday, 1 Monday, 6 Saturday.'),
+  "defaultCurrency": zod.string().nullable().describe('ISO 4217 code for amounts that name no currency.'),
+  "phoneCountryCode": zod.string().nullable().describe('Calling code without \"+\", e.g. \"966\".'),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable().describe('Interface language for members who haven\'t chosen one.')
+}).describe('The workspace\'s regional settings as stored. null means \"use the server default\" (APP_TIMEZONE \/ PHONE_COUNTRY_CODE, else UTC, Monday, USD, and each member\'s own language).'),
+  "effectiveRegional": zod.object({
+  "timezone": zod.string(),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6)]),
+  "defaultCurrency": zod.string(),
+  "phoneCountryCode": zod.string().nullable(),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
+}).describe('The regional settings that apply, with server defaults filled in.')
 }).describe('A tenant — one customer\'s isolated CRM workspace.')
 
 
@@ -139,8 +200,8 @@ export const GetCurrentUserResponse = zod.object({
   "roleId": zod.number().nullish(),
   "isAdmin": zod.boolean(),
   "activeFlag": zod.boolean(),
-  "defaultCurrency": zod.string(),
-  "timezoneName": zod.string(),
+  "defaultCurrency": zod.string().describe('Legacy per-user default. New amounts use the workspace\'s default currency when it sets one (Workspace.regional.defaultCurrency).'),
+  "timezoneName": zod.string().describe('Legacy per-user zone, no longer used for display; the app shows times in the workspace\'s zone (Workspace.effectiveRegional.timezone).'),
   "created": zod.coerce.date(),
   "lastLogin": zod.coerce.date().nullish(),
   "teamId": zod.number().nullish(),
@@ -149,7 +210,21 @@ export const GetCurrentUserResponse = zod.object({
   "workspace": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "slug": zod.string()
+  "slug": zod.string(),
+  "regional": zod.object({
+  "timezone": zod.string().nullable().describe('IANA time zone, e.g. Asia\/Riyadh.'),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6),zod.literal(null)]).nullable().describe('First day of the week — 0 Sunday, 1 Monday, 6 Saturday.'),
+  "defaultCurrency": zod.string().nullable().describe('ISO 4217 code for amounts that name no currency.'),
+  "phoneCountryCode": zod.string().nullable().describe('Calling code without \"+\", e.g. \"966\".'),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable().describe('Interface language for members who haven\'t chosen one.')
+}).describe('The workspace\'s regional settings as stored. null means \"use the server default\" (APP_TIMEZONE \/ PHONE_COUNTRY_CODE, else UTC, Monday, USD, and each member\'s own language).'),
+  "effectiveRegional": zod.object({
+  "timezone": zod.string(),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6)]),
+  "defaultCurrency": zod.string(),
+  "phoneCountryCode": zod.string().nullable(),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
+}).describe('The regional settings that apply, with server defaults filled in.')
 }).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 
@@ -2171,8 +2246,8 @@ export const ListUsersResponseItem = zod.object({
   "roleId": zod.number().nullish(),
   "isAdmin": zod.boolean(),
   "activeFlag": zod.boolean(),
-  "defaultCurrency": zod.string(),
-  "timezoneName": zod.string(),
+  "defaultCurrency": zod.string().describe('Legacy per-user default. New amounts use the workspace\'s default currency when it sets one (Workspace.regional.defaultCurrency).'),
+  "timezoneName": zod.string().describe('Legacy per-user zone, no longer used for display; the app shows times in the workspace\'s zone (Workspace.effectiveRegional.timezone).'),
   "created": zod.coerce.date(),
   "lastLogin": zod.coerce.date().nullish(),
   "teamId": zod.number().nullish(),
@@ -2181,7 +2256,21 @@ export const ListUsersResponseItem = zod.object({
   "workspace": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "slug": zod.string()
+  "slug": zod.string(),
+  "regional": zod.object({
+  "timezone": zod.string().nullable().describe('IANA time zone, e.g. Asia\/Riyadh.'),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6),zod.literal(null)]).nullable().describe('First day of the week — 0 Sunday, 1 Monday, 6 Saturday.'),
+  "defaultCurrency": zod.string().nullable().describe('ISO 4217 code for amounts that name no currency.'),
+  "phoneCountryCode": zod.string().nullable().describe('Calling code without \"+\", e.g. \"966\".'),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable().describe('Interface language for members who haven\'t chosen one.')
+}).describe('The workspace\'s regional settings as stored. null means \"use the server default\" (APP_TIMEZONE \/ PHONE_COUNTRY_CODE, else UTC, Monday, USD, and each member\'s own language).'),
+  "effectiveRegional": zod.object({
+  "timezone": zod.string(),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6)]),
+  "defaultCurrency": zod.string(),
+  "phoneCountryCode": zod.string().nullable(),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
+}).describe('The regional settings that apply, with server defaults filled in.')
 }).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 export const ListUsersResponse = zod.array(ListUsersResponseItem)
@@ -2217,8 +2306,8 @@ export const CreateUserResponse = zod.object({
   "roleId": zod.number().nullish(),
   "isAdmin": zod.boolean(),
   "activeFlag": zod.boolean(),
-  "defaultCurrency": zod.string(),
-  "timezoneName": zod.string(),
+  "defaultCurrency": zod.string().describe('Legacy per-user default. New amounts use the workspace\'s default currency when it sets one (Workspace.regional.defaultCurrency).'),
+  "timezoneName": zod.string().describe('Legacy per-user zone, no longer used for display; the app shows times in the workspace\'s zone (Workspace.effectiveRegional.timezone).'),
   "created": zod.coerce.date(),
   "lastLogin": zod.coerce.date().nullish(),
   "teamId": zod.number().nullish(),
@@ -2227,7 +2316,21 @@ export const CreateUserResponse = zod.object({
   "workspace": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "slug": zod.string()
+  "slug": zod.string(),
+  "regional": zod.object({
+  "timezone": zod.string().nullable().describe('IANA time zone, e.g. Asia\/Riyadh.'),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6),zod.literal(null)]).nullable().describe('First day of the week — 0 Sunday, 1 Monday, 6 Saturday.'),
+  "defaultCurrency": zod.string().nullable().describe('ISO 4217 code for amounts that name no currency.'),
+  "phoneCountryCode": zod.string().nullable().describe('Calling code without \"+\", e.g. \"966\".'),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable().describe('Interface language for members who haven\'t chosen one.')
+}).describe('The workspace\'s regional settings as stored. null means \"use the server default\" (APP_TIMEZONE \/ PHONE_COUNTRY_CODE, else UTC, Monday, USD, and each member\'s own language).'),
+  "effectiveRegional": zod.object({
+  "timezone": zod.string(),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6)]),
+  "defaultCurrency": zod.string(),
+  "phoneCountryCode": zod.string().nullable(),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
+}).describe('The regional settings that apply, with server defaults filled in.')
 }).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 
@@ -2247,8 +2350,8 @@ export const GetUserResponse = zod.object({
   "roleId": zod.number().nullish(),
   "isAdmin": zod.boolean(),
   "activeFlag": zod.boolean(),
-  "defaultCurrency": zod.string(),
-  "timezoneName": zod.string(),
+  "defaultCurrency": zod.string().describe('Legacy per-user default. New amounts use the workspace\'s default currency when it sets one (Workspace.regional.defaultCurrency).'),
+  "timezoneName": zod.string().describe('Legacy per-user zone, no longer used for display; the app shows times in the workspace\'s zone (Workspace.effectiveRegional.timezone).'),
   "created": zod.coerce.date(),
   "lastLogin": zod.coerce.date().nullish(),
   "teamId": zod.number().nullish(),
@@ -2257,7 +2360,21 @@ export const GetUserResponse = zod.object({
   "workspace": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "slug": zod.string()
+  "slug": zod.string(),
+  "regional": zod.object({
+  "timezone": zod.string().nullable().describe('IANA time zone, e.g. Asia\/Riyadh.'),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6),zod.literal(null)]).nullable().describe('First day of the week — 0 Sunday, 1 Monday, 6 Saturday.'),
+  "defaultCurrency": zod.string().nullable().describe('ISO 4217 code for amounts that name no currency.'),
+  "phoneCountryCode": zod.string().nullable().describe('Calling code without \"+\", e.g. \"966\".'),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable().describe('Interface language for members who haven\'t chosen one.')
+}).describe('The workspace\'s regional settings as stored. null means \"use the server default\" (APP_TIMEZONE \/ PHONE_COUNTRY_CODE, else UTC, Monday, USD, and each member\'s own language).'),
+  "effectiveRegional": zod.object({
+  "timezone": zod.string(),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6)]),
+  "defaultCurrency": zod.string(),
+  "phoneCountryCode": zod.string().nullable(),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
+}).describe('The regional settings that apply, with server defaults filled in.')
 }).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 
@@ -2297,8 +2414,8 @@ export const UpdateUserResponse = zod.object({
   "roleId": zod.number().nullish(),
   "isAdmin": zod.boolean(),
   "activeFlag": zod.boolean(),
-  "defaultCurrency": zod.string(),
-  "timezoneName": zod.string(),
+  "defaultCurrency": zod.string().describe('Legacy per-user default. New amounts use the workspace\'s default currency when it sets one (Workspace.regional.defaultCurrency).'),
+  "timezoneName": zod.string().describe('Legacy per-user zone, no longer used for display; the app shows times in the workspace\'s zone (Workspace.effectiveRegional.timezone).'),
   "created": zod.coerce.date(),
   "lastLogin": zod.coerce.date().nullish(),
   "teamId": zod.number().nullish(),
@@ -2307,7 +2424,21 @@ export const UpdateUserResponse = zod.object({
   "workspace": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "slug": zod.string()
+  "slug": zod.string(),
+  "regional": zod.object({
+  "timezone": zod.string().nullable().describe('IANA time zone, e.g. Asia\/Riyadh.'),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6),zod.literal(null)]).nullable().describe('First day of the week — 0 Sunday, 1 Monday, 6 Saturday.'),
+  "defaultCurrency": zod.string().nullable().describe('ISO 4217 code for amounts that name no currency.'),
+  "phoneCountryCode": zod.string().nullable().describe('Calling code without \"+\", e.g. \"966\".'),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable().describe('Interface language for members who haven\'t chosen one.')
+}).describe('The workspace\'s regional settings as stored. null means \"use the server default\" (APP_TIMEZONE \/ PHONE_COUNTRY_CODE, else UTC, Monday, USD, and each member\'s own language).'),
+  "effectiveRegional": zod.object({
+  "timezone": zod.string(),
+  "weekStart": zod.union([zod.literal(0),zod.literal(1),zod.literal(6)]),
+  "defaultCurrency": zod.string(),
+  "phoneCountryCode": zod.string().nullable(),
+  "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
+}).describe('The regional settings that apply, with server defaults filled in.')
 }).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 
