@@ -272,7 +272,7 @@ export const en: Content = {
           caps: [
             { t: "Read-only by design.", d: "It can look records up. It has no way to change one." },
             { t: "Shows its work.", d: "Each answer comes with the deals and records it was drawn from." },
-            { t: "Your own key.", d: "It runs on an Anthropic API key, so today it is for self-hosted deployments." },
+            { t: "Your own key.", d: "Each workspace connects its own OpenAI or Anthropic API key, so usage is billed to your account." },
           ],
         },
       ],
@@ -567,7 +567,7 @@ export const en: Content = {
           ticks: [
             "Your infrastructure, your database, your backups",
             "One Docker image and a PostgreSQL database",
-            "Ask AI with your own Anthropic key",
+            "Ask AI with your own OpenAI or Anthropic key",
           ],
           cta: "Read the self-hosting guide",
         },
@@ -618,7 +618,7 @@ export const en: Content = {
         {
           q: "What can the AI assistant do?",
           a: [
-            "Ask AI is an optional assistant in beta. It answers questions about your pipeline using a fixed set of lookups and cannot change records. It uses the Claude API and needs an Anthropic API key, so today it is available on self-hosted deployments.",
+            "Ask AI is an optional assistant in beta. It answers questions about your pipeline using a fixed set of lookups and cannot change records. It runs on your own OpenAI or Anthropic API key, which an admin connects in Settings → Integrations.",
           ],
         },
         {
@@ -922,7 +922,7 @@ export const en: Content = {
                 "**PostgreSQL 13 or newer**, reached as an ordinary database role (see below).",
                 "**A container host**: Fly.io, a virtual server, Kubernetes or anything else that runs a Docker image. The image is built for linux/amd64.",
                 "**HTTPS** in front of the app. The session cookie is marked Secure.",
-                "Optionally, **SMTP** for email, **S3-compatible storage** for attachments, and an **Anthropic API key** for Ask AI.",
+                "Optionally, **SMTP** for email, **S3-compatible storage** for attachments, and an **Anthropic API key** if Ask AI should work without each workspace connecting its own key.",
               ],
             },
           ],
@@ -1007,7 +1007,7 @@ export const en: Content = {
                 ["`APP_BASE_URL`", "The public URL, used in emails, Slack messages, canonical links and the sitemap."],
                 ["`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`", "Optional. Email for password resets and notifications."],
                 ["`S3_ENDPOINT`, `S3_BUCKET_NAME`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`", "Optional. S3-compatible storage for attachments."],
-                ["`ANTHROPIC_API_KEY`", "Optional. Turns on Ask AI."],
+                ["`ANTHROPIC_API_KEY`", "Optional. Ask AI for workspaces that haven't connected their own OpenAI or Anthropic key."],
               ],
             },
           ],
@@ -1099,7 +1099,7 @@ export const en: Content = {
       "Inbound webhooks for leads and deal updates, authenticated with a per-workspace secret.",
       "English and Arabic interface with right-to-left layout; light and dark themes.",
       "Tenant isolation by PostgreSQL row-level security. Passwords hashed with scrypt.",
-      "Optional read-only AI assistant (beta) using the Claude API; requires an Anthropic API key.",
+      "Optional read-only AI assistant (beta); each workspace connects its own OpenAI or Anthropic API key in Settings → Integrations.",
       "Stack: TypeScript, Node.js 24, Express 5, PostgreSQL 13+, Drizzle ORM, React 19, Vite, OpenAPI.",
     ],
     notYet:
