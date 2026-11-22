@@ -219,7 +219,6 @@
   "auth.login.welcomeTitle": "Welcome back!",
   "auth.login.noAccount": "New here?",
   "auth.login.createWorkspace": "Create a workspace",
-  "auth.rememberMe": "Remember me",
   "auth.reset.allSet": "All set. Your account is secured with the new password.",
   "auth.reset.chooseSubtitle": "Your new password must be at least 8 characters and include a letter and a number.",
   "auth.reset.chooseTitle": "Choose a new password",
@@ -238,6 +237,16 @@
   "auth.reset.updating": "Updating password...",
   "auth.reset.verifying": "Verifying your reset link...",
   "auth.resetPassword": "Reset your password",
+  "auth.shell.builtBy": "Revenue Engine · Built by Sirdab",
+  "auth.shell.eyebrow": "Revenue Engine",
+  "auth.shell.headline": "The open-source CRM for teams that sell.",
+  "auth.shell.openSource": "Open source on GitHub",
+  "auth.shell.point.ai": "Ask AI about your pipeline, in English or Arabic",
+  "auth.shell.point.automations": "Automations and assignment rules that do the busywork",
+  "auth.shell.point.pipeline": "Pipelines, forecasts and every deal in one view",
+  "auth.shell.preview.proposal": "Proposal",
+  "auth.shell.preview.qualified": "Qualified",
+  "auth.shell.preview.won": "Won",
   "auth.showPassword": "Show password",
   "auth.signingIn": "Signing in...",
   "auth.validation.email": "Please enter a valid email address.",
@@ -1786,5 +1795,5 @@
   "activity.strip.keepAsIs": "Keep as is",
   "activity.strip.editFollowUp": "Edit follow-up",
   "activity.strip.followUpMoved": "Follow-up set for {date}",
-  "brand.productName": "Sirdab Revenue Engine"
+  "brand.productName": "Revenue Engine"
 }
