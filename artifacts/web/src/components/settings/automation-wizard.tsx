@@ -105,14 +105,14 @@ const AUTO_ASSIGN = "__auto__";
 const FIRST_STAGE = "__first_stage__";
 
 // Labels are message keys, translated at render; `value` is the API enum.
-const ACTIVITY_TYPES: { value: string; label: MessageKey; noun: MessageKey }[] = [
+const ACTIVITY_TYPES = [
   { value: "call", label: "dealActivity.type.call", noun: "settings.automations.activityNoun.call" },
   { value: "meeting", label: "dealActivity.type.meeting", noun: "settings.automations.activityNoun.meeting" },
   { value: "email", label: "dealActivity.type.email", noun: "settings.automations.activityNoun.email" },
   { value: "task", label: "dealActivity.type.task", noun: "settings.automations.activityNoun.task" },
   { value: "deadline", label: "dealActivity.type.deadline", noun: "settings.automations.activityNoun.deadline" },
   { value: "whatsapp", label: "dealActivity.type.whatsapp", noun: "settings.automations.activityNoun.whatsapp" },
-];
+] satisfies { value: string; label: MessageKey; noun: MessageKey }[];
 
 // ---- Message field-chips + live preview -----------------------------------
 // A chip inserts a raw {{scope.field}} token, but the user only ever sees the
