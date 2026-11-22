@@ -130,7 +130,7 @@ function ValueEditor({
             value={typeof arr[0] === "string" ? arr[0] : ""}
             onChange={(next) => onChange([next === "" ? null : next, arr[1] ?? null])}
           />
-          <span className="text-caption text-subtle">and</span>
+          <span className="text-caption text-subtle">{t("filter.rangeAnd")}</span>
           <DatePicker
             className="h-8 w-40"
             value={typeof arr[1] === "string" ? arr[1] : ""}
@@ -148,7 +148,7 @@ function ValueEditor({
           value={arr[0] == null ? "" : String(arr[0])}
           onChange={(e) => onChange([parse(e.target.value), arr[1] ?? null])}
         />
-        <span className="text-caption text-subtle">and</span>
+        <span className="text-caption text-subtle">{t("filter.rangeAnd")}</span>
         <Input
           type="number"
           className="h-8 w-28"
@@ -431,12 +431,12 @@ export function GroupEditor({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="and">AND</SelectItem>
-            <SelectItem value="or">OR</SelectItem>
+            <SelectItem value="and">{t("filter.combinator.and")}</SelectItem>
+            <SelectItem value="or">{t("filter.combinator.or")}</SelectItem>
           </SelectContent>
         </Select>
         <span className="text-caption text-subtle">
-          match {group.combinator === "and" ? "all" : "any"} of
+          {t(group.combinator === "and" ? "filter.matchAll" : "filter.matchAny")}
         </span>
         {onRemove && (
           <Button

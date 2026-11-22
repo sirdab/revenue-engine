@@ -16,6 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Combobox } from "@/components/ui/combobox";
+import { useI18n } from "@/lib/i18n/i18n";
 
 interface ReassignDealsDialogProps {
   user: User;
@@ -32,6 +33,7 @@ export function ReassignDealsDialog({
   onConfirm,
   confirming,
 }: ReassignDealsDialogProps) {
+  const { t, tNode, tPlural, formatNumber } = useI18n();
   const { data: users } = useListUsers();
   const [target, setTarget] = useState("");
 
@@ -66,57 +68,74 @@ export function ReassignDealsDialog({
   const selectedCurrentCount =
     selectedUser == null ? null : openDealCounts.get(selectedUser.id);
   const selectedAfterCount =
-    selectedCurrentCount == null
-      ? null
-      : selectedCurrentCount + openDealsCount;
+    selectedCurrentCount == null ? null : selectedCurrentCount + openDealsCount;
+
+  const selectedName = selectedUser ? (
+    <bdi className="font-medium text-foreground">{selectedUser.name}</bdi>
+  ) : null;
 
   const formatDealCount = (count: number | undefined) =>
-    count == null ? "..." : `${count} open`;
+    count == null
+      ? "…"
+      : tPlural("admin.users.reassign.openShort", count, {
+          count: formatNumber(count),
+        });
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Reassign deals before deactivating</DialogTitle>
+          <DialogTitle>{t("admin.users.reassign.title")}</DialogTitle>
           <DialogDescription>
-            {user.name} owns {openDealsCount} open deal
-            {openDealsCount === 1 ? "" : "s"}. Choose who to reassign them to
-            before deactivating this account.
+            {tNode("admin.users.reassign.description", {
+              name: <bdi>{user.name}</bdi>,
+              deals: tPlural("admin.users.reassign.openDeals", openDealsCount, {
+                count: formatNumber(openDealsCount),
+              }),
+            })}
           </DialogDescription>
         </DialogHeader>
         <Combobox
           items={options.map((u) => ({
             value: String(u.id),
-            label: `${u.name} - ${formatDealCount(openDealCounts.get(u.id))} to ${formatDealCount(
-              openDealCounts.get(u.id) == null
-                ? undefined
-                : openDealCounts.get(u.id)! + openDealsCount,
-            )}`,
+            label: t("admin.users.reassign.optionLabel", {
+              // FSI…PDI isolates the name so an Arabic or English name
+              // cannot reorder the counts around it in a plain-text label.
+              name: `\u2068${u.name}\u2069`,
+              current: formatDealCount(openDealCounts.get(u.id)),
+              after: formatDealCount(
+                openDealCounts.get(u.id) == null
+                  ? undefined
+                  : openDealCounts.get(u.id)! + openDealsCount,
+              ),
+            }),
           }))}
           value={target}
           onChange={setTarget}
-          placeholder="Choose a user…"
+          placeholder={t("admin.users.reassign.placeholder")}
           inModal
           triggerClassName="w-full"
         />
         {selectedUser && (
           <div className="rounded-md border border-border bg-surface-whisper px-3 py-2 text-body-quiet text-muted-foreground">
-            <span className="font-medium text-foreground">{selectedUser.name}</span>
-            {selectedAfterCount == null ? (
-              <span> is loading current deal count.</span>
-            ) : (
-              <span>
-                {" "}
-                currently owns {selectedCurrentCount} open deal
-                {selectedCurrentCount === 1 ? "" : "s"} and will own{" "}
-                {selectedAfterCount} after reassignment.
-              </span>
-            )}
+            {selectedAfterCount == null || selectedCurrentCount == null
+              ? tNode("admin.users.reassign.loadingCount", {
+                  name: selectedName,
+                })
+              : tNode("admin.users.reassign.summary", {
+                  name: selectedName,
+                  deals: tPlural(
+                    "admin.users.reassign.openDeals",
+                    selectedCurrentCount,
+                    { count: formatNumber(selectedCurrentCount) },
+                  ),
+                  after: formatNumber(selectedAfterCount),
+                })}
           </div>
         )}
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={confirming}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             disabled={!target || confirming}
@@ -124,7 +143,7 @@ export function ReassignDealsDialog({
             className="bg-destructive hover:bg-destructive"
           >
             {confirming && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
-            Reassign &amp; deactivate
+            {t("admin.users.reassign.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

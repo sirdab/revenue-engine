@@ -44,6 +44,7 @@ import {
   type DealFieldConfig,
 } from "@/lib/deal-fields-api";
 import { useAdminPipelines, type AdminPipelineRow } from "@/lib/pipelines-admin-api";
+import { useI18n, type MessageKey } from "@/lib/i18n/i18n";
 
 const FIELD_TYPES = [
   "varchar",
@@ -57,28 +58,50 @@ const FIELD_TYPES = [
   "set",
 ] as const;
 
-const TYPE_LABEL: Record<string, string> = {
-  varchar: "Text (short)",
-  text: "Text (long)",
-  double: "Number",
-  monetary: "Money",
-  date: "Date",
-  daterange: "Date range",
-  boolean: "Yes / No",
-  enum: "Single select",
-  set: "Multi select",
+// Display labels only — the field-type values themselves go to the API as-is.
+// The two native fields every workspace starts with carry an English label in
+// the registry. Shown translated while the label is still that default; a
+// label an admin has renamed is theirs and is shown as typed.
+const NATIVE_LABEL_KEY: Record<string, { label: string; key: MessageKey }> = {
+  value: { label: "Value", key: "common.value" },
+  expected_close_date: {
+    label: "Expected close date",
+    key: "settings.customFields.native.expectedCloseDate",
+  },
+};
+
+function fieldLabel(t: (key: MessageKey) => string, f: { key: string; label: string }): string {
+  const native = NATIVE_LABEL_KEY[f.key];
+  return native && native.label === f.label ? t(native.key) : f.label;
+}
+
+const TYPE_LABEL_KEY: Record<string, MessageKey> = {
+  varchar: "settings.customFields.type.varchar",
+  text: "settings.customFields.type.text",
+  double: "settings.customFields.type.double",
+  monetary: "settings.customFields.type.monetary",
+  date: "settings.customFields.type.date",
+  daterange: "settings.customFields.type.daterange",
+  boolean: "settings.customFields.type.boolean",
+  enum: "settings.customFields.type.enum",
+  set: "settings.customFields.type.set",
 };
 
 const hasOptions = (t: string) => t === "enum" || t === "set";
 
 function SourceBadge({ storage }: { storage: string }) {
+  const { t } = useI18n();
   const map: Record<string, string> = {
     custom: "border-transparent bg-brand-subtle text-brand-subtle-foreground",
     data: "border-attention/30 bg-attention-subtle text-attention",
     column: "border-border bg-surface-whisper text-muted-foreground",
   };
   const label =
-    storage === "custom" ? "Custom" : storage === "column" ? "Column" : "Dataset";
+    storage === "custom"
+      ? t("settings.customFields.source.custom")
+      : storage === "column"
+        ? t("settings.customFields.source.column")
+        : t("settings.customFields.source.dataset");
   return (
     <Badge variant="outline" className={cn("text-[11px] font-medium", map[storage])}>
       {label}
@@ -113,6 +136,7 @@ function FieldDialog({
   allFields: DealFieldRow[];
 }) {
   const { toast } = useToast();
+  const { t, tPlural, formatNumber } = useI18n();
   const [label, setLabel] = useState("");
   const [fieldType, setFieldType] = useState<string>("varchar");
   const [config, setConfig] = useState<DealFieldConfig>({});
@@ -153,7 +177,7 @@ function FieldDialog({
 
   const save = async () => {
     if (!label.trim()) {
-      toast({ title: "Name is required", variant: "destructive" });
+      toast({ title: t("settings.customFields.error.nameRequired"), variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -186,7 +210,7 @@ function FieldDialog({
       onOpenChange(false);
     } catch (e) {
       toast({
-        title: "Couldn't save",
+        title: t("settings.customFields.error.save"),
         description: (e as Error).message,
         variant: "destructive",
       });
@@ -201,22 +225,29 @@ function FieldDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit field" : "New custom field"}</DialogTitle>
+          <DialogTitle>
+            {editing ? t("settings.customFields.editField") : t("settings.customFields.newCustomField")}
+          </DialogTitle>
           <DialogDescription>
             {editing
-              ? "Type and key are locked. Change the label, flags, or options."
-              : "Stored in the deal's custom fields. The key is generated."}
+              ? t("settings.customFields.editDescription")
+              : t("settings.customFields.newDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
           <label className="block text-body-quiet">
-            <span className="mb-1 block font-medium text-muted-foreground">Name</span>
-            <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. Contract value" />
+            <span className="mb-1 block font-medium text-muted-foreground">{t("common.name")}</span>
+            <Input
+              dir="auto"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder={t("settings.customFields.namePlaceholder")}
+            />
           </label>
 
           <label className="block text-body-quiet">
-            <span className="mb-1 block font-medium text-muted-foreground">Type</span>
+            <span className="mb-1 block font-medium text-muted-foreground">{t("common.type")}</span>
             <Select
               value={editing?.fieldType ?? fieldType}
               onValueChange={setFieldType}
@@ -226,9 +257,9 @@ function FieldDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {FIELD_TYPES.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {TYPE_LABEL[t]}
+                {FIELD_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {t(TYPE_LABEL_KEY[type]!)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -237,13 +268,14 @@ function FieldDialog({
 
           {showOptions && (
             <div className="text-body-quiet">
-              <span className="mb-1 block font-medium text-muted-foreground">Options</span>
+              <span className="mb-1 block font-medium text-muted-foreground">{t("settings.customFields.options")}</span>
               <div className="space-y-1.5">
                 {options.map((o, i) => (
                   <div key={i} className="flex items-center gap-1.5">
                     <Input
                       className="h-8"
-                      placeholder="Option label"
+                      dir="auto"
+                      placeholder={t("settings.customFields.optionLabel")}
                       value={o.label}
                       onChange={(e) =>
                         setOptions((prev) =>
@@ -260,6 +292,8 @@ function FieldDialog({
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 shrink-0 text-subtle hover:text-destructive"
+                      aria-label={t("settings.customFields.removeOption")}
+                      title={t("settings.customFields.removeOption")}
                       onClick={() => setOptions((prev) => prev.filter((_, idx) => idx !== i))}
                     >
                       <X className="h-3.5 w-3.5" />
@@ -273,11 +307,11 @@ function FieldDialog({
                   className="h-7 gap-1 text-caption-quiet"
                   onClick={() => setOptions((prev) => [...prev, { value: "", label: "" }])}
                 >
-                  <Plus className="h-3 w-3" /> Add option
+                  <Plus className="h-3 w-3" /> {t("settings.customFields.addOption")}
                 </Button>
                 {editing && hasOptions(editing.fieldType) && (
                   <p className="text-[11px] text-subtle">
-                    Adding options here upserts them. Existing options not listed are archived.
+                    {t("settings.customFields.optionsHint")}
                   </p>
                 )}
               </div>
@@ -285,27 +319,27 @@ function FieldDialog({
           )}
 
           <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-surface-whisper/50 p-3">
-            <FlagToggle label="Required" checked={flag("required")} onChange={(v) => setFlag("required", v)} />
-            <FlagToggle label="Filterable" checked={flag("filterable")} onChange={(v) => setFlag("filterable", v)} />
-            <FlagToggle label="Sortable" checked={flag("sortable")} onChange={(v) => setFlag("sortable", v)} />
-            <FlagToggle label="Show in detail" checked={flag("detailVisible")} onChange={(v) => setFlag("detailVisible", v)} />
+            <FlagToggle label={t("settings.customFields.flag.required")} checked={flag("required")} onChange={(v) => setFlag("required", v)} />
+            <FlagToggle label={t("settings.customFields.flag.filterable")} checked={flag("filterable")} onChange={(v) => setFlag("filterable", v)} />
+            <FlagToggle label={t("settings.customFields.flag.sortable")} checked={flag("sortable")} onChange={(v) => setFlag("sortable", v)} />
+            <FlagToggle label={t("settings.customFields.flag.detailVisible")} checked={flag("detailVisible")} onChange={(v) => setFlag("detailVisible", v)} />
           </div>
 
           <label className="block text-body-quiet">
-            <span className="mb-1 block font-medium text-muted-foreground">Group (optional)</span>
+            <span className="mb-1 block font-medium text-muted-foreground">{t("settings.customFields.group")}</span>
             <Input
+              dir="auto"
               value={config.group ?? ""}
               onChange={(e) => setConfig((c) => ({ ...c, group: e.target.value }))}
-              placeholder="e.g. Financials"
+              placeholder={t("settings.customFields.groupPlaceholder")}
             />
           </label>
 
           {pipelines.length > 0 && (
             <div className="text-body-quiet">
-              <span className="mb-1 block font-medium text-muted-foreground">Pipelines</span>
+              <span className="mb-1 block font-medium text-muted-foreground">{t("settings.customFields.col.pipelines")}</span>
               <p className="mb-2 text-caption-quiet text-subtle">
-                Show this field only on deals in the pipelines you tick. Leave all unticked
-                to show it everywhere. A deal that already has a value keeps showing it.
+                {t("settings.customFields.pipelinesHint")}
               </p>
               <div className="space-y-1.5 rounded-lg border border-border bg-surface-whisper/50 p-3">
                 {pipelines.map((p) => (
@@ -314,7 +348,7 @@ function FieldDialog({
                       checked={pipelineIds.includes(p.id)}
                       onCheckedChange={(v) => togglePipeline(p.id, v === true)}
                     />
-                    <span>{p.name}</span>
+                    <span dir="auto">{p.name}</span>
                   </label>
                 ))}
               </div>
@@ -325,8 +359,10 @@ function FieldDialog({
                     onCheckedChange={(v) => setApplyToGroup(v === true)}
                   />
                   <span>
-                    Also apply to the {groupSiblings.length} other field
-                    {groupSiblings.length === 1 ? "" : "s"} in "{group}"
+                    {tPlural("settings.customFields.applyToGroup", groupSiblings.length, {
+                      count: formatNumber(groupSiblings.length),
+                      group,
+                    })}
                   </span>
                 </label>
               )}
@@ -336,11 +372,11 @@ function FieldDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button onClick={save} disabled={saving} className="gap-2">
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-            {editing ? "Save" : "Create"}
+            {editing ? t("common.save") : t("common.create")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -371,6 +407,7 @@ function FlagToggle({
 
 export function CustomFieldsSettings() {
   const { data, isLoading } = useDealFieldRegistry();
+  const { t, tPlural, formatNumber } = useI18n();
   const qc = useQueryClient();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -426,11 +463,14 @@ export function CustomFieldsSettings() {
       const r = await discoverDealFields();
       refresh();
       toast({
-        title: "Discovery complete",
-        description: `${r.created} new field${r.created === 1 ? "" : "s"} found (${r.scanned} keys scanned).`,
+        title: t("settings.customFields.discoveryComplete"),
+        description: tPlural("settings.customFields.discoveryResult", r.created, {
+          count: formatNumber(r.created),
+          scanned: formatNumber(r.scanned),
+        }),
       });
     } catch (e) {
-      toast({ title: "Discovery failed", description: (e as Error).message, variant: "destructive" });
+      toast({ title: t("settings.customFields.error.discovery"), description: (e as Error).message, variant: "destructive" });
     } finally {
       setDiscovering(false);
     }
@@ -441,32 +481,32 @@ export function CustomFieldsSettings() {
     const j = index + dir;
     if (j < 0 || j >= next.length) return;
     [next[index], next[j]] = [next[j]!, next[index]!];
-    void mutate(() => reorderDealFields(next.map((f) => f.id)), "Couldn't reorder");
+    void mutate(() => reorderDealFields(next.map((f) => f.id)), t("settings.customFields.error.reorder"));
   };
 
   return (
     <div className="mx-auto max-w-5xl p-6">
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-heading-sm text-foreground">Custom Fields</h1>
+          <h1 className="text-heading-sm text-foreground">{t("settings.nav.customFields")}</h1>
           <p className="text-body-quiet text-muted-foreground">
-            Fields shown on deals, decoded from your dataset or created here. Limit a field to certain pipelines from its edit dialog.
+            {t("settings.customFields.subtitle")}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex shrink-0 gap-2">
           <Button variant="outline" size="sm" onClick={discover} disabled={discovering} className="gap-1.5">
             {discovering ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            Discover from dataset
+            {t("settings.customFields.discover")}
           </Button>
           <Button size="sm" onClick={() => { setEditing(null); setDialogOpen(true); }} className="gap-1.5">
-            <Plus className="h-4 w-4" /> New field
+            <Plus className="h-4 w-4" /> {t("settings.customFields.newField")}
           </Button>
         </div>
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-16 text-body-quiet text-muted-foreground">
-          <Loader2 className="me-2 h-4 w-4 animate-spin" /> Loading fields…
+          <Loader2 className="me-2 h-4 w-4 animate-spin" /> {t("settings.customFields.loading")}
         </div>
       ) : (
         <>
@@ -475,58 +515,80 @@ export function CustomFieldsSettings() {
             <table className="w-full text-body-quiet">
               <thead className="bg-surface-whisper text-caption-quiet text-muted-foreground">
                 <tr>
-                  <th className="px-3 py-2 text-start font-medium">Name</th>
-                  <th className="px-3 py-2 text-start font-medium">Type</th>
-                  <th className="px-3 py-2 text-start font-medium">Source</th>
-                  <th className="px-3 py-2 text-start font-medium">Pipelines</th>
-                  <th className="px-3 py-2 text-center font-medium">Detail</th>
-                  <th className="px-3 py-2 text-center font-medium">Req</th>
-                  <th className="px-3 py-2 text-center font-medium">Filter</th>
-                  <th className="px-3 py-2 text-end font-medium">Usage</th>
-                  <th className="px-3 py-2 text-end font-medium">Actions</th>
+                  <th className="px-3 py-2 text-start font-medium">{t("common.name")}</th>
+                  <th className="px-3 py-2 text-start font-medium">{t("common.type")}</th>
+                  <th className="px-3 py-2 text-start font-medium">{t("common.source")}</th>
+                  <th className="px-3 py-2 text-start font-medium">{t("settings.customFields.col.pipelines")}</th>
+                  <th className="px-3 py-2 text-center font-medium">{t("settings.customFields.col.detail")}</th>
+                  <th className="px-3 py-2 text-center font-medium">
+                    <abbr title={t("settings.customFields.col.requiredFull")} className="no-underline">
+                      {t("settings.customFields.col.required")}
+                    </abbr>
+                  </th>
+                  <th className="px-3 py-2 text-center font-medium">
+                    <abbr title={t("settings.customFields.col.filterFull")} className="no-underline">
+                      {t("settings.customFields.col.filter")}
+                    </abbr>
+                  </th>
+                  <th className="px-3 py-2 text-end font-medium">{t("settings.customFields.col.usage")}</th>
+                  <th className="px-3 py-2 text-end font-medium">{t("common.actions")}</th>
                 </tr>
               </thead>
               <tbody>
                 {active.length === 0 && (
                   <tr>
                     <td colSpan={9} className="px-3 py-8 text-center text-body-quiet text-subtle">
-                      No active fields yet. Discover from your dataset or create one.
+                      {t("settings.customFields.empty")}
                     </td>
                   </tr>
                 )}
                 {active.map((f, i) => (
                   <tr key={f.id} className="border-t border-border">
-                    <td className="px-3 py-2">
-                      <div className="font-medium text-foreground">{f.label}</div>
-                      <div className="font-mono text-[10px] text-subtle">{f.key}</div>
+                    <td className="px-3 py-2 text-start">
+                      <div dir="auto" className="font-medium text-foreground">{fieldLabel(t, f)}</div>
+                      <div className="font-mono text-[10px] text-subtle"><span dir="ltr">{f.key}</span></div>
                     </td>
-                    <td className="px-3 py-2 text-muted-foreground">{TYPE_LABEL[f.fieldType] ?? f.fieldType}</td>
-                    <td className="px-3 py-2"><SourceBadge storage={f.storage} /></td>
-                    <td className="px-3 py-2 text-caption-quiet text-muted-foreground">
-                      {f.config?.pipelineIds?.length
-                        ? f.config.pipelineIds
+                    <td className="px-3 py-2 text-start text-muted-foreground">
+                      {TYPE_LABEL_KEY[f.fieldType] ? t(TYPE_LABEL_KEY[f.fieldType]!) : f.fieldType}
+                    </td>
+                    <td className="px-3 py-2 text-start"><SourceBadge storage={f.storage} /></td>
+                    <td className="px-3 py-2 text-start text-caption-quiet text-muted-foreground">
+                      {f.config?.pipelineIds?.length ? (
+                        <span dir="auto">
+                          {f.config.pipelineIds
                             .map((id) => pipelineName.get(id) ?? `#${id}`)
-                            .join(", ")
-                        : "All"}
+                            .join(t("settings.pipelines.listSeparator"))}
+                        </span>
+                      ) : (
+                        t("settings.customFields.allPipelines")
+                      )}
                     </td>
-                    <td className="px-3 py-2 text-center">{f.config?.detailVisible ? "✓" : "—"}</td>
-                    <td className="px-3 py-2 text-center">{f.config?.required ? "✓" : "—"}</td>
-                    <td className="px-3 py-2 text-center">{f.config?.filterable ? "✓" : "—"}</td>
-                    <td className="px-3 py-2 text-end tabular-nums text-muted-foreground">{f.usage ?? "—"}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2 text-center">
+                      <BoolMark on={!!f.config?.detailVisible} />
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      <BoolMark on={!!f.config?.required} />
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      <BoolMark on={!!f.config?.filterable} />
+                    </td>
+                    <td className="px-3 py-2 text-end tabular-nums text-muted-foreground">
+                      {f.usage == null ? "—" : formatNumber(f.usage)}
+                    </td>
+                    <td className="px-3 py-2 text-end">
                       <div className="flex items-center justify-end gap-0.5">
-                        <IconBtn title="Move up" disabled={i === 0} onClick={() => move(i, -1)}>
+                        <IconBtn title={t("settings.assignmentRules.moveUp")} disabled={i === 0} onClick={() => move(i, -1)}>
                           <ArrowUp className="h-3.5 w-3.5" />
                         </IconBtn>
-                        <IconBtn title="Move down" disabled={i === active.length - 1} onClick={() => move(i, 1)}>
+                        <IconBtn title={t("settings.assignmentRules.moveDown")} disabled={i === active.length - 1} onClick={() => move(i, 1)}>
                           <ArrowDown className="h-3.5 w-3.5" />
                         </IconBtn>
-                        <IconBtn title="Edit" onClick={() => { setEditing(f); setDialogOpen(true); }}>
+                        <IconBtn title={t("common.edit")} onClick={() => { setEditing(f); setDialogOpen(true); }}>
                           <Pencil className="h-3.5 w-3.5" />
                         </IconBtn>
                         <IconBtn
-                          title="Archive"
-                          onClick={() => mutate(() => deleteDealField(f.id), "Couldn't archive")}
+                          title={t("common.archive")}
+                          onClick={() => mutate(() => deleteDealField(f.id), t("settings.customFields.error.archive"))}
                         >
                           <Archive className="h-3.5 w-3.5" />
                         </IconBtn>
@@ -542,14 +604,13 @@ export function CustomFieldsSettings() {
           {discovered.length > 0 && (
             <section>
               <h2 className="mb-2 text-body font-semibold text-foreground">
-                Discovered from dataset{" "}
-                <span className="ms-1 rounded-full bg-attention-subtle px-2 py-0.5 text-caption text-attention">
-                  {discovered.length}
+                {t("settings.customFields.discoveredHeading")}{" "}
+                <span className="ms-1 rounded-full bg-attention-subtle px-2 py-0.5 text-caption tabular-nums text-attention">
+                  {formatNumber(discovered.length)}
                 </span>
               </h2>
               <p className="mb-3 text-caption-quiet text-muted-foreground">
-                Keys found in your data. Activate the ones you want on the deal; computed
-                metrics as read-only.
+                {t("settings.customFields.discoveredHint")}
               </p>
               <div className="divide-y divide-border overflow-hidden rounded-2xl bg-card shadow-card">
                 {discovered.map((f) => (
@@ -560,7 +621,7 @@ export function CustomFieldsSettings() {
                     onActivate={(editable) =>
                       mutate(
                         () => updateDealField(f.id, { active: true, editable }),
-                        "Couldn't activate",
+                        t("settings.customFields.error.activate"),
                       )
                     }
                   />
@@ -573,24 +634,24 @@ export function CustomFieldsSettings() {
           {archived.length > 0 && (
             <section className="mt-6">
               <h2 className="mb-2 text-body font-semibold text-foreground">
-                Archived{" "}
-                <span className="ms-1 rounded-full bg-muted px-2 py-0.5 text-caption text-muted-foreground">
-                  {archived.length}
+                {t("settings.customFields.archivedHeading")}{" "}
+                <span className="ms-1 rounded-full bg-muted px-2 py-0.5 text-caption tabular-nums text-muted-foreground">
+                  {formatNumber(archived.length)}
                 </span>
               </h2>
               <div className="divide-y divide-border overflow-hidden rounded-2xl bg-card shadow-card">
                 {archived.map((f) => (
                   <div key={f.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
                     <div className="min-w-0">
-                      <div className="truncate font-medium text-muted-foreground">{f.label}</div>
-                      <div className="font-mono text-[10px] text-subtle">{f.key}</div>
+                      <div dir="auto" className="truncate font-medium text-muted-foreground">{fieldLabel(t, f)}</div>
+                      <div className="font-mono text-[10px] text-subtle"><span dir="ltr">{f.key}</span></div>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => mutate(() => updateDealField(f.id, { active: true }), "Couldn't restore")}
+                      onClick={() => mutate(() => updateDealField(f.id, { active: true }), t("settings.customFields.error.restore"))}
                     >
-                      Restore
+                      {t("common.restore")}
                     </Button>
                   </div>
                 ))}
@@ -612,6 +673,15 @@ export function CustomFieldsSettings() {
         allFields={fields}
       />
     </div>
+  );
+}
+
+function BoolMark({ on }: { on: boolean }) {
+  const { t } = useI18n();
+  return (
+    <span aria-label={on ? t("settings.customFields.yes") : t("settings.customFields.no")}>
+      {on ? "✓" : "—"}
+    </span>
   );
 }
 
@@ -650,28 +720,33 @@ function DiscoveredRow({
   optionCount: number;
   onActivate: (editable: boolean) => void;
 }) {
+  const { t, tPlural, formatNumber } = useI18n();
   const [editable, setEditable] = useState(true);
   return (
     <div className="flex items-center justify-between gap-3 px-3 py-2.5">
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <span className="truncate font-medium text-foreground">{field.label}</span>
+          <span dir="auto" className="truncate font-medium text-foreground">{fieldLabel(t, field)}</span>
           <Badge variant="outline" className="text-[11px] text-muted-foreground">
-            {TYPE_LABEL[field.fieldType] ?? field.fieldType}
+            {TYPE_LABEL_KEY[field.fieldType] ? t(TYPE_LABEL_KEY[field.fieldType]!) : field.fieldType}
           </Badge>
           {optionCount > 0 && (
-            <span className="text-[11px] text-subtle">{optionCount} options</span>
+            <span className="text-[11px] text-subtle">
+              {tPlural("settings.customFields.optionCount", optionCount, {
+                count: formatNumber(optionCount),
+              })}
+            </span>
           )}
         </div>
-        <div className="font-mono text-[10px] text-subtle">{field.sourceKey}</div>
+        <div className="font-mono text-[10px] text-subtle"><span dir="ltr">{field.sourceKey}</span></div>
       </div>
       <div className="flex shrink-0 items-center gap-3">
         <label className="flex items-center gap-1.5 text-caption-quiet text-muted-foreground">
-          Editable
+          {t("settings.customFields.editable")}
           <Switch checked={editable} onCheckedChange={setEditable} />
         </label>
         <Button size="sm" variant="outline" onClick={() => onActivate(editable)} className="gap-1.5">
-          <Plus className="h-3.5 w-3.5" /> Add to deal
+          <Plus className="h-3.5 w-3.5" /> {t("settings.customFields.addToDeal")}
         </Button>
       </div>
     </div>

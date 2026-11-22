@@ -45,6 +45,7 @@ import { cn } from "@/lib/utils";
 import { SectionCard } from "@/components/settings/section-card";
 import { errorMessage } from "@/lib/api-error";
 import { AutomationWizard } from "@/components/settings/automation-wizard";
+import { useI18n, type MessageKey, type Translate, type TranslatePlural } from "@/lib/i18n/i18n";
 
 // Settings → Automations: admin management for automations ("when X happens →
 // do Y"). One flat list ordered by trigger; automations sharing a trigger run in
@@ -58,53 +59,72 @@ import { AutomationWizard } from "@/components/settings/automation-wizard";
 
 const EVENT_ORDER: AutomationTriggerEvent[] = ["deal_added", "deal_updated"];
 
+const ACTIVITY_NOUN_KEYS: Record<string, MessageKey> = {
+  call: "settings.automations.activityNoun.call",
+  meeting: "settings.automations.activityNoun.meeting",
+  email: "settings.automations.activityNoun.email",
+  task: "settings.automations.activityNoun.task",
+  deadline: "settings.automations.activityNoun.deadline",
+  whatsapp: "settings.automations.activityNoun.whatsapp",
+};
+
 function actionLabel(
   a: Automation,
   pipelines: Pipeline[],
   owners: DealOwner[],
+  t: Translate,
+  tPlural: TranslatePlural,
 ): string {
   const cfg = a.actionConfig;
   if (a.actionType === "call_webhook") {
-    let host = cfg.url ?? "webhook";
+    let host = cfg.url ?? t("settings.automations.summary.webhook");
     try {
       host = new URL(cfg.url ?? "").host || host;
     } catch {
       /* keep raw url text */
     }
-    return `send it to ${host}`;
+    return t("settings.automations.summary.sendTo", { host });
   }
   if (a.actionType === "send_slack_message") {
     const dest =
       cfg.destination?.kind === "channel"
-        ? cfg.destination.channel || "default channel"
+        ? cfg.destination.channel ||
+          t("settings.automations.summary.defaultChannel")
         : cfg.destination?.kind === "user"
           ? (owners.find((o) => o.id === cfg.destination?.userId)?.name ??
-            "user")
-          : "the deal owner";
-    return `post it to Slack (${dest})`;
+            t("settings.automations.summary.user"))
+          : t("settings.automations.summary.dealOwner");
+    return t("settings.automations.summary.slack", { destination: dest });
   }
   if (a.actionType === "post_notification") {
     // Everyone gets these; there is no per-person opt-in any more, so saying
     // "subscribers" here would send people looking for a switch that is gone.
-    return "alert the team in the app";
+    return t("settings.automations.summary.alertTeam");
   }
   if (a.actionType === "create_activity") {
     const who =
       cfg.assignee?.kind === "user"
-        ? (owners.find((o) => o.id === cfg.assignee?.userId)?.name ?? "user")
-        : "the deal owner";
+        ? (owners.find((o) => o.id === cfg.assignee?.userId)?.name ??
+          t("settings.automations.summary.user"))
+        : t("settings.automations.summary.dealOwner");
     const days = cfg.dueInDays ?? 0;
-    return `create a ${cfg.activityType ?? "call"} for ${who}, due in ${days} day${days === 1 ? "" : "s"}`;
+    const typeKey = ACTIVITY_NOUN_KEYS[cfg.activityType ?? "call"];
+    return tPlural("settings.automations.summary.createActivity", days, {
+      type: typeKey ? t(typeKey) : (cfg.activityType ?? ""),
+      assignee: who,
+    });
   }
   const pipeline =
-    pipelines.find((p) => p.id === cfg.pipelineId)?.name ?? "pipeline";
+    pipelines.find((p) => p.id === cfg.pipelineId)?.name ??
+    t("settings.automations.summary.pipeline");
   const who =
     cfg.owner?.kind === "user"
-      ? (owners.find((o) => o.id === cfg.owner?.userId)?.name ?? "user")
+      ? (owners.find((o) => o.id === cfg.owner?.userId)?.name ??
+        t("settings.automations.summary.user"))
       : cfg.owner?.kind === "auto"
-        ? "auto-assigned"
-        : "the deal owner";
-  return `create a deal in ${pipeline}, owned by ${who}`;
+        ? t("settings.automations.summary.autoAssigned")
+        : t("settings.automations.summary.dealOwner");
+  return t("settings.automations.summary.createDeal", { pipeline, owner: who });
 }
 
 function AutomationRow({
@@ -128,7 +148,16 @@ function AutomationRow({
   onDelete: () => void;
   onMove: (dir: -1 | 1) => void;
 }) {
+  const { t, tPlural } = useI18n();
   const conditionCount = countConditions(automation.conditions as FilterGroup);
+  const triggerText =
+    automation.triggerEvent === "deal_updated"
+      ? conditionCount === 0
+        ? t("settings.automations.row.anyChange")
+        : tPlural("settings.automations.row.changesToMatch", conditionCount)
+      : conditionCount === 0
+        ? t("settings.automations.row.everyNew")
+        : tPlural("settings.automations.row.newMatching", conditionCount);
   return (
     <li
       className={cn(
@@ -141,7 +170,7 @@ function AutomationRow({
           type="button"
           disabled={busy || index === 0}
           onClick={() => onMove(-1)}
-          aria-label="Move up"
+          aria-label={t("settings.assignmentRules.moveUp")}
           className="text-subtle transition-colors hover:text-muted-foreground disabled:opacity-30"
         >
           <ArrowUp className="h-3.5 w-3.5" />
@@ -150,7 +179,7 @@ function AutomationRow({
           type="button"
           disabled={busy || index === count - 1}
           onClick={() => onMove(1)}
-          aria-label="Move down"
+          aria-label={t("settings.assignmentRules.moveDown")}
           className="text-subtle transition-colors hover:text-muted-foreground disabled:opacity-30"
         >
           <ArrowDown className="h-3.5 w-3.5" />
@@ -158,19 +187,14 @@ function AutomationRow({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-body font-semibold text-foreground">
+        <p dir="auto" className="truncate text-start text-body font-semibold text-foreground">
           {automation.name}
         </p>
         <p className="truncate text-caption-quiet text-muted-foreground">
-          {automation.triggerEvent === "deal_updated"
-            ? conditionCount === 0
-              ? "Any change to any deal"
-              : `A deal changes to match ${conditionCount} condition${conditionCount === 1 ? "" : "s"}`
-            : conditionCount === 0
-              ? "Every new deal"
-              : `A new deal matching ${conditionCount} condition${conditionCount === 1 ? "" : "s"}`}
-          {" — "}
-          {summary}
+          {t("settings.automations.row.summary", {
+            trigger: triggerText,
+            action: summary,
+          })}
         </p>
       </div>
 
@@ -179,7 +203,9 @@ function AutomationRow({
         onCheckedChange={onToggle}
         disabled={busy}
         aria-label={
-          automation.active ? "Deactivate automation" : "Activate automation"
+          automation.active
+            ? t("settings.automations.deactivate")
+            : t("settings.automations.activate")
         }
       />
 
@@ -188,7 +214,7 @@ function AutomationRow({
         size="icon"
         disabled={busy}
         onClick={onEdit}
-        aria-label={`Edit ${automation.name}`}
+        aria-label={t("settings.assignmentRules.edit", { name: automation.name })}
         className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
       >
         <Pencil className="h-3.5 w-3.5" />
@@ -200,7 +226,7 @@ function AutomationRow({
             variant="ghost"
             size="icon"
             disabled={busy}
-            aria-label={`Delete ${automation.name}`}
+            aria-label={t("settings.assignmentRules.delete", { name: automation.name })}
             className="h-7 w-7 shrink-0 text-subtle opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -208,19 +234,20 @@ function AutomationRow({
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete “{automation.name}”?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("settings.assignmentRules.deleteTitle", { name: automation.name })}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This automation will stop running. Activities and deals it
-              already created are kept. This cannot be undone.
+              {t("settings.automations.deleteDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={onDelete}
               className="bg-destructive text-white hover:bg-destructive"
             >
-              Delete automation
+              {t("settings.automations.deleteConfirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -232,6 +259,7 @@ function AutomationRow({
 export function AutomationsSettings() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t, tPlural } = useI18n();
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editing, setEditing] = useState<Automation | null>(null);
 
@@ -303,41 +331,40 @@ export function AutomationsSettings() {
     <div className="mx-auto w-full max-w-3xl px-4 py-6 md:px-6">
       <header className="mb-5">
         <h1 className="text-heading-sm text-foreground">
-          Automations
+          {t("settings.automations.title")}
         </h1>
         <p className="mt-1 text-body-quiet text-muted-foreground">
-          When something happens — a deal comes in, a deal moves stage — have
-          the app do the next step for you.
+          {t("settings.automations.subtitle")}
         </p>
       </header>
 
       <SectionCard
-        title="Automations"
-        description="Each one runs by itself, in the order shown. Switch one off to pause it."
+        title={t("settings.automations.title")}
+        description={t("settings.automations.cardDescription")}
         actions={
           <Button
             size="sm"
             onClick={openCreate}
             className="h-8 bg-primary text-primary-foreground hover:bg-primary-hover"
           >
-            <Plus className="me-1 h-3.5 w-3.5" /> Automation
+            <Plus className="me-1 h-3.5 w-3.5" /> {t("settings.automations.add")}
           </Button>
         }
       >
         {isLoading ? (
           <div className="flex items-center justify-center gap-2 px-5 py-10 text-body-quiet text-subtle">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading automations…
+            <Loader2 className="h-4 w-4 animate-spin" /> {t("settings.automations.loading")}
           </div>
         ) : isError || !data ? (
           <div className="px-5 py-10 text-center text-body-quiet text-destructive">
-            Failed to load automations.
+            {t("settings.automations.loadFailed")}
           </div>
         ) : total === 0 ? (
           <div className="px-5 py-10 text-center">
             <Zap className="mx-auto mb-2 h-6 w-6 text-subtle" />
-            <p className="text-body-quiet text-muted-foreground">No automations yet.</p>
+            <p className="text-body-quiet text-muted-foreground">{t("settings.automations.empty")}</p>
             <p className="mt-1 text-caption-quiet text-subtle">
-              Add one to take a repetitive step off your plate.
+              {t("settings.automations.emptyHint")}
             </p>
           </div>
         ) : (
@@ -352,6 +379,8 @@ export function AutomationsSettings() {
                       automation,
                       pipelines ?? [],
                       owners ?? [],
+                      t,
+                      tPlural,
                     )}
                     index={i}
                     count={byEvent[event].length}

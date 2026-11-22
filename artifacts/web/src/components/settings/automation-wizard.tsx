@@ -83,6 +83,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { errorMessage } from "@/lib/api-error";
 import { cn } from "@/lib/utils";
+import { useI18n, type MessageKey } from "@/lib/i18n/i18n";
 
 // 4-step wizard to create/edit a deal automation:
 //   1. trigger event    2. conditions (reused deals-filter GroupEditor)
@@ -92,24 +93,25 @@ import { cn } from "@/lib/utils";
 // non-technical user never types raw {{deal.title}} placeholders.
 
 const STEPS = [
-  { id: "trigger", label: "Trigger" },
-  { id: "conditions", label: "Conditions" },
-  { id: "action", label: "Action" },
-  { id: "name", label: "Name" },
-] as const;
+  { id: "trigger", label: "settings.automations.wizard.step.trigger" },
+  { id: "conditions", label: "settings.automations.wizard.step.conditions" },
+  { id: "action", label: "settings.automations.wizard.step.action" },
+  { id: "name", label: "settings.automations.wizard.step.name" },
+] as const satisfies readonly { id: string; label: MessageKey }[];
 type StepId = (typeof STEPS)[number]["id"];
 
 const DEAL_OWNER = "__deal_owner__";
 const AUTO_ASSIGN = "__auto__";
 const FIRST_STAGE = "__first_stage__";
 
-const ACTIVITY_TYPES = [
-  { value: "call", label: "Call" },
-  { value: "meeting", label: "Meeting" },
-  { value: "email", label: "Email" },
-  { value: "task", label: "Task" },
-  { value: "deadline", label: "Deadline" },
-  { value: "whatsapp", label: "WhatsApp" },
+// Labels are message keys, translated at render; `value` is the API enum.
+const ACTIVITY_TYPES: { value: string; label: MessageKey; noun: MessageKey }[] = [
+  { value: "call", label: "dealActivity.type.call", noun: "settings.automations.activityNoun.call" },
+  { value: "meeting", label: "dealActivity.type.meeting", noun: "settings.automations.activityNoun.meeting" },
+  { value: "email", label: "dealActivity.type.email", noun: "settings.automations.activityNoun.email" },
+  { value: "task", label: "dealActivity.type.task", noun: "settings.automations.activityNoun.task" },
+  { value: "deadline", label: "dealActivity.type.deadline", noun: "settings.automations.activityNoun.deadline" },
+  { value: "whatsapp", label: "dealActivity.type.whatsapp", noun: "settings.automations.activityNoun.whatsapp" },
 ];
 
 // ---- Message field-chips + live preview -----------------------------------
@@ -157,10 +159,8 @@ function renderTemplate(template: string): string {
 type Builtin = {
   key: string;
   emoji: string;
-  name: string;
-  nameAr: string;
-  description: string;
-  descriptionAr: string;
+  name: MessageKey;
+  description: MessageKey;
   triggerEvent: AutomationTriggerEvent;
   conditions: FilterGroup;
   /** Defaults to send_slack_message — every starter was Slack before. */
@@ -170,8 +170,8 @@ type Builtin = {
     | { kind: "channel"; channel: string }
     | { kind: "deal_owner" }
     | { kind: "user" };
-  message: string;
-  messageAr: string;
+  /** Pre-filled message; translated into the UI language when applied. */
+  message: MessageKey;
 };
 
 const STATUS_WON_CONDITION = {
@@ -182,28 +182,22 @@ const BUILTIN_TEMPLATES: Builtin[] = [
   {
     key: "celebrate-won",
     emoji: "🎉",
-    name: "Celebrate won deals",
-    nameAr: "احتفل بالصفقات المكسوبة",
-    description: "When a deal is won, post it to a channel.",
-    descriptionAr: "عند كسب صفقة، انشرها في قناة.",
+    name: "settings.automations.wizard.builtin.celebrateWon.name",
+    description: "settings.automations.wizard.builtin.celebrateWon.description",
     triggerEvent: "deal_updated",
     conditions: STATUS_WON_CONDITION,
     destination: { kind: "channel", channel: "" },
-    message: "🎉 {{deal.title}} won: {{deal.value}} {{deal.currency}}",
-    messageAr: "🎉 تم كسب صفقة {{deal.title}}: {{deal.value}} {{deal.currency}}",
+    message: "settings.automations.wizard.builtin.celebrateWon.message",
   },
   {
     key: "new-lead",
     emoji: "📥",
-    name: "New lead alert",
-    nameAr: "تنبيه صفقة جديدة",
-    description: "When a deal is created, DM the owner.",
-    descriptionAr: "عند إنشاء صفقة، أرسل رسالة خاصة لصاحبها.",
+    name: "settings.automations.wizard.builtin.newLead.name",
+    description: "settings.automations.wizard.builtin.newLead.description",
     triggerEvent: "deal_added",
     conditions: structuredClone(EMPTY_FILTER),
     destination: { kind: "deal_owner" },
-    message: "📥 New deal assigned to you: {{deal.title}}",
-    messageAr: "📥 تم تعيين صفقة جديدة لك: {{deal.title}}",
+    message: "settings.automations.wizard.builtin.newLead.message",
   },
 ];
 
@@ -218,11 +212,11 @@ export function AutomationWizard({
 }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t, locale } = useI18n();
 
   const [showGallery, setShowGallery] = useState(false);
-  // English only for now (Arabic shelved per founder) — `lang` is frozen so
-  // the bilingual strings stay dormant; restore the header toggle to re-enable.
-  const [lang] = useState<"en" | "ar">("en");
+  // Bilingual data (chip labels) follows the UI language.
+  const lang = locale;
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   // Non-null = the wizard is editing this saved template, not an automation.
   const [editingTemplate, setEditingTemplate] =
@@ -268,10 +262,10 @@ export function AutomationWizard({
   const [chipDraft, setChipDraft] = useState<MessageChipConfig | null>(null);
   const [chipEditIndex, setChipEditIndex] = useState<number | null>(null);
   const [chipLabel, setChipLabel] = useState("");
-  const [chipLabelAr, setChipLabelAr] = useState(""); // carried, not shown
+  // The name field edits the label of the UI language; the other is carried.
+  const [chipLabelAr, setChipLabelAr] = useState("");
   const [chipInsertText, setChipInsertText] = useState("");
 
-  const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
   // Populate every per-action field from a saved config (shared by edit-load
   // and template-apply).
   const populateFromConfig = (cfg: AutomationActionConfig) => {
@@ -390,9 +384,11 @@ export function AutomationWizard({
   const slackChannelItems = (channelData?.channels ?? []).map((c) => ({
     value: c.name,
     label:
-      (c.isPrivate ? "🔒 " : "#") +
-      c.name +
-      (c.isMember ? "" : " · add the app to this channel first"),
+      c.isMember
+        ? (c.isPrivate ? "🔒 " : "#") + c.name
+        : t("settings.automations.wizard.channelNeedsApp", {
+            channel: (c.isPrivate ? "🔒 " : "#") + c.name,
+          }),
   }));
 
   // Automations evaluate in memory against DealFacts — restrict the picker to
@@ -491,32 +487,32 @@ export function AutomationWizard({
             };
 
   // Apply a built-in starter into the wizard, then jump to the action step.
-  const applyBuiltin = (t: Builtin) => {
+  const applyBuiltin = (tpl: Builtin) => {
     loadShape({
-      triggerEvent: t.triggerEvent,
-      conditions: t.conditions,
-      actionType: t.actionType ?? "send_slack_message",
+      triggerEvent: tpl.triggerEvent,
+      conditions: tpl.conditions,
+      actionType: tpl.actionType ?? "send_slack_message",
       actionConfig:
-        (t.actionType ?? "send_slack_message") === "post_notification"
-          ? { message: lang === "ar" ? t.messageAr : t.message }
+        (tpl.actionType ?? "send_slack_message") === "post_notification"
+          ? { message: t(tpl.message) }
           : {
-              destination: t.destination,
-              message: lang === "ar" ? t.messageAr : t.message,
+              destination: tpl.destination,
+              message: t(tpl.message),
             },
     });
-    setName(lang === "ar" ? t.nameAr : t.name);
+    setName(t(tpl.name));
     setShowGallery(false);
     setStep("action");
   };
 
-  const applySaved = (t: AutomationTemplate) => {
+  const applySaved = (tpl: AutomationTemplate) => {
     loadShape({
-      triggerEvent: t.triggerEvent as AutomationTriggerEvent,
-      conditions: t.conditions,
-      actionType: t.actionType as AutomationActionType,
-      actionConfig: t.actionConfig,
+      triggerEvent: tpl.triggerEvent as AutomationTriggerEvent,
+      conditions: tpl.conditions,
+      actionType: tpl.actionType as AutomationActionType,
+      actionConfig: tpl.actionConfig,
     });
-    setName(t.name);
+    setName(tpl.name);
     setShowGallery(false);
     setStep("action");
   };
@@ -533,7 +529,9 @@ export function AutomationWizard({
       {
         onSuccess: (res) =>
           toast({
-            title: res.delivered ? "Test sent" : "Test not sent",
+            title: res.delivered
+              ? t("settings.automations.wizard.toast.testSent")
+              : t("settings.automations.wizard.toast.testNotSent"),
             description: res.detail,
             variant: res.delivered ? undefined : "destructive",
           }),
@@ -571,7 +569,7 @@ export function AutomationWizard({
       { data: templatePayload() },
       {
         onSuccess: () =>
-          afterTemplateWrite("Saved as a team template, no automation created"),
+          afterTemplateWrite(t("settings.automations.wizard.toast.savedTemplateOnly")),
       },
     );
   };
@@ -586,7 +584,7 @@ export function AutomationWizard({
     if (!name.trim()) return;
     updateTemplate.mutate(
       { id: editingTemplate.id, data: templatePayload() },
-      { onSuccess: () => afterTemplateWrite("Template updated for the team") },
+      { onSuccess: () => afterTemplateWrite(t("settings.automations.wizard.toast.templateUpdated")) },
     );
   };
 
@@ -606,7 +604,7 @@ export function AutomationWizard({
         },
         {
           onSuccess: () => {
-            toast({ title: "Saved as a team template" });
+            toast({ title: t("settings.automations.wizard.toast.savedAsTemplate") });
             queryClient.invalidateQueries({
               queryKey: getListAutomationTemplatesQueryKey(),
             });
@@ -687,66 +685,51 @@ export function AutomationWizard({
   // One human sentence describing the whole automation (name step).
   const messagePreview = renderTemplate(slackMessage);
   const plainSentence = (() => {
-    const ar = lang === "ar";
-    const triggerPart =
-      event === "deal_added"
-        ? ar
-          ? "يتم فيها إنشاء صفقة"
-          : "a deal is created"
-        : ar
-          ? "يتم فيها تحديث صفقة"
-          : "a deal is updated";
     const condCount = countConditions(conditions);
     // An updated deal fires only on the change that makes it match (the
     // engine's entering rule), so say "starts matching", not "matches".
-    const condPart =
-      condCount > 0
-        ? event === "deal_updated"
-          ? ar
-            ? " فتصبح مطابقة لشروطك"
-            : " and starts matching your conditions"
-          : ar
-            ? " تطابق شروطك"
-            : " that matches your conditions"
-        : "";
+    const sentenceKey: MessageKey =
+      event === "deal_added"
+        ? condCount > 0
+          ? "settings.automations.wizard.plain.addedMatch"
+          : "settings.automations.wizard.plain.addedAny"
+        : condCount > 0
+          ? "settings.automations.wizard.plain.updatedMatch"
+          : "settings.automations.wizard.plain.updatedAny";
 
-    let actionPart = "";
-    let tail = "";
+    let action = "";
+    let withMessage = false;
     if (actionType === "send_slack_message") {
       const ch = slackChannel.trim().replace(/^#/, "");
-      actionPart =
+      action =
         slackDestType === "channel"
           ? ch
-            ? ar
-              ? `انشر في #${ch}`
-              : `post to #${ch}`
-            : ar
-              ? "انشر في قناة الإعلانات الافتراضية"
-              : "post to the default announcements channel"
+            ? t("settings.automations.wizard.plain.postChannel", { channel: ch })
+            : t("settings.automations.wizard.plain.postDefault")
           : slackDestType === "deal_owner"
-            ? ar
-              ? "أرسل رسالة خاصة لمالك الصفقة"
-              : "DM the deal owner"
-            : ar
-              ? `أرسل رسالة خاصة لـ ${userItems.find((u) => u.value === slackUser)?.label ?? "زميل"}`
-              : `DM ${userItems.find((u) => u.value === slackUser)?.label ?? "a teammate"}`;
-      if (messagePreview.trim())
-        tail = ar ? `: «${messagePreview}»` : `: “${messagePreview}”`;
+            ? t("settings.automations.wizard.plain.dmOwner")
+            : t("settings.automations.wizard.plain.dmUser", {
+                name:
+                  userItems.find((u) => u.value === slackUser)?.label ??
+                  t("settings.automations.wizard.plain.aTeammate"),
+              });
+      withMessage = true;
     } else if (actionType === "post_notification") {
       // "the team", not "subscribers": there is no opt-in any more, so naming
       // subscribers would send people looking for a switch that is gone.
-      actionPart = ar ? "أشعر الفريق داخل التطبيق" : "alert the team in the app";
-      if (messagePreview.trim())
-        tail = ar ? `: «${messagePreview}»` : `: “${messagePreview}”`;
+      action = t("settings.automations.wizard.plain.alertTeam");
+      withMessage = true;
     } else if (actionType === "create_activity") {
-      actionPart = ar
-        ? `أنشئ نشاطًا بعنوان «${subject.trim() || "…"}»`
-        : `create a “${subject.trim() || "…"}” ${activityType} activity`;
+      const noun = ACTIVITY_TYPES.find((a) => a.value === activityType)?.noun;
+      action = t("settings.automations.wizard.plain.createActivity", {
+        subject: subject.trim() || "…",
+        type: noun ? t(noun) : activityType,
+      });
     } else if (actionType === "create_deal") {
       const p = (pipelines ?? []).find((x) => x.id === pipelineId)?.name;
-      actionPart = ar
-        ? `أنشئ صفقة${p ? ` في ${p}` : ""}`
-        : `create a deal${p ? ` in ${p}` : ""}`;
+      action = p
+        ? t("settings.automations.wizard.plain.createDealIn", { pipeline: p })
+        : t("settings.automations.wizard.plain.createDeal");
     } else {
       let host = webhookUrl.trim();
       try {
@@ -754,13 +737,16 @@ export function AutomationWizard({
       } catch {
         /* keep raw */
       }
-      actionPart = ar
-        ? `استدعِ ${host || "الرابط الخاص بك"}`
-        : `call ${host || "your webhook"}`;
+      action = t("settings.automations.wizard.plain.callWebhook", {
+        host: host || t("settings.automations.wizard.plain.yourWebhook"),
+      });
     }
-    return ar
-      ? `في كل مرة ${triggerPart}${condPart}، ${actionPart}${tail}.`
-      : `Every time ${triggerPart}${condPart}, ${actionPart}${tail}.`;
+    if (withMessage && messagePreview.trim())
+      action = t("settings.automations.wizard.plain.withMessage", {
+        action,
+        message: messagePreview,
+      });
+    return t(sentenceKey, { action });
   })();
 
   const activeChips = (manageChips && chipDraft ? chipDraft : chipConfig).deal;
@@ -773,14 +759,17 @@ export function AutomationWizard({
   };
 
   const chipFormInsert = chipInsertText.trim();
-  const chipFormValid = chipLabel.trim().length > 0 && chipFormInsert.length > 0;
+  const chipLabelShown = lang === "ar" ? chipLabelAr : chipLabel;
+  const setChipLabelShown = lang === "ar" ? setChipLabelAr : setChipLabel;
+  const chipFormValid =
+    chipLabelShown.trim().length > 0 && chipFormInsert.length > 0;
 
   const applyChipForm = () => {
     if (!chipDraft || !chipFormValid) return;
     const next = structuredClone(chipDraft);
     const chip: MessageChip = {
       insert: chipFormInsert,
-      label: chipLabel.trim(),
+      label: chipLabel.trim() || chipLabelAr.trim(),
       labelAr: chipLabelAr.trim() || chipLabel.trim(),
     };
     if (chipEditIndex == null) next.deal.push(chip);
@@ -798,7 +787,7 @@ export function AutomationWizard({
           queryClient.invalidateQueries({
             queryKey: getGetAutomationChipsQueryKey(),
           });
-          toast({ title: t("Fields updated for the team", "تم تحديث الحقول للفريق") });
+          toast({ title: t("settings.automations.wizard.toast.fieldsUpdated") });
           setManageChips(false);
           setChipDraft(null);
           resetChipForm();
@@ -813,23 +802,17 @@ export function AutomationWizard({
         <DialogHeader>
           <DialogTitle>
             {editingTemplate
-              ? t("Edit template", "تعديل القالب")
+              ? t("settings.automations.wizard.title.editTemplate")
               : editingAutomation
-                ? t("Edit automation", "تعديل الأتمتة")
+                ? t("settings.automations.wizard.title.editAutomation")
                 : showGallery
-                  ? t("Start a new automation", "ابدأ أتمتة جديدة")
-                  : t("New automation", "أتمتة جديدة")}
+                  ? t("settings.automations.wizard.title.start")
+                  : t("settings.automations.wizard.title.new")}
           </DialogTitle>
           <DialogDescription>
             {showGallery
-              ? t(
-                  "Start from a ready-made template, or build your own from scratch.",
-                  "ابدأ من قالب جاهز، أو أنشئ أتمتتك من الصفر.",
-                )
-              : t(
-                  "When something happens, do something automatically.",
-                  "عندما يحدث شيء، نفّذ إجراءً تلقائيًا.",
-                )}
+              ? t("settings.automations.wizard.description.gallery")
+              : t("settings.automations.wizard.description.wizard")}
           </DialogDescription>
         </DialogHeader>
 
@@ -841,15 +824,14 @@ export function AutomationWizard({
                   key={tpl.key}
                   type="button"
                   onClick={() => applyBuiltin(tpl)}
-                  dir={lang === "ar" ? "rtl" : "ltr"}
                   className="flex flex-col gap-1 rounded-lg border border-border p-3 text-start transition-colors hover:border-btn-border-hover hover:bg-gray-alpha-50"
                 >
                   <span className="text-heading-sm">{tpl.emoji}</span>
                   <span className="text-body font-semibold text-foreground">
-                    {lang === "ar" ? tpl.nameAr : tpl.name}
+                    {t(tpl.name)}
                   </span>
                   <span className="text-caption-quiet text-muted-foreground">
-                    {lang === "ar" ? tpl.descriptionAr : tpl.description}
+                    {t(tpl.description)}
                   </span>
                 </button>
               ))}
@@ -865,21 +847,23 @@ export function AutomationWizard({
                     className="flex flex-col gap-1 text-start"
                   >
                     <span className="text-heading-sm">{tpl.emoji || "⚙️"}</span>
-                    <span className="text-body font-semibold text-foreground">
+                    <span dir="auto" className="text-body font-semibold text-foreground">
                       {tpl.name}
                     </span>
-                    <span className="text-caption-quiet text-muted-foreground">
-                      {tpl.description || t("Team template", "قالب الفريق")}
+                    <span dir="auto" className="text-caption-quiet text-muted-foreground">
+                      {tpl.description || t("settings.automations.wizard.teamTemplate")}
                     </span>
                     {tpl.createdByName && (
                       <span className="text-[11px] text-subtle">
-                        Saved by {tpl.createdByName}
+                        {t("settings.automations.wizard.savedBy", {
+                          name: tpl.createdByName,
+                        })}
                       </span>
                     )}
                   </button>
                   <button
                     type="button"
-                    aria-label={`Edit ${tpl.name}`}
+                    aria-label={t("settings.assignmentRules.edit", { name: tpl.name })}
                     onClick={() => {
                       applySaved(tpl);
                       setEditingTemplate(tpl);
@@ -893,7 +877,7 @@ export function AutomationWizard({
                     <AlertDialogTrigger asChild>
                       <button
                         type="button"
-                        aria-label={`Delete ${tpl.name}`}
+                        aria-label={t("settings.assignmentRules.delete", { name: tpl.name })}
                         disabled={deleteTemplate.isPending}
                         className="absolute end-2 top-2 rounded-md p-1 text-subtle opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
                       >
@@ -903,16 +887,16 @@ export function AutomationWizard({
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>
-                          Delete “{tpl.name}” for the whole team?
+                          {t("settings.automations.wizard.deleteTemplateTitle", {
+                            name: tpl.name,
+                          })}
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                          This template is shared: deleting it removes it for
-                          everyone. Automations already created from it keep
-                          working.
+                          {t("settings.automations.wizard.deleteTemplateDescription")}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                         <AlertDialogAction
                           onClick={() =>
                             deleteTemplate.mutate(
@@ -928,7 +912,7 @@ export function AutomationWizard({
                           }
                           className="bg-destructive text-white hover:bg-destructive"
                         >
-                          Delete template
+                          {t("settings.automations.wizard.deleteTemplate")}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -942,7 +926,7 @@ export function AutomationWizard({
               onClick={() => setShowGallery(false)}
               className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-input p-3 text-body text-muted-foreground hover:bg-gray-alpha-50"
             >
-              <Plus className="h-4 w-4" /> {t("Start from scratch", "ابدأ من الصفر")}
+              <Plus className="h-4 w-4" /> {t("settings.automations.wizard.startFromScratch")}
             </button>
           </div>
         ) : (
@@ -968,10 +952,7 @@ export function AutomationWizard({
                         : "text-subtle",
                     )}
                   >
-                    {t(
-                      s.label,
-                      { Trigger: "المشغّل", Conditions: "الشروط", Action: "الإجراء", Name: "الاسم" }[s.label] ?? s.label,
-                    )}
+                    {t(s.label)}
                   </span>
                   {i < STEPS.length - 1 && (
                     <span className="mx-1 h-px w-6 bg-gray-200" />
@@ -980,14 +961,11 @@ export function AutomationWizard({
               ))}
             </ol>
 
-            <div
-              className="min-h-[16rem] py-2"
-              dir={lang === "ar" ? "rtl" : "ltr"}
-            >
+            <div className="min-h-[16rem] py-2">
               {step === "trigger" && (
                 <div className="space-y-4">
                   <Label className="text-caption-quiet text-muted-foreground">
-                    {t("Trigger event", "حدث التشغيل")}
+                    {t("settings.automations.wizard.triggerEvent")}
                   </Label>
                   <RadioGroup
                     value={event}
@@ -998,13 +976,10 @@ export function AutomationWizard({
                       <RadioGroupItem value="deal_added" className="mt-0.5" />
                       <span>
                         <span className="block text-body text-foreground">
-                          {t("Deal created", "إنشاء صفقة")}
+                          {t("settings.automations.wizard.trigger.added")}
                         </span>
                         <span className="block text-caption-quiet text-muted-foreground">
-                          {t(
-                            "Runs when a new deal is created in the app or from an inbound lead (not CSV imports).",
-                            "يعمل عند إنشاء صفقة جديدة في التطبيق أو من عميل محتمل وارد (لا يشمل استيراد CSV).",
-                          )}
+                          {t("settings.automations.wizard.trigger.addedHint")}
                         </span>
                       </span>
                     </label>
@@ -1012,13 +987,10 @@ export function AutomationWizard({
                       <RadioGroupItem value="deal_updated" className="mt-0.5" />
                       <span>
                         <span className="block text-body text-foreground">
-                          {t("Deal updated", "تحديث صفقة")}
+                          {t("settings.automations.wizard.trigger.updated")}
                         </span>
                         <span className="block text-caption-quiet text-muted-foreground">
-                          {t(
-                            "Runs when a deal changes: stage, value, owner, status, and so on. With conditions, it runs once, on the change that makes the deal match them; later edits don’t repeat it. To act when a deal is won, add a “Status is won” condition.",
-                            "يعمل عند تغيير الصفقة: المرحلة أو القيمة أو المالك أو الحالة. مع الشروط يعمل مرة واحدة عند التغيير الذي يجعل الصفقة مطابقة لها، ولا تكرره التعديلات اللاحقة. للتنفيذ عند كسب صفقة أضف شرط «الحالة مكسوبة».",
-                          )}
+                          {t("settings.automations.wizard.trigger.updatedHint")}
                         </span>
                       </span>
                     </label>
@@ -1029,12 +1001,12 @@ export function AutomationWizard({
               {step === "conditions" && (
                 <div>
                   <Label className="text-caption-quiet text-muted-foreground">
-                    {t("Conditions", "الشروط")}
+                    {t("settings.automations.wizard.conditions")}
                   </Label>
                   <p className="mb-2 text-caption-quiet text-subtle">
-                    {lang === "ar"
-                      ? `يجب أن تطابق الصفقة هذه الشروط لكي تعمل الأتمتة. اتركها فارغة لتعمل مع كل صفقة ${event === "deal_added" ? "جديدة" : "محدّثة"}.`
-                      : `The deal must match these for the automation to run. Leave empty to run on every ${event === "deal_added" ? "new" : "updated"} deal.`}
+                    {event === "deal_added"
+                      ? t("settings.automations.wizard.conditionsHintAdded")
+                      : t("settings.automations.wizard.conditionsHintUpdated")}
                   </p>
                   <GroupEditor
                     group={conditions}
@@ -1049,7 +1021,7 @@ export function AutomationWizard({
                 <div className="space-y-4">
                   <div>
                     <Label className="text-caption-quiet text-muted-foreground">
-                      {t("Action", "الإجراء")}
+                      {t("settings.automations.wizard.action")}
                     </Label>
                     <RadioGroup
                       value={actionType}
@@ -1066,13 +1038,10 @@ export function AutomationWizard({
                         />
                         <span>
                           <span className="block text-body text-foreground">
-                            {t("Create activity", "إنشاء نشاط")}
+                            {t("settings.automations.wizard.action.createActivity")}
                           </span>
                           <span className="block text-caption-quiet text-muted-foreground">
-                            {t(
-                              "Schedule a call, task, or meeting on the deal.",
-                              "جدولة مكالمة أو مهمة أو اجتماع على الصفقة.",
-                            )}
+                            {t("settings.automations.wizard.action.createActivityHint")}
                           </span>
                         </span>
                       </label>
@@ -1083,13 +1052,10 @@ export function AutomationWizard({
                         />
                         <span>
                           <span className="block text-body text-foreground">
-                            {t("Create deal", "إنشاء صفقة")}
+                            {t("settings.automations.wizard.action.createDeal")}
                           </span>
                           <span className="block text-caption-quiet text-muted-foreground">
-                            {t(
-                              "Start a follow-on deal in another pipeline.",
-                              "ابدأ صفقة متابعة في خط مبيعات آخر.",
-                            )}
+                            {t("settings.automations.wizard.action.createDealHint")}
                           </span>
                         </span>
                       </label>
@@ -1100,13 +1066,10 @@ export function AutomationWizard({
                         />
                         <span>
                           <span className="block text-body text-foreground">
-                            {t("Call webhook", "استدعاء Webhook")}
+                            {t("settings.automations.wizard.action.callWebhook")}
                           </span>
                           <span className="block text-caption-quiet text-muted-foreground">
-                            {t(
-                              "Send the deal to an external URL (n8n, Zapier, your own endpoint).",
-                              "أرسل الصفقة إلى رابط خارجي (n8n أو Zapier أو خادمك).",
-                            )}
+                            {t("settings.automations.wizard.action.callWebhookHint")}
                           </span>
                         </span>
                       </label>
@@ -1117,13 +1080,10 @@ export function AutomationWizard({
                         />
                         <span>
                           <span className="block text-body text-foreground">
-                            {t("Send Slack message", "إرسال رسالة سلاك")}
+                            {t("settings.automations.wizard.action.slack")}
                           </span>
                           <span className="block text-caption-quiet text-muted-foreground">
-                            {t(
-                              "Post to a channel or DM a teammate when this fires.",
-                              "انشر في قناة أو راسل زميلًا عند التشغيل.",
-                            )}
+                            {t("settings.automations.wizard.action.slackHint")}
                           </span>
                         </span>
                       </label>
@@ -1134,13 +1094,10 @@ export function AutomationWizard({
                         />
                         <span>
                           <span className="block text-body text-foreground">
-                            {t("Post notification", "إشعار داخل التطبيق")}
+                            {t("settings.automations.wizard.action.notification")}
                           </span>
                           <span className="block text-caption-quiet text-muted-foreground">
-                            {t(
-                              "Notify people in-app. No opt-in needed — switching this automation on is what turns it on for the team. Each person hears only about records they own.",
-                              "إشعار داخل التطبيق. لا حاجة لاشتراك — تشغيل الأتمتة هو التفعيل للفريق. ويصل كل شخص ما يخص سجلاته فقط.",
-                            )}
+                            {t("settings.automations.wizard.action.notificationHint")}
                           </span>
                         </span>
                       </label>
@@ -1154,25 +1111,31 @@ export function AutomationWizard({
                           htmlFor="automation-subject"
                           className="text-caption-quiet text-muted-foreground"
                         >
-                          Subject
+                          {t("common.subject")}
                         </Label>
                         <Input
                           id="automation-subject"
                           value={subject}
                           onChange={(e) => setSubject(e.target.value)}
-                          placeholder="e.g. Intro call"
+                          dir="auto"
+                          placeholder={t("settings.automations.wizard.subjectPlaceholder")}
                           maxLength={200}
                           className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label className="text-caption-quiet text-muted-foreground">Type</Label>
+                        <Label className="text-caption-quiet text-muted-foreground">
+                          {t("common.type")}
+                        </Label>
                         <Combobox
-                          items={ACTIVITY_TYPES}
+                          items={ACTIVITY_TYPES.map((a) => ({
+                            value: a.value,
+                            label: t(a.label),
+                          }))}
                           inModal
                           value={activityType}
                           onChange={(v) => v && setActivityType(v)}
-                          placeholder="Call"
+                          placeholder={t("dealActivity.type.call")}
                           triggerClassName="mt-1 h-9 w-full"
                         />
                       </div>
@@ -1181,7 +1144,7 @@ export function AutomationWizard({
                           htmlFor="automation-due"
                           className="text-caption-quiet text-muted-foreground"
                         >
-                          Due in (days)
+                          {t("settings.automations.wizard.dueInDays")}
                         </Label>
                         <Input
                           id="automation-due"
@@ -1202,17 +1165,20 @@ export function AutomationWizard({
                       </div>
                       <div className="sm:col-span-2">
                         <Label className="text-caption-quiet text-muted-foreground">
-                          Assigned to
+                          {t("settings.automations.wizard.assignedTo")}
                         </Label>
                         <Combobox
                           items={[
-                            { value: DEAL_OWNER, label: "Deal owner" },
+                            {
+                              value: DEAL_OWNER,
+                              label: t("settings.automations.wizard.dealOwner"),
+                            },
                             ...userItems,
                           ]}
                           inModal
                           value={assignee}
                           onChange={(v) => setAssignee(v || DEAL_OWNER)}
-                          placeholder="Deal owner"
+                          placeholder={t("settings.automations.wizard.dealOwner")}
                           triggerClassName="mt-1 h-9 w-full"
                         />
                       </div>
@@ -1222,7 +1188,7 @@ export function AutomationWizard({
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
                         <Label className="text-caption-quiet text-muted-foreground">
-                          Pipeline
+                          {t("common.pipeline")}
                         </Label>
                         <Combobox
                           items={(pipelines ?? []).map((p) => ({
@@ -1235,17 +1201,19 @@ export function AutomationWizard({
                             setPipelineId(v ? Number(v) : null);
                             setStageChoice(FIRST_STAGE);
                           }}
-                          placeholder="Select a pipeline…"
+                          placeholder={t("settings.automations.wizard.selectPipeline")}
                           triggerClassName="mt-1 h-9 w-full"
                         />
                       </div>
                       <div>
-                        <Label className="text-caption-quiet text-muted-foreground">Stage</Label>
+                        <Label className="text-caption-quiet text-muted-foreground">
+                          {t("common.stage")}
+                        </Label>
                         <Combobox
                           items={[
                             {
                               value: FIRST_STAGE,
-                              label: "First stage (default)",
+                              label: t("settings.automations.wizard.firstStage"),
                             },
                             ...pipelineStages.map((s) => ({
                               value: String(s.id),
@@ -1255,7 +1223,7 @@ export function AutomationWizard({
                           inModal
                           value={stageChoice}
                           onChange={(v) => setStageChoice(v || FIRST_STAGE)}
-                          placeholder="First stage (default)"
+                          placeholder={t("settings.automations.wizard.firstStage")}
                           triggerClassName="mt-1 h-9 w-full"
                         />
                       </div>
@@ -1264,39 +1232,43 @@ export function AutomationWizard({
                           htmlFor="automation-title"
                           className="text-caption-quiet text-muted-foreground"
                         >
-                          Title template
+                          {t("settings.automations.wizard.titleTemplate")}
                         </Label>
                         <Input
                           id="automation-title"
                           value={titleTemplate}
                           onChange={(e) => setTitleTemplate(e.target.value)}
-                          placeholder="Leave empty to copy the source deal's title"
+                          placeholder={t("settings.automations.wizard.titleTemplatePlaceholder")}
+                          dir="auto"
                           maxLength={300}
                           className="mt-1"
                         />
                         <p className="mt-1 text-caption-quiet text-subtle">
-                          Use {"{title}"} to insert the source deal&apos;s
-                          title, e.g. “Onboarding - {"{title}"}”.
+                          {t("settings.automations.wizard.titleTemplateHint", {
+                            token: "{title}",
+                          })}
                         </p>
                       </div>
                       <div className="sm:col-span-2">
-                        <Label className="text-caption-quiet text-muted-foreground">Owner</Label>
+                        <Label className="text-caption-quiet text-muted-foreground">
+                          {t("common.owner")}
+                        </Label>
                         <Combobox
                           items={[
                             {
                               value: DEAL_OWNER,
-                              label: "Deal owner (same as source deal)",
+                              label: t("settings.automations.wizard.ownerSameAsSource"),
                             },
                             {
                               value: AUTO_ASSIGN,
-                              label: "Auto-assign (assignment rules)",
+                              label: t("settings.automations.wizard.autoAssign"),
                             },
                             ...userItems,
                           ]}
                           inModal
                           value={owner}
                           onChange={(v) => setOwner(v || DEAL_OWNER)}
-                          placeholder="Deal owner"
+                          placeholder={t("settings.automations.wizard.dealOwner")}
                           triggerClassName="mt-1 h-9 w-full"
                         />
                       </div>
@@ -1309,18 +1281,21 @@ export function AutomationWizard({
                           htmlFor="webhook-url"
                           className="text-caption-quiet text-muted-foreground"
                         >
-                          Webhook URL
+                          {t("settings.automations.wizard.webhookUrl")}
                         </Label>
                         <Input
                           id="webhook-url"
                           value={webhookUrl}
                           onChange={(e) => setWebhookUrl(e.target.value)}
                           placeholder="https://example.com/hooks/deal"
+                          dir="ltr"
                           className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label className="text-caption-quiet text-muted-foreground">Method</Label>
+                        <Label className="text-caption-quiet text-muted-foreground">
+                          {t("settings.automations.wizard.method")}
+                        </Label>
                         <Combobox
                           items={[
                             { value: "POST", label: "POST" },
@@ -1343,7 +1318,7 @@ export function AutomationWizard({
                           htmlFor="webhook-include-deal"
                           className="text-caption-quiet text-muted-foreground"
                         >
-                          Include deal data
+                          {t("settings.automations.wizard.includeDeal")}
                         </Label>
                       </div>
                       <div className="sm:col-span-2">
@@ -1351,7 +1326,7 @@ export function AutomationWizard({
                           htmlFor="webhook-secret-header"
                           className="text-caption-quiet text-muted-foreground"
                         >
-                          Secret header name (optional)
+                          {t("settings.automations.wizard.secretHeader")}
                         </Label>
                         <Input
                           id="webhook-secret-header"
@@ -1360,12 +1335,11 @@ export function AutomationWizard({
                             setWebhookSecretHeader(e.target.value)
                           }
                           placeholder="X-Webhook-Secret"
+                          dir="ltr"
                           className="mt-1"
                         />
                         <p className="mt-1 text-caption-quiet text-subtle">
-                          If set, the configured integration webhook secret is
-                          sent under this header so your endpoint can verify the
-                          call.
+                          {t("settings.automations.wizard.secretHeaderHint")}
                         </p>
                       </div>
                     </div>
@@ -1385,7 +1359,7 @@ export function AutomationWizard({
                         )}
                       >
                         <Label className="text-caption-quiet text-muted-foreground">
-                          {t("Send to", "أرسل إلى")}
+                          {t("settings.automations.wizard.sendTo")}
                         </Label>
                         <Select
                           value={slackDestType}
@@ -1400,13 +1374,13 @@ export function AutomationWizard({
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="channel">
-                              {t("A Slack channel", "قناة سلاك")}
+                              {t("settings.automations.wizard.dest.channel")}
                             </SelectItem>
                             <SelectItem value="deal_owner">
-                              {t("DM the deal owner", "رسالة خاصة لمالك الصفقة")}
+                              {t("settings.automations.wizard.dest.dealOwner")}
                             </SelectItem>
                             <SelectItem value="user">
-                              {t("DM a specific person", "رسالة خاصة لشخص محدد")}
+                              {t("settings.automations.wizard.dest.user")}
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -1416,7 +1390,7 @@ export function AutomationWizard({
                         slackDestType === "channel" && (
                         <div>
                           <Label className="text-caption-quiet text-muted-foreground">
-                            {t("Channel", "القناة")}
+                            {t("settings.automations.wizard.channel")}
                           </Label>
                           {slackChannelsAvailable ? (
                             <Combobox
@@ -1424,7 +1398,7 @@ export function AutomationWizard({
                               items={slackChannelItems}
                               value={slackChannel}
                               onChange={(v) => setSlackChannel(v || "")}
-                              placeholder="Pick a channel…"
+                              placeholder={t("settings.automations.wizard.pickChannel")}
                               triggerClassName="mt-1 h-9 w-full"
                             />
                           ) : (
@@ -1433,19 +1407,14 @@ export function AutomationWizard({
                               value={slackChannel}
                               onChange={(e) => setSlackChannel(e.target.value)}
                               placeholder="#sales-wins"
+                              dir="ltr"
                               className="mt-1"
                             />
                           )}
                           <p className="mt-1 text-caption-quiet text-subtle">
                             {slackChannelsAvailable
-                              ? t(
-                                  "Pick from your workspace's channels. For private channels, add the Slack app to the channel first.",
-                                  "اختر من قنوات مساحة العمل. للقنوات الخاصة أضف تطبيق سلاك إلى القناة أولًا.",
-                                )
-                              : t(
-                                  "Type a channel like #sales-wins, or leave blank for the default announcements channel. Connect Slack under Settings › Integrations to pick from a list.",
-                                  "اكتب اسم قناة مثل ‎#sales-wins، أو اتركه فارغًا لقناة الإعلانات الافتراضية.",
-                                )}
+                              ? t("settings.automations.wizard.channelHintList")
+                              : t("settings.automations.wizard.channelHintManual")}
                           </p>
                         </div>
                       )}
@@ -1454,14 +1423,14 @@ export function AutomationWizard({
                         slackDestType === "user" && (
                         <div>
                           <Label className="text-caption-quiet text-muted-foreground">
-                            {t("Recipient", "المستلم")}
+                            {t("settings.automations.wizard.recipient")}
                           </Label>
                           <Combobox
                             items={userItems}
                             inModal
                             value={slackUser}
                             onChange={(v) => setSlackUser(v || "")}
-                            placeholder="Pick a teammate…"
+                            placeholder={t("settings.automations.wizard.pickTeammate")}
                             triggerClassName="mt-1 h-9 w-full"
                           />
                         </div>
@@ -1472,7 +1441,7 @@ export function AutomationWizard({
                           htmlFor="slack-message"
                           className="text-caption-quiet text-muted-foreground"
                         >
-                          {t("Message", "الرسالة")}
+                          {t("settings.automations.wizard.message")}
                         </Label>
 
                         {/* Field chips — click to insert, no typing braces */}
@@ -1496,22 +1465,16 @@ export function AutomationWizard({
                               }}
                               className="ms-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-subtle hover:bg-gray-alpha-100 hover:text-muted-foreground"
                             >
-                              ⚙ {t("Customize fields", "تخصيص الحقول")}
+                              ⚙ {t("settings.automations.wizard.customizeFields")}
                             </button>
                           </div>
                         ) : (
                           <div className="mt-1 rounded-lg border border-border bg-surface-whisper/60 p-3">
                             <p className="text-caption text-muted-foreground">
-                              {t(
-                                "Customize fields for the whole team",
-                                "تخصيص الحقول للفريق كامل",
-                              )}
+                              {t("settings.automations.wizard.customizeTitle")}
                             </p>
                             <p className="mt-0.5 text-[11px] text-subtle">
-                              {t(
-                                "Click a field to edit it, or × to remove it. New fields can insert data or your own text.",
-                                "اضغط على حقل لتعديله أو × لحذفه. الحقول الجديدة تُدرج بيانات أو نصًا خاصًا بك.",
-                              )}
+                              {t("settings.automations.wizard.customizeHint")}
                             </p>
                             <div className="mt-2 flex flex-wrap gap-1.5">
                               {activeChips.map((c, i) => (
@@ -1529,7 +1492,7 @@ export function AutomationWizard({
                                     onClick={() => {
                                       setChipEditIndex(i);
                                       setChipLabel(c.label);
-                                      setChipLabelAr(c.labelAr ?? "");
+                                      setChipLabelAr(c.labelAr || c.label);
                                       setChipInsertText(c.insert);
                                     }}
                                   >
@@ -1537,7 +1500,7 @@ export function AutomationWizard({
                                   </button>
                                   <button
                                     type="button"
-                                    aria-label={t("Remove field", "حذف الحقل")}
+                                    aria-label={t("settings.automations.wizard.removeField")}
                                     onClick={() => {
                                       if (!chipDraft) return;
                                       const next = structuredClone(chipDraft);
@@ -1556,26 +1519,27 @@ export function AutomationWizard({
                             <div className="mt-3 grid gap-2 sm:grid-cols-2">
                               <div>
                                 <Label className="text-[11px] text-muted-foreground">
-                                  {t("Name", "الاسم")}
+                                  {t("common.name")}
                                 </Label>
                                 <Input
-                                  value={chipLabel}
-                                  onChange={(e) => setChipLabel(e.target.value)}
-                                  placeholder={t("e.g. Deal name", "مثال: اسم الصفقة")}
+                                  value={chipLabelShown}
+                                  onChange={(e) => setChipLabelShown(e.target.value)}
+                                  dir="auto"
+                                  placeholder={t("settings.automations.wizard.chipNamePlaceholder")}
                                   maxLength={40}
                                   className="mt-1 h-8 text-caption-quiet"
                                 />
                               </div>
                               <div>
                                 <Label className="text-[11px] text-muted-foreground">
-                                  {t("What it inserts", "ماذا يُدرج")}
+                                  {t("settings.automations.wizard.chipInserts")}
                                 </Label>
                                 <Input
                                   value={chipInsertText}
                                   onChange={(e) => setChipInsertText(e.target.value)}
                                   placeholder={t(
-                                    "{{deal.title}} or any text",
-                                    "{{deal.title}} أو أي نص",
+                                    "settings.automations.wizard.chipInsertsPlaceholder",
+                                    { example: "{{deal.title}}" },
                                   )}
                                   maxLength={120}
                                   dir="auto"
@@ -1584,9 +1548,9 @@ export function AutomationWizard({
                               </div>
                             </div>
                             <p className="mt-1.5 text-[10.5px] text-subtle">
-                              {t("Fields you can use:", "الحقول المتاحة:")}{" "}
-                              {DEFAULT_DEAL_CHIPS.map((f) => f.insert)
-                                .join("  ")}
+                              {t("settings.automations.wizard.fieldsYouCanUse", {
+                                fields: DEFAULT_DEAL_CHIPS.map((f) => f.insert).join("  "),
+                              })}
                             </p>
 
                             <div className="mt-2 flex items-center justify-between">
@@ -1598,8 +1562,8 @@ export function AutomationWizard({
                                 onClick={applyChipForm}
                               >
                                 {chipEditIndex == null
-                                  ? t("Add field", "إضافة حقل")
-                                  : t("Update field", "تحديث الحقل")}
+                                  ? t("settings.automations.wizard.addField")
+                                  : t("settings.automations.wizard.updateField")}
                               </Button>
                               <div className="flex items-center gap-2">
                                 <Button
@@ -1612,7 +1576,7 @@ export function AutomationWizard({
                                     resetChipForm();
                                   }}
                                 >
-                                  {t("Cancel", "إلغاء")}
+                                  {t("common.cancel")}
                                 </Button>
                                 <Button
                                   type="button"
@@ -1624,7 +1588,7 @@ export function AutomationWizard({
                                   {updateChips.isPending && (
                                     <Loader2 className="me-1.5 h-3 w-3 animate-spin" />
                                   )}
-                                  {t("Save fields", "حفظ الحقول")}
+                                  {t("settings.automations.wizard.saveFields")}
                                 </Button>
                               </div>
                             </div>
@@ -1645,11 +1609,8 @@ export function AutomationWizard({
                                 onChange={(e) => setMsgRow(i, e.target.value)}
                                 placeholder={
                                   i === 0
-                                    ? t(
-                                        "Write your message, then tap a field above to drop it in.",
-                                        "اكتب رسالتك ثم اضغط على أي حقل بالأعلى لإدراجه.",
-                                      )
-                                    : t("Another line…", "سطر إضافي…")
+                                    ? t("settings.automations.wizard.messagePlaceholder")
+                                    : t("settings.automations.wizard.anotherLine")
                                 }
                                 className={cn(
                                   "flex-1",
@@ -1658,7 +1619,7 @@ export function AutomationWizard({
                               />
                               <button
                                 type="button"
-                                aria-label={t("Delete this line", "حذف هذا السطر")}
+                                aria-label={t("settings.automations.wizard.deleteLine")}
                                 disabled={msgRows.length === 1 && !row}
                                 onClick={() => deleteMsgRow(i)}
                                 className="rounded-md p-1.5 text-subtle transition-colors hover:text-destructive disabled:opacity-30"
@@ -1673,24 +1634,21 @@ export function AutomationWizard({
                             className="flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-input py-1.5 text-caption text-muted-foreground hover:bg-gray-alpha-50"
                           >
                             <Plus className="h-3.5 w-3.5" />
-                            {t("Add another line", "أضف سطرًا آخر")}
+                            {t("settings.automations.wizard.addLine")}
                           </button>
                         </div>
 
                         {/* Live preview against sample data */}
                         <div className="mt-2 rounded-md border-s-2 border-gray-alpha-300 bg-surface-whisper px-3 py-2">
                           <p className="text-caption text-brand">
-                            {t("Preview (sample data)", "معاينة (بيانات تجريبية)")}
+                            {t("settings.automations.wizard.preview")}
                           </p>
                           <p
                             dir="auto"
                             className="mt-0.5 whitespace-pre-wrap text-body-quiet text-foreground"
                           >
                             {messagePreview.trim() ||
-                              t(
-                                "Your message preview will appear here.",
-                                "ستظهر معاينة رسالتك هنا.",
-                              )}
+                              t("settings.automations.wizard.previewEmpty")}
                           </p>
                         </div>
 
@@ -1707,13 +1665,10 @@ export function AutomationWizard({
                             ) : (
                               <Send className="me-1.5 h-3.5 w-3.5" />
                             )}
-                            {t("Send test message", "إرسال رسالة تجريبية")}
+                            {t("settings.automations.wizard.sendTest")}
                           </Button>
                           <span className="ms-2 text-caption-quiet text-subtle">
-                            {t(
-                              "Sent privately to you in Slack, never to the channel.",
-                              "تصلك وحدك في سلاك، لا تُرسل إلى القناة أبدًا.",
-                            )}
+                            {t("settings.automations.wizard.sendTestHint")}
                           </span>
                         </div>
                       </div>
@@ -1729,7 +1684,7 @@ export function AutomationWizard({
                       htmlFor="automation-name"
                       className="text-caption-quiet text-muted-foreground"
                     >
-                      {t("Automation name", "اسم الأتمتة")}
+                      {t("settings.automations.wizard.automationName")}
                     </Label>
                     <Input
                       id="automation-name"
@@ -1738,7 +1693,8 @@ export function AutomationWizard({
                       onKeyDown={(e) =>
                         e.key === "Enter" && name.trim() && !busy && save()
                       }
-                      placeholder="e.g. “Schedule intro call for new deals”"
+                      placeholder={t("settings.automations.wizard.namePlaceholder")}
+                      dir="auto"
                       maxLength={200}
                       autoFocus
                     />
@@ -1747,7 +1703,7 @@ export function AutomationWizard({
                   {/* Plain-words confirmation */}
                   <div className="rounded-lg bg-warning-subtle px-4 py-3">
                     <p className="text-caption text-warning">
-                      {t("In plain words", "بكلمات بسيطة")}
+                      {t("settings.automations.wizard.inPlainWords")}
                     </p>
                     <p className="mt-1 text-body-quiet text-foreground">
                       {plainSentence}
@@ -1761,10 +1717,7 @@ export function AutomationWizard({
                         onCheckedChange={setSaveAsTemplate}
                       />
                       <span className="text-body-quiet text-muted-foreground">
-                        {t(
-                          "Also save this as a reusable template for the team",
-                          "احفظها أيضًا كقالب قابل لإعادة الاستخدام للفريق",
-                        )}
+                        {t("settings.automations.wizard.alsoSaveTemplate")}
                       </span>
                     </label>
                   )}
@@ -1787,7 +1740,7 @@ export function AutomationWizard({
               }}
               disabled={busy || (stepIdx === 0 && !!editingAutomation)}
             >
-              {t("Back", "رجوع")}
+              {t("settings.automations.wizard.back")}
             </Button>
             {step === "name" ? (
               <div className="flex items-center gap-2">
@@ -1797,7 +1750,7 @@ export function AutomationWizard({
                     onClick={saveTemplateOnly}
                     disabled={!name.trim() || busy}
                   >
-                    {t("Save as template only", "حفظ كقالب فقط")}
+                    {t("settings.automations.wizard.saveTemplateOnly")}
                   </Button>
                 )}
                 <Button
@@ -1809,10 +1762,10 @@ export function AutomationWizard({
                     <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
                   )}
                   {editingTemplate
-                    ? t("Save template", "حفظ القالب")
+                    ? t("settings.automations.wizard.saveTemplate")
                     : editingAutomation
-                      ? t("Save changes", "حفظ التعديلات")
-                      : t("Create automation", "إنشاء الأتمتة")}
+                      ? t("settings.automations.wizard.saveChanges")
+                      : t("settings.automations.wizard.createAutomation")}
                 </Button>
               </div>
             ) : (
@@ -1821,7 +1774,7 @@ export function AutomationWizard({
                 disabled={!canAdvance || busy}
                 className="bg-primary text-primary-foreground hover:bg-primary-hover"
               >
-                {t("Next", "التالي")}
+                {t("common.next")}
               </Button>
             )}
           </DialogFooter>

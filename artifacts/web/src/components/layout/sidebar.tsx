@@ -139,13 +139,15 @@ function NavSection({
         <span
           aria-hidden={collapsed}
           className={cn(
-            "overflow-hidden whitespace-nowrap transition-all duration-300",
-            collapsed ? "ms-0 max-w-0 opacity-0" : "ms-3 max-w-40 opacity-100",
+            "flex min-w-0 items-center overflow-hidden whitespace-nowrap transition-all duration-300",
+            collapsed ? "ms-0 max-w-0 opacity-0" : "ms-3 max-w-48 opacity-100",
           )}
         >
-          {label}
+          {/* The label gives way before the beta chip does: a longer label
+              (the Arabic one) ends in an ellipsis instead of clipping the chip. */}
+          <span className="min-w-0 truncate">{label}</span>
           {item.beta && (
-            <span className="ms-2 rounded-full bg-attention-subtle px-1.5 py-0.5 text-caption lowercase text-attention-foreground">
+            <span className="ms-2 shrink-0 rounded-full bg-attention-subtle px-1.5 py-0.5 text-caption lowercase text-attention-foreground">
               {t("nav.beta")}
             </span>
           )}

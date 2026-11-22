@@ -94,6 +94,7 @@ export function SlackSettings() {
               <StatusPill set={data.botTokenSet} />
             </div>
             <Input
+              dir="ltr"
               id="slack-bot-token"
               type="password"
               autoComplete="off"
@@ -111,6 +112,7 @@ export function SlackSettings() {
               <StatusPill set={data.webhookUrlSet} />
             </div>
             <Input
+              dir="ltr"
               id="slack-webhook-url"
               type="password"
               autoComplete="off"
@@ -129,6 +131,7 @@ export function SlackSettings() {
           <div className="space-y-1.5">
             <Label htmlFor="slack-channel">{t("settings.slack.announceChannel")}</Label>
             <Input
+              dir="ltr"
               id="slack-channel"
               value={channelValue}
               onChange={(e) => setChannel(e.target.value)}

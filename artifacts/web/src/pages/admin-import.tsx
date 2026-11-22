@@ -40,6 +40,13 @@ import {
 } from "@/lib/contacts-search-api";
 import { cn } from "@/lib/utils";
 import {
+  useI18n,
+  type MessageKey,
+  type PluralKey,
+  type Translate,
+} from "@/lib/i18n/i18n";
+import { LOCALE_INFO } from "@/lib/i18n/locales";
+import {
   ENTITY_SPECS,
   IMPORT_BATCH_SIZE,
   autoMapHeaders,
@@ -51,6 +58,8 @@ import {
   toPersonRows,
   toDealRows,
   type EntityKey,
+  type FieldSpec,
+  type CellError,
   type ImportDefaults,
   type ValidatedRow,
 } from "@/lib/import-spec";
@@ -80,13 +89,134 @@ import {
 
 const STEPS = ["entity", "upload", "map", "review", "done"] as const;
 type StepId = (typeof STEPS)[number];
-const STEP_LABELS: Record<StepId, string> = {
-  entity: "Type",
-  upload: "Upload",
-  map: "Map & defaults",
-  review: "Review",
-  done: "Done",
+// Message keys, resolved at render through t(). The same goes for the entity
+// and field tables below: `import-spec.ts` keeps its English labels because
+// header auto-mapping matches on them, so only the display is translated here.
+const STEP_LABELS: Record<StepId, MessageKey> = {
+  entity: "settings.import.step.entity",
+  upload: "settings.import.step.upload",
+  map: "settings.import.step.map",
+  review: "settings.import.step.review",
+  done: "settings.import.step.done",
 };
+
+interface EntityText {
+  label: MessageKey;
+  singular: MessageKey;
+  description: MessageKey;
+  cta: MessageKey;
+  fieldsTitle: MessageKey;
+  view: MessageKey;
+  importCount: PluralKey;
+  imported: PluralKey;
+}
+
+const ENTITY_TEXT: Record<EntityKey, EntityText> = {
+  organizations: {
+    label: "settings.import.entity.organizations.label",
+    singular: "common.organization",
+    description: "settings.import.entity.organizations.description",
+    cta: "settings.import.entity.organizations.cta",
+    fieldsTitle: "settings.import.entity.organizations.fieldsTitle",
+    view: "settings.import.entity.organizations.view",
+    importCount: "settings.import.entity.organizations.importCount",
+    imported: "settings.import.entity.organizations.imported",
+  },
+  persons: {
+    label: "settings.import.entity.persons.label",
+    singular: "common.person",
+    description: "settings.import.entity.persons.description",
+    cta: "settings.import.entity.persons.cta",
+    fieldsTitle: "settings.import.entity.persons.fieldsTitle",
+    view: "settings.import.entity.persons.view",
+    importCount: "settings.import.entity.persons.importCount",
+    imported: "settings.import.entity.persons.imported",
+  },
+  deals: {
+    label: "settings.import.entity.deals.label",
+    singular: "common.deal",
+    description: "settings.import.entity.deals.description",
+    cta: "settings.import.entity.deals.cta",
+    fieldsTitle: "settings.import.entity.deals.fieldsTitle",
+    view: "settings.import.entity.deals.view",
+    importCount: "settings.import.entity.deals.importCount",
+    imported: "settings.import.entity.deals.imported",
+  },
+};
+
+// Display labels by field key. The key itself (and the CSV template header)
+// is a data format and stays as it is.
+const FIELD_LABELS: Record<string, MessageKey> = {
+  name: "settings.import.field.name",
+  address: "settings.import.field.address",
+  ownerId: "settings.import.field.ownerId",
+  email: "settings.import.field.email",
+  phone: "settings.import.field.phone",
+  jobTitle: "settings.import.field.jobTitle",
+  organizationId: "settings.import.field.organizationId",
+  title: "settings.import.field.title",
+  value: "settings.import.field.value",
+  currency: "settings.import.field.currency",
+  pipelineId: "settings.import.field.pipelineId",
+  stageId: "settings.import.field.stageId",
+  personId: "settings.import.field.personId",
+  personPhone: "settings.import.field.personPhone",
+  personName: "settings.import.field.personName",
+  personEmail: "settings.import.field.personEmail",
+  expectedCloseDate: "settings.import.field.expectedCloseDate",
+  labels: "settings.import.field.labels",
+};
+
+const FIELD_HELP: Record<string, MessageKey> = {
+  ownerId: "settings.import.help.id",
+  organizationId: "settings.import.help.id",
+  personId: "settings.import.help.id",
+  pipelineId: "settings.import.help.pipelineId",
+  stageId: "settings.import.help.stageId",
+  personPhone: "settings.import.help.personPhone",
+  personName: "settings.import.help.personName",
+  personEmail: "settings.import.help.personEmail",
+  expectedCloseDate: "settings.import.help.expectedCloseDate",
+  labels: "settings.import.help.labels",
+};
+
+function fieldLabel(t: Translate, field: Pick<FieldSpec, "key" | "label">): string {
+  const key = FIELD_LABELS[field.key];
+  return key ? t(key) : field.label;
+}
+
+function fieldHelp(t: Translate, field: FieldSpec): string | undefined {
+  if (!field.help) return undefined;
+  const key = FIELD_HELP[field.key];
+  return key ? t(key) : field.help;
+}
+
+// validateRows() words its messages in English from the field label; rebuild
+// them here from the field and the kind of failure so they read in the UI's
+// language. A required-field miss is the only message that ends "is required.";
+// any other is the parse failure for that field's type.
+function cellErrorText(
+  t: Translate,
+  fields: FieldSpec[],
+  err: CellError,
+): string {
+  const field = fields.find((f) => f.key === err.field);
+  if (!field) return err.message;
+  const name = fieldLabel(t, field);
+  if (err.message === `${err.label} is required.`) {
+    return t("settings.import.error.required", { field: name });
+  }
+  switch (field.type) {
+    case "integer":
+      return t("settings.import.error.integer", { field: name });
+    case "number":
+      return t("settings.import.error.number", { field: name });
+    case "date":
+      return t("settings.import.error.date", { field: name });
+    default:
+      return err.message;
+  }
+}
 
 const ENTITY_CARDS: { key: EntityKey; icon: typeof Building2 }[] = [
   { key: "organizations", icon: Building2 },
@@ -97,6 +227,7 @@ const ENTITY_CARDS: { key: EntityKey; icon: typeof Building2 }[] = [
 const NONE = "__none__"; // Select sentinel for "no mapping / no default".
 
 export default function AdminImportPage() {
+  const { t, tPlural, formatNumber } = useI18n();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -183,8 +314,8 @@ export default function AdminImportPage() {
         );
         if (!hdrs.length || !data.length) {
           toast({
-            title: "Nothing to import",
-            description: "The file has no header row or no data rows.",
+            title: t("settings.import.toast.nothingTitle"),
+            description: t("settings.import.toast.nothingDescription"),
             variant: "destructive",
           });
           return;
@@ -197,7 +328,7 @@ export default function AdminImportPage() {
       },
       error: (e: Error) =>
         toast({
-          title: "Could not parse CSV",
+          title: t("settings.import.toast.parseFailed"),
           description: e.message,
           variant: "destructive",
         }),
@@ -208,7 +339,7 @@ export default function AdminImportPage() {
     const reader = new FileReader();
     reader.onload = (ev) => parseCsv(String(ev.target?.result ?? ""), file.name);
     reader.onerror = () =>
-      toast({ title: "Could not read file", variant: "destructive" });
+      toast({ title: t("settings.import.toast.readFailed"), variant: "destructive" });
     reader.readAsText(file);
   };
 
@@ -271,10 +402,13 @@ export default function AdminImportPage() {
     if (failure) {
       const reason = errorMessage(failure);
       toast({
-        title: "Import failed",
+        title: t("settings.import.toast.importFailed"),
         description:
           aggregate.created > 0
-            ? `${aggregate.created} row(s) were imported before this batch failed. ${reason}`
+            ? tPlural("settings.import.toast.partial", aggregate.created, {
+                count: formatNumber(aggregate.created),
+                reason,
+              })
             : reason,
         variant: "destructive",
       });
@@ -293,16 +427,15 @@ export default function AdminImportPage() {
   const spec = entity ? ENTITY_SPECS[entity] : null;
 
   return (
-    <div className="mx-auto flex h-full max-w-5xl flex-col">
-      <div className="mb-5">
+    <div className="mx-auto flex h-full w-full max-w-5xl flex-col">
+      <header className="mb-5">
         <h1 className="text-heading-sm text-foreground">
-          Import data
+          {t("settings.import.title")}
         </h1>
-        <p className="text-body-quiet text-muted-foreground">
-          Bring organizations, people and deals in from a CSV, with a template,
-          validation and a preview before anything is created.
+        <p className="mt-1 text-body-quiet text-muted-foreground">
+          {t("settings.import.subtitle")}
         </p>
-      </div>
+      </header>
 
       <Stepper current={step} />
 
@@ -377,9 +510,10 @@ export default function AdminImportPage() {
 // Stepper header
 // ---------------------------------------------------------------------------
 function Stepper({ current }: { current: StepId }) {
+  const { t, formatNumber } = useI18n();
   const currentIdx = STEPS.indexOf(current);
   return (
-    <ol className="flex items-center gap-2 text-body-quiet">
+    <ol className="flex flex-wrap items-center gap-x-2 gap-y-2 text-body-quiet">
       {STEPS.map((s, i) => {
         const done = i < currentIdx;
         const active = i === currentIdx;
@@ -393,7 +527,11 @@ function Stepper({ current }: { current: StepId }) {
                 !active && !done && "bg-muted text-subtle",
               )}
             >
-              {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
+              {done ? (
+                <CheckCircle2 className="h-3.5 w-3.5" />
+              ) : (
+                formatNumber(i + 1)
+              )}
             </span>
             <span
               className={cn(
@@ -401,7 +539,7 @@ function Stepper({ current }: { current: StepId }) {
                 active ? "text-foreground" : "text-subtle",
               )}
             >
-              {STEP_LABELS[s]}
+              {t(STEP_LABELS[s])}
             </span>
             {i < STEPS.length - 1 && (
               <span className="mx-1 h-px w-6 bg-gray-200" />
@@ -414,13 +552,14 @@ function Stepper({ current }: { current: StepId }) {
 }
 
 function RequiredBadge({ required }: { required: boolean }) {
+  const { t } = useI18n();
   return required ? (
     <Badge variant="outline" className="border-warning/30 bg-warning-subtle text-warning">
-      Required
+      {t("settings.import.required")}
     </Badge>
   ) : (
     <Badge variant="outline" className="text-subtle">
-      Optional
+      {t("common.optional")}
     </Badge>
   );
 }
@@ -442,10 +581,11 @@ function Card({ children, className }: { children: ReactNode; className?: string
 // Step 1 — choose entity + download template
 // ---------------------------------------------------------------------------
 function EntityStep({ onChoose }: { onChoose: (k: EntityKey) => void }) {
+  const { t } = useI18n();
   return (
     <div className="grid gap-4 sm:grid-cols-3">
       {ENTITY_CARDS.map(({ key, icon: Icon }) => {
-        const spec = ENTITY_SPECS[key];
+        const text = ENTITY_TEXT[key];
         return (
           <div
             key={key}
@@ -462,11 +602,13 @@ function EntityStep({ onChoose }: { onChoose: (k: EntityKey) => void }) {
                 <Icon className="h-5 w-5" />
               </div>
               <div className="text-body-lg font-semibold text-foreground">
-                {spec.label}
+                {t(text.label)}
               </div>
-              <p className="mb-3 text-body-quiet text-muted-foreground">{spec.description}</p>
+              <p className="mb-3 text-body-quiet text-muted-foreground">
+                {t(text.description)}
+              </p>
               <div className="mt-auto flex items-center gap-1 text-body text-brand">
-                Import {spec.label}
+                {t(text.cta)}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </div>
             </button>
@@ -475,7 +617,7 @@ function EntityStep({ onChoose }: { onChoose: (k: EntityKey) => void }) {
               onClick={() => downloadTemplate(key)}
               className="mt-3 inline-flex w-fit items-center gap-1.5 text-caption-quiet text-muted-foreground hover:text-brand"
             >
-              <Download className="h-3.5 w-3.5" /> Download template
+              <Download className="h-3.5 w-3.5" /> {t("settings.import.downloadTemplate")}
             </button>
           </div>
         );
@@ -504,6 +646,7 @@ function UploadStep({
   onParsePaste: () => void;
   onBack: () => void;
 }) {
+  const { t } = useI18n();
   const [drag, setDrag] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -512,25 +655,33 @@ function UploadStep({
       <Card>
         <div className="mb-2 flex items-center justify-between">
           <h2 className="font-semibold text-foreground">
-            Fields for {spec.label}
+            {t(ENTITY_TEXT[spec.key].fieldsTitle)}
           </h2>
           <Button
             variant="outline"
             size="sm"
             onClick={() => downloadTemplate(spec.key)}
           >
-            <Download className="me-1.5 h-3.5 w-3.5" /> Template
+            <Download className="me-1.5 h-3.5 w-3.5" /> {t("settings.import.template")}
           </Button>
         </div>
         <div className="grid gap-1.5 sm:grid-cols-2">
           {spec.fields.map((f) => (
             <div key={f.key} className="flex items-center gap-2 text-body-quiet">
-              <code className="rounded-sm bg-muted px-1.5 py-0.5 text-caption-quiet text-foreground">
+              <code
+                dir="ltr"
+                className="rounded-sm bg-muted px-1.5 py-0.5 text-caption-quiet text-foreground"
+              >
                 {f.key}
               </code>
               <RequiredBadge required={f.required} />
               {f.help && (
-                <span className="truncate text-caption-quiet text-subtle">{f.help}</span>
+                <span
+                  className="truncate text-caption-quiet text-subtle"
+                  title={fieldHelp(t, f)}
+                >
+                  {fieldHelp(t, f)}
+                </span>
               )}
             </div>
           ))}
@@ -557,7 +708,7 @@ function UploadStep({
         >
           <UploadCloud className="mb-2 h-8 w-8 text-subtle" />
           <p className="text-body text-foreground">
-            Drag a .csv file here, or
+            {t("settings.import.upload.drop")}
           </p>
           <Button
             variant="outline"
@@ -565,7 +716,7 @@ function UploadStep({
             className="mt-2"
             onClick={() => inputRef.current?.click()}
           >
-            Choose file
+            {t("settings.import.upload.choose")}
           </Button>
           <input
             ref={inputRef}
@@ -580,19 +731,21 @@ function UploadStep({
           />
           {fileName && (
             <p className="mt-3 inline-flex items-center gap-1.5 text-caption-quiet text-muted-foreground">
-              <FileSpreadsheet className="h-3.5 w-3.5" /> {fileName}
+              <FileSpreadsheet className="h-3.5 w-3.5" />{" "}
+              <span dir="auto">{fileName}</span>
             </p>
           )}
         </div>
 
         <details className="mt-4">
           <summary className="cursor-pointer text-body text-muted-foreground">
-            Or paste CSV text
+            {t("settings.import.upload.pasteToggle")}
           </summary>
           <Textarea
             value={pasteText}
             onChange={(e) => onPaste(e.target.value)}
-            placeholder="Paste CSV including the header row…"
+            placeholder={t("settings.import.upload.pastePlaceholder")}
+            dir="auto"
             className="mt-2 min-h-[140px] font-mono text-caption-quiet"
           />
           <Button
@@ -601,14 +754,15 @@ function UploadStep({
             disabled={!pasteText.trim()}
             onClick={onParsePaste}
           >
-            Parse pasted text
+            {t("settings.import.upload.parse")}
           </Button>
         </details>
       </Card>
 
       <div className="flex justify-between">
         <Button variant="ghost" onClick={onBack}>
-          <ArrowLeft className="me-1.5 h-4 w-4" /> Back
+          <ArrowLeft className="me-1.5 h-4 w-4" />{" "}
+          {t("settings.import.back")}
         </Button>
       </div>
     </div>
@@ -659,6 +813,7 @@ function MapStep({
   onBack: () => void;
   onContinue: () => void;
 }) {
+  const { t, tPlural, formatNumber, locale } = useI18n();
   const isDeals = spec.key === "deals";
   const hasOrg = spec.key === "persons" || spec.key === "deals";
 
@@ -674,27 +829,27 @@ function MapStep({
       {isPipedriveExport(headers) && (
         <Alert>
           <Info className="h-4 w-4" />
-          <AlertTitle>Pipedrive export detected</AlertTitle>
+          <AlertTitle>{t("settings.import.pipedrive.title")}</AlertTitle>
           <AlertDescription>
-            Its columns are matched for you. Owners, organizations,
-            {isDeals ? " people, pipelines and stages" : " and people"} in the
-            file are Pipedrive’s, not this workspace’s, so they are not
-            linked: pick them under Defaults for every row.
+            {isDeals
+              ? t("settings.import.pipedrive.deals")
+              : t("settings.import.pipedrive.other")}
           </AlertDescription>
         </Alert>
       )}
 
       {/* Bulk-select defaults — the answer to "a key detail isn't there". */}
       <Card>
-        <h2 className="font-semibold text-foreground">Defaults for every row</h2>
+        <h2 className="font-semibold text-foreground">
+          {t("settings.import.defaults.title")}
+        </h2>
         <p className="mb-3 text-body-quiet text-muted-foreground">
-          Applied to any row that leaves the matching column blank. Use these
-          when your file doesn’t carry IDs.
+          {t("settings.import.defaults.description")}
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           {isDeals && (
             <>
-              <Field label="Pipeline" required>
+              <Field label={t("common.pipeline")} required>
                 <Select
                   value={defaults.pipelineId ? String(defaults.pipelineId) : NONE}
                   onValueChange={(v) =>
@@ -707,10 +862,10 @@ function MapStep({
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select pipeline…" />
+                    <SelectValue placeholder={t("settings.import.defaults.selectPipeline")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NONE}>No default</SelectItem>
+                    <SelectItem value={NONE}>{t("settings.import.defaults.none")}</SelectItem>
                     {pipelines.map((p) => (
                       <SelectItem key={p.id} value={String(p.id)}>
                         {p.name}
@@ -719,7 +874,7 @@ function MapStep({
                   </SelectContent>
                 </Select>
               </Field>
-              <Field label="Stage" required>
+              <Field label={t("common.stage")} required>
                 <Select
                   value={defaults.stageId ? String(defaults.stageId) : NONE}
                   onValueChange={(v) =>
@@ -734,13 +889,13 @@ function MapStep({
                     <SelectValue
                       placeholder={
                         defaults.pipelineId == null
-                          ? "Pick a pipeline first"
-                          : "Select stage…"
+                          ? t("settings.import.defaults.pickPipelineFirst")
+                          : t("settings.import.defaults.selectStage")
                       }
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NONE}>No default</SelectItem>
+                    <SelectItem value={NONE}>{t("settings.import.defaults.none")}</SelectItem>
                     {stages.map((s) => (
                       <SelectItem key={s.id} value={String(s.id)}>
                         {s.name}
@@ -752,7 +907,7 @@ function MapStep({
             </>
           )}
 
-          <Field label="Owner">
+          <Field label={t("common.owner")}>
             <Combobox
               items={users.map((u) => ({ value: String(u.id), label: u.name }))}
               value={defaults.ownerId ? String(defaults.ownerId) : NONE}
@@ -763,20 +918,20 @@ function MapStep({
                 }))
               }
               allValue={NONE}
-              allLabel="Importer (you)"
-              placeholder="Search users…"
+              allLabel={t("settings.import.defaults.importer")}
+              placeholder={t("settings.import.defaults.searchUsers")}
               triggerClassName="w-full"
             />
           </Field>
 
           {hasOrg && (
-            <Field label="Organization">
+            <Field label={t("common.organization")}>
               <AsyncSelect
                 value={defaults.organizationId ? String(defaults.organizationId) : null}
                 valueLabel={orgLabel}
-                placeholder="Search organizations…"
+                placeholder={t("common.searchOrganizations")}
                 allValue={NONE}
-                allLabel="No default"
+                allLabel={t("settings.import.defaults.none")}
                 loadOptions={loadOrganizationOptions}
                 onChange={(v: string | null, label: string | null) => {
                   setDefaults((d) => ({
@@ -792,13 +947,13 @@ function MapStep({
 
           {isDeals && (
             <>
-              <Field label="Person">
+              <Field label={t("common.person")}>
                 <AsyncSelect
                   value={defaults.personId ? String(defaults.personId) : null}
                   valueLabel={personLabel}
-                  placeholder="Search people…"
+                  placeholder={t("common.searchPeople")}
                   allValue={NONE}
-                  allLabel="No default"
+                  allLabel={t("settings.import.defaults.none")}
                   loadOptions={loadPersonOptions}
                   onChange={(v: string | null, label: string | null) => {
                     setDefaults((d) => ({
@@ -810,11 +965,11 @@ function MapStep({
                   triggerClassName="w-full"
                 />
               </Field>
-              <Field label="Currency">
+              <Field label={t("common.currency")}>
                 <Input
                   value={defaults.currency ?? ""}
                   maxLength={3}
-                  placeholder="e.g. USD"
+                  placeholder={t("settings.import.defaults.currencyPlaceholder")}
                   onChange={(e) =>
                     setDefaults((d) => ({
                       ...d,
@@ -831,9 +986,9 @@ function MapStep({
       {/* Column mapping */}
       <Card>
         <h2 className="mb-3 font-semibold text-foreground">
-          Map columns{" "}
+          {t("settings.import.map.title")}{" "}
           <span className="font-normal text-subtle">
-            ({rowCount} rows detected)
+            {tPlural("settings.import.map.rowsDetected", rowCount, { count: formatNumber(rowCount) })}
           </span>
         </h2>
         <div className="space-y-1.5">
@@ -844,9 +999,12 @@ function MapStep({
             >
               <div className="flex items-center gap-2">
                 <span className="text-body text-foreground">
-                  {f.label}
+                  {fieldLabel(t, f)}
                 </span>
-                <code className="rounded-sm bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
+                <code
+                  dir="ltr"
+                  className="rounded-sm bg-muted px-1 py-0.5 text-[10px] text-muted-foreground"
+                >
                   {f.key}
                 </code>
               </div>
@@ -856,13 +1014,15 @@ function MapStep({
                 onValueChange={(v) => setMap(f.key, v)}
               >
                 <SelectTrigger className="h-8">
-                  <SelectValue placeholder="Not mapped" />
+                  <SelectValue placeholder={t("settings.import.map.notMapped")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NONE}>- Not mapped -</SelectItem>
+                  <SelectItem value={NONE}>
+                    {t("settings.import.map.notMappedOption")}
+                  </SelectItem>
                   {headers.map((h) => (
                     <SelectItem key={h} value={h}>
-                      {h}
+                      <span dir="auto">{h}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -875,30 +1035,33 @@ function MapStep({
       {unsatisfied.length > 0 && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Pick a default to continue</AlertTitle>
+          <AlertTitle>{t("settings.import.unsatisfied.title")}</AlertTitle>
           <AlertDescription>
-            {unsatisfied.map((f) => f.label).join(", ")}{" "}
-            {unsatisfied.length === 1 ? "is" : "are"} required but not in your
-            file. Bulk-select{" "}
-            {unsatisfied.length === 1 ? "a value" : "values"} above to apply to
-            every row.
+            {tPlural("settings.import.unsatisfied.body", unsatisfied.length, {
+              fields: new Intl.ListFormat(LOCALE_INFO[locale].tag, {
+                type: "conjunction",
+              }).format(unsatisfied.map((f) => fieldLabel(t, f))),
+            })}
           </AlertDescription>
         </Alert>
       )}
 
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={onBack}>
-          <ArrowLeft className="me-1.5 h-4 w-4" /> Back
+          <ArrowLeft className="me-1.5 h-4 w-4" />{" "}
+          {t("settings.import.back")}
         </Button>
         <div className="flex items-center gap-3">
           <span className="text-body-quiet text-muted-foreground">
-            <span className="font-semibold text-brand">{validCount}</span>{" "}
-            ready
+            <span className="font-semibold text-brand">
+              {tPlural("settings.import.map.ready", validCount, { count: formatNumber(validCount) })}
+            </span>
             {errorCount > 0 && (
               <>
                 {" · "}
-                <span className="font-semibold text-destructive">{errorCount}</span>{" "}
-                with errors
+                <span className="font-semibold text-destructive">
+                  {tPlural("settings.import.map.withErrors", errorCount, { count: formatNumber(errorCount) })}
+                </span>
               </>
             )}
           </span>
@@ -907,7 +1070,8 @@ function MapStep({
             disabled={unsatisfied.length > 0}
             onClick={onContinue}
           >
-            Review <ArrowRight className="ms-1.5 h-4 w-4" />
+            {t("settings.import.step.review")}{" "}
+            <ArrowRight className="ms-1.5 h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -963,6 +1127,7 @@ function ReviewStep({
   onBack: () => void;
   onImport: () => void;
 }) {
+  const { t, tPlural, formatNumber } = useI18n();
   const [onlyErrors, setOnlyErrors] = useState(false);
   const visible = (onlyErrors
     ? validated.filter((r) => r.errors.length > 0)
@@ -977,7 +1142,9 @@ function ReviewStep({
       .map((r) => ({
         row: r.index + 2, // +1 header, +1 to 1-base
         summary: primarySummary(spec.key, r.data),
-        errors: r.errors.map((e) => e.message).join(" "),
+        errors: r.errors
+          .map((e) => cellErrorText(t, spec.fields, e))
+          .join(" "),
       }));
     const blob = new Blob([Papa.unparse(rows)], {
       type: "text/csv;charset=utf-8;",
@@ -994,23 +1161,26 @@ function ReviewStep({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Badge className="border-transparent bg-brand-subtle text-brand-subtle-foreground">
-          <CheckCircle2 className="me-1 h-3.5 w-3.5" /> {validCount} ready to
-          import
+          <CheckCircle2 className="me-1 h-3.5 w-3.5" />{" "}
+          {tPlural("settings.import.review.ready", validCount, { count: formatNumber(validCount) })}
         </Badge>
         {errorCount > 0 && (
           <Badge variant="outline" className="border-destructive/30 bg-destructive-subtle text-destructive">
-            <AlertCircle className="me-1 h-3.5 w-3.5" /> {errorCount} will be
-            skipped
+            <AlertCircle className="me-1 h-3.5 w-3.5" />{" "}
+            {tPlural("settings.import.review.skipped", errorCount, { count: formatNumber(errorCount) })}
           </Badge>
         )}
         <div className="ms-auto flex items-center gap-2">
           {errorCount > 0 && (
             <>
               <Button variant="ghost" size="sm" onClick={() => setOnlyErrors((v) => !v)}>
-                {onlyErrors ? "Show all" : "Show only errors"}
+                {onlyErrors
+                  ? t("settings.import.review.showAll")
+                  : t("settings.import.review.showErrors")}
               </Button>
               <Button variant="outline" size="sm" onClick={downloadErrors}>
-                <FileWarning className="me-1.5 h-3.5 w-3.5" /> Download errors
+                <FileWarning className="me-1.5 h-3.5 w-3.5" />{" "}
+                {t("settings.import.review.downloadErrors")}
               </Button>
             </>
           )}
@@ -1022,10 +1192,18 @@ function ReviewStep({
           <table className="w-full text-body-quiet">
             <thead className="sticky top-0 bg-surface-whisper text-start text-caption text-muted-foreground">
               <tr>
-                <th className="w-16 px-3 py-2 font-semibold">Row</th>
-                <th className="w-24 px-3 py-2 font-semibold">Status</th>
-                <th className="px-3 py-2 font-semibold">{spec.singular}</th>
-                <th className="px-3 py-2 font-semibold">Issues</th>
+                <th className="w-16 px-3 py-2 text-start font-semibold">
+                  {t("settings.import.review.row")}
+                </th>
+                <th className="w-24 px-3 py-2 text-start font-semibold">
+                  {t("common.status")}
+                </th>
+                <th className="px-3 py-2 text-start font-semibold">
+                  {t(ENTITY_TEXT[spec.key].singular)}
+                </th>
+                <th className="px-3 py-2 text-start font-semibold">
+                  {t("settings.import.review.issues")}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -1033,23 +1211,29 @@ function ReviewStep({
                 const ok = r.errors.length === 0;
                 return (
                   <tr key={r.index} className="border-t border-border">
-                    <td className="px-3 py-2 text-subtle">{r.index + 2}</td>
+                    <td className="px-3 py-2 tabular-nums text-subtle">
+                      {formatNumber(r.index + 2)}
+                    </td>
                     <td className="px-3 py-2">
                       {ok ? (
                         <span className="inline-flex items-center gap-1 text-brand">
-                          <CheckCircle2 className="h-3.5 w-3.5" /> Ready
+                          <CheckCircle2 className="h-3.5 w-3.5" />{" "}
+                          {t("settings.import.review.statusReady")}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-destructive">
-                          <AlertCircle className="h-3.5 w-3.5" /> Error
+                          <AlertCircle className="h-3.5 w-3.5" />{" "}
+                          {t("settings.import.review.statusError")}
                         </span>
                       )}
                     </td>
-                    <td className="px-3 py-2 text-foreground">
+                    <td dir="auto" className="px-3 py-2 text-start text-foreground">
                       {primarySummary(spec.key, r.data)}
                     </td>
                     <td className="px-3 py-2 text-caption-quiet text-destructive">
-                      {r.errors.map((e) => e.message).join(" ")}
+                      {r.errors
+                        .map((e) => cellErrorText(t, spec.fields, e))
+                        .join(" ")}
                     </td>
                   </tr>
                 );
@@ -1059,14 +1243,15 @@ function ReviewStep({
         </div>
         {hiddenCount > 0 && (
           <div className="border-t border-border px-3 py-2 text-center text-caption-quiet text-subtle">
-            +{hiddenCount} more rows not shown
+            {tPlural("settings.import.review.moreRows", hiddenCount, { count: formatNumber(hiddenCount) })}
           </div>
         )}
       </Card>
 
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={onBack} disabled={importing}>
-          <ArrowLeft className="me-1.5 h-4 w-4" /> Back
+          <ArrowLeft className="me-1.5 h-4 w-4" />{" "}
+          {t("settings.import.back")}
         </Button>
         <Button
           className="bg-primary text-primary-foreground hover:bg-primary-hover"
@@ -1075,12 +1260,13 @@ function ReviewStep({
         >
           {importing ? (
             <>
-              <Loader2 className="me-1.5 h-4 w-4 animate-spin" /> Importing…
+              <Loader2 className="me-1.5 h-4 w-4 animate-spin" />{" "}
+              {t("settings.import.review.importing")}
             </>
           ) : (
             <>
-              <UploadCloud className="me-1.5 h-4 w-4" /> Import {validCount}{" "}
-              {validCount === 1 ? spec.singular : spec.label.toLowerCase()}
+              <UploadCloud className="me-1.5 h-4 w-4" />{" "}
+              {tPlural(ENTITY_TEXT[spec.key].importCount, validCount, { count: formatNumber(validCount) })}
             </>
           )}
         </Button>
@@ -1105,6 +1291,8 @@ function ResultStep({
   onImportMore: () => void;
   onView: () => void;
 }) {
+  const { t, tPlural, formatNumber } = useI18n();
+  const text = ENTITY_TEXT[spec.key];
   return (
     <div className="space-y-4">
       <Card className="flex flex-col items-center py-8 text-center">
@@ -1114,13 +1302,11 @@ function ResultStep({
           <AlertCircle className="mb-3 h-12 w-12 text-warning-glyph" />
         )}
         <h2 className="text-heading-xs text-foreground">
-          Imported {result.created}{" "}
-          {result.created === 1 ? spec.singular : spec.label.toLowerCase()}
+          {tPlural(text.imported, result.created, { count: formatNumber(result.created) })}
         </h2>
         {result.failed > 0 && (
           <p className="text-body-quiet text-muted-foreground">
-            {result.failed} row{result.failed === 1 ? "" : "s"} were rejected by
-            the server.
+            {tPlural("settings.import.result.rejected", result.failed, { count: formatNumber(result.failed) })}
           </p>
         )}
       </Card>
@@ -1128,7 +1314,7 @@ function ResultStep({
       {result.errors.length > 0 && (
         <Card>
           <h3 className="mb-2 text-body font-semibold text-foreground">
-            Server-rejected rows
+            {t("settings.import.result.rejectedTitle")}
           </h3>
           <ul className="max-h-56 space-y-1 overflow-y-auto text-body-quiet">
             {result.errors.map((e, i) => {
@@ -1136,8 +1322,10 @@ function ResultStep({
               const line = csvIndex != null ? csvIndex + 2 : e.row;
               return (
                 <li key={i} className="flex gap-2 text-destructive">
-                  <span className="shrink-0 text-subtle">Row {line}:</span>
-                  {e.message}
+                  <span className="shrink-0 text-subtle">
+                    {t("settings.import.result.rowLine", { line: formatNumber(line) })}
+                  </span>
+                  <span dir="auto">{e.message}</span>
                 </li>
               );
             })}
@@ -1147,10 +1335,10 @@ function ResultStep({
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onImportMore}>
-          Import another file
+          {t("settings.import.result.another")}
         </Button>
         <Button className="bg-primary text-primary-foreground hover:bg-primary-hover" onClick={onView}>
-          View {spec.label}
+          {t(text.view)}
         </Button>
       </div>
     </div>
