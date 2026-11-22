@@ -1,19 +1,24 @@
 name: Deploy
 
-# Optional auto-deploy to Fly.io on push to main. Off by default: it runs only
-# when the repository variable FLY_APP is set to your Fly app name (Settings →
-# Secrets and variables → Actions → Variables), so forks and clones never try
-# to deploy. Also needs the FLY_API_TOKEN repo secret (`flyctl tokens create
-# deploy`). Migrations run on Fly as the release command (fly.toml), where the
-# database is reachable, not here. See DEPLOY.md.
+# Optional auto-deploy to Fly.io once CI has passed on main. Off by default: it
+# runs only when the repository variable FLY_APP is set to your Fly app name, so
+# forks and clones never try to deploy. The FLY_API_TOKEN secret belongs in a
+# GitHub environment named `production` that only protected branches can use
+# (see DEPLOY.md). Migrations run on Fly as the release command (fly.toml),
+# where the database is reachable, not here.
 #
-# `flyctl deploy` runs the full Docker build on Fly's amd64 remote builder (the
-# real production build), but we run a fast typecheck first so an
-# obviously-broken commit fails before spending a remote-builder run.
+# This job holds a token that can ship to production, so it runs as little as
+# possible: no dependency install and no project scripts. `flyctl deploy` sends
+# the source to Fly's amd64 remote builder, which does the real build. Actions
+# are pinned to full commit ids, so a moved tag cannot change what runs here.
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: ["main"]
   workflow_dispatch: {}
+
+permissions: {}
 
 # Never overlap deploys; cancel a superseded in-flight deploy when a newer main
 # commit lands so only the latest ships.
@@ -23,36 +28,59 @@ concurrency:
 
 jobs:
   deploy:
-    if: ${{ vars.FLY_APP != '' }}
+    # A fork can open a run whose branch is also called main, so check that this
+    # was a push to this repository.
+    if: >-
+      ${{
+        vars.FLY_APP != '' &&
+        (github.event_name == 'workflow_dispatch' ||
+          (github.event.workflow_run.conclusion == 'success' &&
+           github.event.workflow_run.event == 'push' &&
+           github.event.workflow_run.head_repository.full_name == github.repository))
+      }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    environment: production
+    permissions:
+      contents: read
+    env:
+      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      # CI runs can finish out of order: never put an older commit over a newer one.
+      - name: Check this is still the latest commit on main
+        id: latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          main_sha="$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)"
+          if [ "$main_sha" = "$DEPLOY_SHA" ]; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Skipping $DEPLOY_SHA: main is now at $main_sha"
+            echo "current=false" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.latest.outputs.current == 'true'
+        # v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          # Lockfile was written by pnpm 10; pnpm 9 fails --frozen-lockfile with
-          # ERR_PNPM_LOCKFILE_CONFIG_MISMATCH on the overrides config.
-          version: 10.34.4
-      - uses: actions/setup-node@v4
+          ref: ${{ env.DEPLOY_SHA }}
+          persist-credentials: false
+      - if: steps.latest.outputs.current == 'true'
+        # master, 2026-10-30
+        uses: superfly/flyctl-actions/setup-flyctl@98172f70657cb3e15db199af139be99bd3e61200
         with:
-          node-version: "24"
-          cache: "pnpm"
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Typecheck gate (fast fail before remote build)
-        run: pnpm run typecheck
-      - uses: superfly/flyctl-actions/setup-flyctl@master
+          version: 0.5.10
       - name: Deploy to Fly
-        # --remote-only builds on Fly's amd64 builder, avoiding the
-        # linux-x64-only native-binary problem entirely. VITE_ vars are inlined
-        # at build time, so they must be passed as --build-arg (a Fly runtime
-        # secret would be too late — vite already baked in the bundle). The Sentry DSN is
+        if: steps.latest.outputs.current == 'true'
+        # VITE_ vars are inlined at build time, so they must be passed as
+        # --build-arg (a Fly runtime secret would be too late). The Sentry DSN is
         # not sensitive (send-only, ships in the public client bundle either
         # way); when its secret is unset the arg is empty and Sentry no-ops.
         run: >-
           flyctl deploy --remote-only
-          --app "${{ vars.FLY_APP }}"
+          --app "$FLY_APP"
           --build-arg VITE_SENTRY_DSN="$VITE_SENTRY_DSN"
         env:
+          FLY_APP: ${{ vars.FLY_APP }}
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
