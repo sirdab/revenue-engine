@@ -288,10 +288,14 @@ export function HomePage({ c, locale }: PageProps) {
                   <h3 className="plan__name">{plan.name}</h3>
                   <p className="plan__sub">{plan.sub}</p>
                 </div>
-                <p className="plan__price">
-                  <b>{plan.price}</b>
-                  <span>{plan.per}</span>
-                </p>
+                <div className="plan__cost">
+                  {plan.badge && <p className="plan__badge">{plan.badge}</p>}
+                  <p className="plan__price">
+                    <b>{plan.price}</b>
+                    <span>{plan.per}</span>
+                  </p>
+                  {plan.note && <p className="plan__note">{plan.note}</p>}
+                </div>
                 <Ticks items={plan.ticks} />
                 {i === 0 ? (
                   <a className="btn btn--ink" href={appPath("/signup", locale)}>

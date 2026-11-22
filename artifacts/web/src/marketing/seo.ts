@@ -7,6 +7,7 @@
 import type { Content, Faq, Guide } from "./content/types";
 import {
   DEFAULT_LOCALE,
+  HOSTED_PRICE,
   LOCALES,
   LOCALE_META,
   ORIGIN_TOKEN,
@@ -91,12 +92,21 @@ function structuredData(c: Content, route: Route): object {
       applicationSubCategory: "Customer relationship management",
       operatingSystem: "Web",
       inLanguage: LOCALES.map((l) => LOCALE_META[l].htmlLang),
-      isAccessibleForFree: true,
       license: MIT_URL,
+      // The hosted plan, billed once a year per seat after the free months.
+      // Self-hosting the MIT-licensed code is free and is the SoftwareSourceCode below.
       offers: {
         "@type": "Offer",
-        price: "0",
-        priceCurrency: "USD",
+        price: HOSTED_PRICE.perSeatYear,
+        priceCurrency: HOSTED_PRICE.currency,
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          price: HOSTED_PRICE.perSeatYear,
+          priceCurrency: HOSTED_PRICE.currency,
+          unitText: "seat",
+          billingDuration: "P1Y",
+        },
+        eligibleDuration: { "@type": "QuantitativeValue", value: HOSTED_PRICE.freeMonths, unitCode: "MON" },
         availability: "https://schema.org/InStock",
         url: `${ORIGIN_TOKEN}/signup`,
       },

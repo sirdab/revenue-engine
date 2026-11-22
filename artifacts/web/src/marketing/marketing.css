@@ -1650,12 +1650,26 @@ a.chip:hover {
 .plan__sub {
   color: var(--muted);
 }
-.plan__price {
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
+.plan__cost {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
   padding-block-end: 1.4rem;
   border-block-end: 1px dashed var(--line-2);
+}
+.plan__badge {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: var(--teal-tint);
+  color: var(--teal-deep);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.plan__price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.6rem;
 }
 .plan__price b {
   font-family: var(--font-display);
@@ -1668,6 +1682,10 @@ a.chip:hover {
 }
 .plan__price span {
   color: var(--muted);
+}
+.plan__note {
+  color: var(--ink-2);
+  font-size: 0.9375rem;
 }
 .plan .btn {
   justify-self: start;

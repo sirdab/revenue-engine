@@ -21,6 +21,19 @@ export const SITE = {
   licenseUrl: "https://github.com/sirdab/revenue-engine/blob/main/LICENSE",
 } as const;
 
+/**
+ * The hosted plan's price, for structured data. The pages say the same in
+ * words (`pricing` in content/), so change both together. Self-hosting is free.
+ */
+export const HOSTED_PRICE = {
+  currency: "SAR",
+  /** Per seat, per month, billed annually. */
+  perSeatMonth: "24.91",
+  /** The one annual payment per seat. `perSeatMonth` is this over twelve, rounded down. */
+  perSeatYear: "299",
+  freeMonths: 3,
+} as const;
+
 export const repoFile = (path: string): string =>
   `${SITE.githubUrl}/blob/main/${path}`;
 
