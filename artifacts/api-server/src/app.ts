@@ -67,6 +67,8 @@ app.use(cors());
 // 100kb; only those routes get the larger limit. express.json skips a body
 // that is already parsed, so the global parser below leaves these alone.
 app.use("/api/import", express.json({ limit: "10mb" }));
+// The workspace logo: up to 300 KB of image, base64 in JSON.
+app.use("/api/settings/branding", express.json({ limit: "512kb" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(SESSION_SECRET));

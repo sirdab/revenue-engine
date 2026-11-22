@@ -1,12 +1,13 @@
 import { KanbanSquare, List, BarChart3, Filter } from "lucide-react";
 import { Segmented, SegmentedItem } from "@sirdab/one/components/segmented";
 import type { DealsView } from "./use-deals-url-state";
+import { useI18n, type MessageKey } from "@/lib/i18n/i18n";
 
-const TABS: { value: DealsView; label: string; icon: typeof List }[] = [
-  { value: "pipeline", label: "Pipeline", icon: KanbanSquare },
-  { value: "list", label: "List", icon: List },
-  { value: "forecast", label: "Forecast", icon: BarChart3 },
-  { value: "funnel", label: "Funnel", icon: Filter },
+const TABS: { value: DealsView; labelKey: MessageKey; icon: typeof List }[] = [
+  { value: "pipeline", labelKey: "deals.view.pipeline", icon: KanbanSquare },
+  { value: "list", labelKey: "deals.view.list", icon: List },
+  { value: "forecast", labelKey: "deals.view.forecast", icon: BarChart3 },
+  { value: "funnel", labelKey: "deals.view.funnel", icon: Filter },
 ];
 
 export function ViewSwitcher({
@@ -16,6 +17,7 @@ export function ViewSwitcher({
   value: DealsView;
   onChange: (view: DealsView) => void;
 }) {
+  const { t } = useI18n();
   return (
     <Segmented
       animated={false}
@@ -28,7 +30,7 @@ export function ViewSwitcher({
           <SegmentedItem
             key={tab.value}
             value={tab.value}
-            label={tab.label}
+            label={t(tab.labelKey)}
             icon={<Icon />}
           />
         );

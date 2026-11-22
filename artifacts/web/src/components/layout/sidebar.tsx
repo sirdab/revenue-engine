@@ -147,7 +147,7 @@ function NavSection({
               (the Arabic one) ends in an ellipsis instead of clipping the chip. */}
           <span className="min-w-0 truncate">{label}</span>
           {item.beta && (
-            <span className="ms-2 shrink-0 rounded-full bg-attention-subtle px-1.5 py-0.5 text-caption lowercase text-attention-foreground">
+            <span className="ms-2 inline-flex h-[18px] shrink-0 items-center rounded-md bg-brand-subtle px-1.5 text-[10.5px] font-semibold uppercase leading-none tracking-[0.06em] text-brand ring-1 ring-inset ring-brand/20">
               {t("nav.beta")}
             </span>
           )}
