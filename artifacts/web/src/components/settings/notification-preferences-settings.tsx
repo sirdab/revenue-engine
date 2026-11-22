@@ -175,7 +175,7 @@ function CategoryRow({
 export function NotificationPreferencesSettings() {
   const { t } = useI18n();
   return (
-    <div className="p-5 pt-0">
+    <div>
       <SectionCard
         title={t("settings.notifications.channels")}
         description={t("settings.notifications.channelsDescription")}
