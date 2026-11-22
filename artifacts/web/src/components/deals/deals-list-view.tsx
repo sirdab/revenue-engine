@@ -68,6 +68,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useTableLayoutPreference } from "@/hooks/use-user-preferences";
 import { parseSort } from "@/lib/table-sort";
 import { useI18n } from "@/lib/i18n/i18n";
+import { statusLabel } from "@/lib/deals-filter-labels";
 
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -427,9 +428,8 @@ export function DealsListView({
         cell: ({ row }) => (
           <Badge
             tone={STATUS_TONE[row.original.status] ?? "neutral"}
-            className="capitalize"
           >
-            {row.original.status}
+            {statusLabel(t, row.original.status)}
           </Badge>
         ),
       },
@@ -634,9 +634,9 @@ export function DealsListView({
                       </div>
                       <Badge
                         tone={STATUS_TONE[deal.status] ?? "neutral"}
-                        className="shrink-0 capitalize"
+                        className="shrink-0"
                       >
-                        {deal.status}
+                        {statusLabel(t, deal.status)}
                       </Badge>
                     </div>
                     <div className="mt-1 text-heading-xs tabular-nums text-foreground">

@@ -32,7 +32,7 @@ const ALL = "__all__";
 
 // One "value · weighted · count" line of the totals popover.
 function TotalsRow({ total }: { total: DealCurrencyTotal }) {
-  const { t } = useI18n();
+  const { t, tPlural, formatNumber } = useI18n();
   return (
     <div className="flex items-center justify-between gap-3 tabular-nums">
       <span className="font-medium text-foreground">
@@ -46,7 +46,7 @@ function TotalsRow({ total }: { total: DealCurrencyTotal }) {
         <Money value={total.weightedValue} currency={total.currency} />
       </span>
       <span className="text-subtle">
-        {total.count.toLocaleString()} {total.count === 1 ? "deal" : "deals"}
+        {tPlural("deals.toolbar.dealCount", total.count, { count: formatNumber(total.count) })}
       </span>
     </div>
   );
@@ -55,7 +55,7 @@ function TotalsRow({ total }: { total: DealCurrencyTotal }) {
 // Live count plus the totals popover: overall and per-currency sums of deal
 // value alongside the stage-probability-weighted forecast value.
 export function DealsCount({ state }: { state: DealsUrlState }) {
-  const { t } = useI18n();
+  const { t, tPlural } = useI18n();
   const { data, isFetching } = useDealsSummary({
     view: state.view === "funnel" ? "list" : state.view,
     pipelineId: state.pipelineId,
@@ -75,7 +75,7 @@ export function DealsCount({ state }: { state: DealsUrlState }) {
       ) : (
         <span className="font-semibold text-foreground">{count ?? 0}</span>
       )}
-      <span>{count === 1 ? "deal" : "deals"}</span>
+      <span>{tPlural("deals.toolbar.dealWord", count ?? 0)}</span>
       <Popover>
         <PopoverTrigger asChild>
           <button

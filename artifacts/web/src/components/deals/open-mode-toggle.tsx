@@ -28,7 +28,7 @@ export function OpenModeToggle({
   value: DealOpenMode;
   onChange: (mode: DealOpenMode) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const rootRef = useRef<HTMLDivElement>(null);
   const knobRef = useRef<HTMLSpanElement>(null);
   const drag = useRef<{ startX: number; startKnob: number; x: number; moved: boolean } | null>(
@@ -43,11 +43,16 @@ export function OpenModeToggle({
   const restingX = value === "drawer" ? SEG : 0;
   const activeIsDrawer = (preview ?? value) === "drawer";
 
+  // Positions are measured from the inline-start edge, so the same numbers
+  // work right-to-left: only the screen direction of the move flips.
+  const isRtl = () =>
+    !!rootRef.current && getComputedStyle(rootRef.current).direction === "rtl";
+
   function place(x: number, animate: boolean) {
     const knob = knobRef.current;
     if (!knob) return;
     knob.style.transition = animate ? SETTLE : "none";
-    knob.style.transform = `translateX(${x}px)`;
+    knob.style.transform = `translateX(${isRtl() ? -x : x}px)`;
   }
 
   // Position the knob whenever it's resting (mount, tap, keyboard, drag-commit).
@@ -56,7 +61,8 @@ export function OpenModeToggle({
     if (drag.current) return;
     place(restingX, animateNext.current);
     animateNext.current = false;
-  }, [restingX]);
+    // locale: switching language flips the direction, so re-place the knob.
+  }, [restingX, locale]);
 
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     rootRef.current?.setPointerCapture(e.pointerId);
@@ -67,7 +73,7 @@ export function OpenModeToggle({
   function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
     const d = drag.current;
     if (!d) return;
-    const dx = e.clientX - d.startX;
+    const dx = (e.clientX - d.startX) * (isRtl() ? -1 : 1);
     if (Math.abs(dx) > DRAG_THRESHOLD) d.moved = true;
     d.x = Math.max(0, Math.min(SEG, d.startKnob + dx));
     place(d.x, false); // glued to the cursor, no transition
@@ -89,17 +95,21 @@ export function OpenModeToggle({
     } else {
       // A tap: select the clicked side and let it glide there.
       const rect = rootRef.current!.getBoundingClientRect();
-      target = e.clientX - rect.left > rect.width / 2 ? "drawer" : "page";
+      const fromStart = isRtl() ? rect.right - e.clientX : e.clientX - rect.left;
+      target = fromStart > rect.width / 2 ? "drawer" : "page";
       animateNext.current = true;
     }
     if (target !== value) onChange(target);
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
-    if (e.key === "ArrowLeft" || e.key === "Home") {
+    // "page" is the inline-start segment: left in LTR, right in RTL.
+    const towardStart = isRtl() ? "ArrowRight" : "ArrowLeft";
+    const towardEnd = isRtl() ? "ArrowLeft" : "ArrowRight";
+    if (e.key === towardStart || e.key === "Home") {
       animateNext.current = true;
       onChange("page");
-    } else if (e.key === "ArrowRight" || e.key === "End") {
+    } else if (e.key === towardEnd || e.key === "End") {
       animateNext.current = true;
       onChange("drawer");
     }

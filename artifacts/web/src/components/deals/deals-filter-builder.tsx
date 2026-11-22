@@ -44,7 +44,7 @@ import { Filter, Plus, X, FolderPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DealsUrlState } from "./use-deals-url-state";
 import { useI18n } from "@/lib/i18n/i18n";
-import { filterFieldLabel, filterGroupLabel, filterOperatorLabel } from "@/lib/deals-filter-labels";
+import { filterFieldLabel, filterGroupLabel, filterOperatorLabel, statusLabel } from "@/lib/deals-filter-labels";
 
 const MAX_DEPTH = 3;
 const STATUS_OPTIONS = ["open", "won", "lost", "deleted"];
@@ -259,7 +259,7 @@ function ValueEditor({
           options={STATUS_OPTIONS}
           value={typeof condition.value === "string" ? condition.value : ""}
           onChange={(v) => onChange(v)}
-          renderLabel={(v) => v.charAt(0).toUpperCase() + v.slice(1)}
+          renderLabel={(v) => statusLabel(t, v)}
           placeholder={t("deals.filter.selectStatus")}
           triggerClassName="h-8 w-40 px-2"
         />

@@ -21,7 +21,7 @@ function formatDuration(seconds: number | null | undefined): string {
 }
 
 export function DealsFunnelView({ state }: { state: DealsUrlState }) {
-  const { t } = useI18n();
+  const { t, tPlural, formatNumber } = useI18n();
   const { data: pipelines } = useListPipelines();
   const pipelineId = state.pipelineId ?? pipelines?.[0]?.id;
 
@@ -70,7 +70,7 @@ export function DealsFunnelView({ state }: { state: DealsUrlState }) {
             {t("deals.funnel.entered")}
           </div>
           <div className="mt-1 text-heading-sm tabular-nums text-foreground">
-            {data.totalEntered.toLocaleString()}
+            {formatNumber(data.totalEntered)}
           </div>
         </Card>
         <Card className="p-4">
@@ -103,7 +103,7 @@ export function DealsFunnelView({ state }: { state: DealsUrlState }) {
                       {s.stageName}
                     </span>
                     <span className="tabular-nums text-muted-foreground">
-                      {s.enteredCount.toLocaleString()} entered
+                      {tPlural("deals.funnel.enteredCount", s.enteredCount, { count: formatNumber(s.enteredCount) })}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
@@ -112,7 +112,7 @@ export function DealsFunnelView({ state }: { state: DealsUrlState }) {
                         className="flex h-full items-center justify-end rounded-md bg-brand px-2 text-caption font-semibold text-brand-foreground"
                         style={{ width: `${width}%` }}
                       >
-                        {s.wonCount > 0 && <span>{s.wonCount.toLocaleString()} won</span>}
+                        {s.wonCount > 0 && <span>{tPlural("deals.funnel.wonCount", s.wonCount, { count: formatNumber(s.wonCount) })}</span>}
                       </div>
                     </div>
                     <div className="w-16 flex-shrink-0 text-end text-label tabular-nums text-foreground">
@@ -143,13 +143,13 @@ export function DealsFunnelView({ state }: { state: DealsUrlState }) {
               <tr key={s.stageId}>
                 <td className="px-4 py-2.5 text-foreground">{s.stageName}</td>
                 <td className="px-4 py-2.5 text-end tabular-nums text-foreground">
-                  {s.enteredCount.toLocaleString()}
+                  {formatNumber(s.enteredCount)}
                 </td>
                 <td className="px-4 py-2.5 text-end tabular-nums text-muted-foreground">
-                  {s.reachedLaterCount.toLocaleString()}
+                  {formatNumber(s.reachedLaterCount)}
                 </td>
                 <td className="px-4 py-2.5 text-end tabular-nums text-muted-foreground">
-                  {s.wonCount.toLocaleString()}
+                  {formatNumber(s.wonCount)}
                 </td>
                 <td className="px-4 py-2.5 text-end font-medium tabular-nums text-foreground">
                   {Math.round(s.conversionRate * 100)}%

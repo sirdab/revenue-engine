@@ -87,3 +87,15 @@ export function filterGroupLabel(t: Translate, group: string): string {
 export function filterOperatorLabel(t: Translate, op: FilterOperator): string {
   return t(OPERATOR_KEYS[op]);
 }
+
+const STATUS_KEYS: Record<string, MessageKey> = {
+  open: "deals.status.open",
+  won: "deals.status.won",
+  lost: "deals.status.lost",
+};
+
+/** A deal status (open / won / lost) in the reader's language. */
+export function statusLabel(t: Translate, status: string): string {
+  const key = STATUS_KEYS[status];
+  return key ? t(key) : status;
+}
