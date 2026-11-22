@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode, RefObject } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowUp, ArrowUpRight, Database, Plus, Sparkles } from "lucide-react";
+import { ArrowUp, ArrowUpRight, Database, Loader2, Plus, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -847,7 +847,13 @@ export default function AskAIPage() {
 
   return (
     <div className="flex h-full min-h-0 bg-background text-foreground">
-      {messages.length === 0 && status.data && !status.data.available ? (
+      {messages.length === 0 && status.isPending ? (
+        // Not yet known whether AI is set up: show neither the prompt nor the
+        // setup screen, so the page never opens on one and jumps to the other.
+        <div className="flex min-w-0 flex-1 items-center justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-subtle" aria-label={t("common.loading")} />
+        </div>
+      ) : messages.length === 0 && status.data && !status.data.available ? (
         <NotSetUp isAdmin={Boolean(user?.isAdmin)} />
       ) : messages.length === 0 ? (
         <EmptyState

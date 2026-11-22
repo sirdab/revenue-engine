@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { errorMessage } from "@/lib/api-error";
 import { useI18n } from "@/lib/i18n/i18n";
+import { useAuth } from "@/hooks/use-auth";
 import { SectionCard } from "./section-card";
 
 // Settings › Workspace: the workspace's name and logo, which every member sees
@@ -108,8 +109,9 @@ export function WorkspaceSettings() {
 function LogoCard() {
   const { t } = useI18n();
   const { toast } = useToast();
-  const { data: logo, isLoading } = useWorkspaceLogo(true);
-  const setLogo = useSetWorkspaceLogo();
+  const { user } = useAuth();
+  const { data: logo, isLoading } = useWorkspaceLogo(user?.tenantId);
+  const setLogo = useSetWorkspaceLogo(user?.tenantId);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const upload = async (file: File | undefined) => {

@@ -5,6 +5,31 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const KEY = ["workspace-branding"];
 
+// The last logo seen, per workspace, so the sidebar can draw it on the first
+// frame of the next visit instead of flashing the default mark while the
+// request is in flight. A per-viewer convenience: the server stays the source
+// of truth and the query still refetches.
+const cacheKey = (tenantId: number) => `crm.workspaceLogo.${tenantId}`;
+
+function readCached(tenantId: number | undefined): Branding | undefined {
+  if (tenantId == null) return undefined;
+  try {
+    const raw = localStorage.getItem(cacheKey(tenantId));
+    return raw === null ? undefined : { logo: raw || null };
+  } catch {
+    return undefined;
+  }
+}
+
+function writeCached(tenantId: number | undefined, logo: string | null): void {
+  if (tenantId == null) return;
+  try {
+    localStorage.setItem(cacheKey(tenantId), logo ?? "");
+  } catch {
+    // Storage full or blocked: the logo still loads, just not instantly.
+  }
+}
+
 interface Branding {
   logo: string | null;
 }
@@ -17,19 +42,30 @@ async function json<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-/** The logo as a data URL, or null. Only fetched while signed in. */
-export function useWorkspaceLogo(enabled: boolean) {
+/**
+ * The logo as a data URL, or null. Only fetched while signed in (`tenantId`
+ * set). Starts from the last logo this browser saw for the workspace.
+ */
+export function useWorkspaceLogo(tenantId: number | undefined) {
   return useQuery({
-    queryKey: KEY,
-    queryFn: async () =>
-      json<Branding>(await fetch("/api/settings/branding", { credentials: "same-origin" })),
-    enabled,
+    queryKey: [...KEY, tenantId],
+    queryFn: async () => {
+      const data = await json<Branding>(
+        await fetch("/api/settings/branding", { credentials: "same-origin" }),
+      );
+      writeCached(tenantId, data.logo);
+      return data;
+    },
+    enabled: tenantId != null,
+    initialData: () => readCached(tenantId),
+    // The cached copy may be stale: always confirm it with the server.
+    initialDataUpdatedAt: 0,
     staleTime: 5 * 60_000,
     select: (d) => d.logo,
   });
 }
 
-export function useSetWorkspaceLogo() {
+export function useSetWorkspaceLogo(tenantId: number | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (logo: string | null) =>
@@ -41,7 +77,10 @@ export function useSetWorkspaceLogo() {
           body: logo ? JSON.stringify({ logo }) : undefined,
         }),
       ),
-    onSuccess: (data) => queryClient.setQueryData(KEY, data),
+    onSuccess: (data) => {
+      writeCached(tenantId, data.logo);
+      queryClient.setQueryData([...KEY, tenantId], data);
+    },
   });
 }
 
