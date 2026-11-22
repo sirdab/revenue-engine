@@ -7,8 +7,10 @@ need:
 
 - a **Postgres 13+** database, reached as an ordinary role (see below);
 - somewhere to run the container: Fly.io (below), or any container host;
-- optionally SMTP for email, S3-compatible storage for attachments, and an
-  Anthropic API key for Ask AI.
+- optionally SMTP for email and S3-compatible storage for attachments. Ask AI
+  needs no server setup: each workspace connects its own OpenAI or Anthropic
+  key in Settings → Integrations (an `ANTHROPIC_API_KEY` secret, if set, covers
+  workspaces that haven't).
 
 ## The one database rule
 

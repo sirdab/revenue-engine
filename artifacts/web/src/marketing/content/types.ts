@@ -377,8 +377,12 @@ export interface Content {
       plans: {
         name: string;
         sub: string;
+        /** A short offer shown above the price, e.g. a free trial. */
+        badge?: string;
         price: string;
         per: string;
+        /** One line under the price, e.g. what the annual bill comes to. */
+        note?: string;
         ticks: string[];
         cta: string;
       }[];

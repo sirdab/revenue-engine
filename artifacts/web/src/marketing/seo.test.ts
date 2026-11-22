@@ -4,7 +4,7 @@ import { ar } from "./content/ar.ts";
 import { en } from "./content/en.ts";
 import type { Content } from "./content/types.ts";
 import { headTags, llmsTxt, plain, robotsTxt, sitemapXml } from "./seo.ts";
-import { LOCALES, ORIGIN_TOKEN, PAGES, ROUTES, matchRoute, pagePath } from "./site.ts";
+import { HOSTED_PRICE, LOCALES, ORIGIN_TOKEN, PAGES, ROUTES, matchRoute, pagePath } from "./site.ts";
 
 const CONTENT: Record<(typeof LOCALES)[number], Content> = { en, ar };
 
@@ -78,7 +78,7 @@ test("each page's head names itself as canonical and lists every language", () =
   }
 });
 
-test("structured data is valid JSON, describes a free product, and answers the FAQ", () => {
+test("structured data is valid JSON, prices the hosted plan, and answers the FAQ", () => {
   for (const route of ROUTES) {
     const head = headTags(CONTENT[route.locale], route);
     const json = /<script type="application\/ld\+json">(.*?)<\/script>/s.exec(head)?.[1];
@@ -90,7 +90,10 @@ test("structured data is valid JSON, describes a free product, and answers the F
     }
     assert.equal(types.includes("BreadcrumbList"), route.page !== "home", route.path);
     const app = graph.find((node) => node["@type"] === "SoftwareApplication")!;
-    assert.deepEqual((app.offers as { price: string }).price, "0");
+    const offer = app.offers as { price: string; priceCurrency: string };
+    assert.equal(offer.price, HOSTED_PRICE.perSeatYear);
+    assert.equal(offer.priceCurrency, "SAR");
+    assert.equal(Math.floor((Number(HOSTED_PRICE.perSeatYear) / 12) * 100) / 100, Number(HOSTED_PRICE.perSeatMonth));
     // Ratings and reviews are never invented.
     assert.ok(!("aggregateRating" in app) && !("review" in app));
     const faq = graph.find((node) => node["@type"] === "FAQPage")!;

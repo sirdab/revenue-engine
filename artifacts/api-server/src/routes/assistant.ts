@@ -1,4 +1,3 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { Router, type IRouter, type Response } from "express";
 import { z } from "zod";
 import {
@@ -6,6 +5,8 @@ import {
   type AssistantMessage,
   type AssistantReply,
 } from "../lib/assistant";
+import { AiProviderError } from "../lib/ai-chat";
+import { resolveAiConfig } from "../lib/ai-settings";
 import { currentUser } from "../lib/auth";
 import { logger } from "../lib/logger";
 import { assistantRateLimiter } from "../lib/rate-limit";
@@ -21,7 +22,7 @@ const MAX_MESSAGE_LENGTH = 4000;
 // history content gets the larger ceiling.
 const MAX_HISTORY_CONTENT_LENGTH = 24000;
 const MAX_HISTORY_TURNS = 20;
-// The Anthropic SDK's per-call `timeout` (lib/assistant.ts) only bounds
+// The per-call timeout (AI_REQUEST_TIMEOUT_MS, lib/ai-chat.ts) only bounds
 // connect/time-to-first-byte for each request in the tool loop — it does not
 // bound a stream that starts flowing and then stalls. This wall-clock cap
 // bounds the whole request regardless, alongside the existing
@@ -78,6 +79,37 @@ function sendEvent(res: Response, event: string, data: unknown): void {
   res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 }
 
+/**
+ * Error events carry a `code` the page translates, and an English `message`
+ * for older clients and logs:
+ *   not_configured  the workspace has no AI connection (or switched it off)
+ *   key_rejected    the provider refused the workspace's key
+ *   rate_limited    the provider's rate or quota limit for that key
+ *   model_invalid   the provider doesn't know the model set in Settings
+ *   history         the chat history is malformed
+ *   timeout         the whole request ran past OVERALL_TIMEOUT_MS
+ *   unavailable     anything else
+ */
+type AssistantErrorCode =
+  | "not_configured"
+  | "key_rejected"
+  | "rate_limited"
+  | "model_invalid"
+  | "history"
+  | "timeout"
+  | "unavailable";
+
+function sendError(res: Response, code: AssistantErrorCode, message: string): void {
+  sendEvent(res, "error", { code, message });
+}
+
+// Any signed-in user may ask whether Ask AI is available here, so the page can
+// say "not set up yet" up front instead of failing on the first question.
+router.get("/assistant/status", async (_req, res): Promise<void> => {
+  const config = await resolveAiConfig();
+  res.json({ available: Boolean(config), provider: config?.provider ?? null });
+});
+
 router.post("/assistant", assistantRateLimiter, async (req, res): Promise<void> => {
   const parsed = AssistantRequestBody.safeParse(req.body);
   if (!parsed.success) {
@@ -93,6 +125,7 @@ router.post("/assistant", assistantRateLimiter, async (req, res): Promise<void> 
   }
 
   const user = currentUser(res);
+  const config = await resolveAiConfig();
 
   // Cancel the in-flight Claude API call if the client disconnects (tab
   // closed, navigated away) instead of letting it run to completion
@@ -125,8 +158,20 @@ router.post("/assistant", assistantRateLimiter, async (req, res): Promise<void> 
     logger.warn({ err }, "Assistant SSE response error");
   });
 
+  if (!config) {
+    sendError(
+      res,
+      "not_configured",
+      "Ask AI isn't set up for this workspace. An admin can connect an OpenAI or Anthropic key in Settings → Integrations.",
+    );
+    clearTimeout(overallTimeout);
+    res.end();
+    return;
+  }
+
   try {
     const reply: AssistantReply = await runAssistant(
+      config,
       parsed.data.message,
       history,
       { userId: user.id, userName: user.name },
@@ -150,19 +195,39 @@ router.post("/assistant", assistantRateLimiter, async (req, res): Promise<void> 
       // res.on('error') above already absorbs the dead-socket write that a
       // sendEvent here would trigger.
     } else if (timedOut) {
-      sendEvent(res, "error", {
-        message: "The assistant took too long to respond. Please try again.",
-      });
-    } else if (err instanceof Anthropic.APIError && err.status === 400) {
+      sendError(res, "timeout", "The assistant took too long to respond. Please try again.");
+    } else if (err instanceof AiProviderError && (err.status === 401 || err.status === 403)) {
+      logger.warn({ provider: err.provider, status: err.status }, "The AI provider rejected the workspace's key");
+      sendError(
+        res,
+        "key_rejected",
+        "The AI provider rejected this workspace's API key. An admin can update it in Settings → Integrations.",
+      );
+    } else if (err instanceof AiProviderError && err.status === 429) {
+      logger.warn({ provider: err.provider }, "The AI provider rate-limited the workspace's key");
+      sendError(
+        res,
+        "rate_limited",
+        "The AI provider's usage limit for this workspace's key was reached. Try again shortly, or check the account's quota.",
+      );
+    } else if (err instanceof AiProviderError && err.status === 404) {
+      logger.warn({ err }, "The AI provider does not know the configured model");
+      sendError(
+        res,
+        "model_invalid",
+        "The AI provider doesn't recognise the model set for this workspace. An admin can change it in Settings → Integrations.",
+      );
+    } else if (err instanceof AiProviderError && err.status === 400) {
       // Defense-in-depth: findHistoryAlternationError above should prevent a
-      // malformed history from ever reaching Claude, but if some other path
+      // malformed history from ever reaching the model, but if some other path
       // builds `messages` without going through that guard, surface the same
       // actionable message instead of the generic "temporarily unavailable."
-      logger.warn({ err }, "Assistant received a 400 from the Claude API");
-      sendEvent(res, "error", { message: HISTORY_MALFORMED_MESSAGE });
+      // A 400 can also be an unknown model name an admin typed, so log it.
+      logger.warn({ err }, "Assistant received a 400 from the AI provider");
+      sendError(res, "history", HISTORY_MALFORMED_MESSAGE);
     } else {
       logger.error({ err }, "Assistant request failed");
-      sendEvent(res, "error", { message: "The assistant is temporarily unavailable." });
+      sendError(res, "unavailable", "The assistant is temporarily unavailable.");
     }
   } finally {
     clearTimeout(overallTimeout);

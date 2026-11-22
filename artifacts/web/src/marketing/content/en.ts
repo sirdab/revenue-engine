@@ -41,7 +41,7 @@ export const en: Content = {
       license: "MIT License",
       trademarks: "Trademarks",
       designSystem: "Sirdab One",
-      blurb: "The free, open-source CRM for teams that sell.",
+      blurb: "The open-source CRM for teams that sell.",
       builtBy: "Built by Sirdab",
       rights: "Released under the MIT License.",
       language: "Language",
@@ -51,17 +51,17 @@ export const en: Content = {
 
   home: {
     meta: {
-      title: "Free open-source CRM for sales teams | Revenue Engine",
+      title: "Open-source CRM for sales teams | Revenue Engine",
       description:
-        "Revenue Engine is a free, open-source sales CRM: pipelines, contacts, activities, automations and dashboards. Sign up in seconds or self-host. MIT licensed.",
+        "Revenue Engine is an open-source sales CRM: pipelines, contacts, activities, automations and dashboards. Hosted free for 3 months, or self-host it. MIT licensed.",
       imageAlt:
         "The Revenue Engine deal pipeline: a board of deals moving through sales stages.",
     },
     hero: {
       chip: "Open source · MIT licensed",
-      title: ["The free, open-source CRM", "for teams that sell."],
+      title: ["The open-source CRM", "for teams that sell."],
       lead: "Pipelines, contacts, activities, automations and dashboards in one fast workspace. Create yours in under a minute, or run it on your own servers.",
-      notes: ["No credit card", "No per-seat pricing", "English and Arabic"],
+      notes: ["No credit card", "Free for 3 months", "English and Arabic"],
     },
     app: {
       workspace: "Meridian",
@@ -205,15 +205,15 @@ export const en: Content = {
       alt: "Illustration of the Revenue Engine app: a sales pipeline board with deals in five stages, one deal being dragged to the next stage, and a deal open in a side drawer.",
     },
     facts: [
-      { n: "$0", l: "per seat, per month" },
+      { n: "3", l: "months free on the hosted plan" },
       { n: "MIT", l: "licensed, with the source on GitHub" },
       { n: "2", l: "languages: English and Arabic" },
       { n: "1", l: "container to host it yourself" },
     ],
     statement: {
       before: "A complete sales CRM, ",
-      em: "without the per-seat bill",
-      after: " or a vendor between you and your pipeline.",
+      em: "free to run on your own servers",
+      after: ", with no vendor between you and your pipeline.",
     },
     product: {
       eyebrow: "Product",
@@ -272,7 +272,7 @@ export const en: Content = {
           caps: [
             { t: "Read-only by design.", d: "It can look records up. It has no way to change one." },
             { t: "Shows its work.", d: "Each answer comes with the deals and records it was drawn from." },
-            { t: "Your own key.", d: "It runs on an Anthropic API key, so today it is for self-hosted deployments." },
+            { t: "Your own key.", d: "Each workspace connects its own OpenAI or Anthropic API key, so usage is billed to your account." },
           ],
         },
       ],
@@ -544,30 +544,32 @@ export const en: Content = {
     },
     pricing: {
       eyebrow: "Pricing",
-      title: "Free to use. Free to run.",
-      lead: "No plans to compare and no seats to count.",
+      title: "One plan to use. Free to run.",
+      lead: "One price per seat when we host it, free for the first 3 months. The open-source version is free to run yourself.",
       plans: [
         {
           name: "Cloud",
           sub: "Hosted by Sirdab",
-          price: "$0",
-          per: "per user",
+          badge: "Free for the first 3 months",
+          price: "SAR 24.91",
+          per: "per seat, per month, billed annually",
+          note: "One payment of SAR 299 per seat a year",
           ticks: [
             "A private workspace, ready in under a minute",
             "Pipelines, contacts, automations and insights",
-            "No credit card and no per-seat pricing",
+            "Free for 3 months, with no credit card to start",
           ],
           cta: "Start for free",
         },
         {
           name: "Self-hosted",
           sub: "On your own servers",
-          price: "$0",
+          price: "Free",
           per: "MIT licensed",
           ticks: [
             "Your infrastructure, your database, your backups",
             "One Docker image and a PostgreSQL database",
-            "Ask AI with your own Anthropic key",
+            "Ask AI with your own OpenAI or Anthropic key",
           ],
           cta: "Read the self-hosting guide",
         },
@@ -579,9 +581,10 @@ export const en: Content = {
       lead: "Something else? Open an issue on [GitHub](github).",
       items: [
         {
-          q: "Is Revenue Engine really free?",
+          q: "How much does Revenue Engine cost?",
           a: [
-            "Yes. The hosted version is free to use and has no per-seat pricing. The source code is MIT licensed, so you can also run it yourself and pay only for your own servers.",
+            "The hosted version is free for the first 3 months. After that it is SAR 24.91 per seat per month, billed annually as one payment of SAR 299 per seat a year.",
+            "The open-source version is free. The source code is MIT licensed, so you can run it yourself and pay only for your own servers.",
           ],
         },
         {
@@ -618,7 +621,7 @@ export const en: Content = {
         {
           q: "What can the AI assistant do?",
           a: [
-            "Ask AI is an optional assistant in beta. It answers questions about your pipeline using a fixed set of lookups and cannot change records. It uses the Claude API and needs an Anthropic API key, so today it is available on self-hosted deployments.",
+            "Ask AI is an optional assistant in beta. It answers questions about your pipeline using a fixed set of lookups and cannot change records. It runs on your own OpenAI or Anthropic API key, which an admin connects in Settings → Integrations.",
           ],
         },
         {
@@ -646,13 +649,13 @@ export const en: Content = {
       meta: {
         title: "Open-source CRM, MIT licensed and free | Revenue Engine",
         description:
-          "An open-source CRM you can read, run and change: pipelines, contacts, automations and dashboards under the MIT license. Use it hosted for free, or self-host.",
+          "An open-source CRM you can read, run and change: pipelines, contacts, automations and dashboards under the MIT license. Hosted free for 3 months, or self-host.",
         imageAlt: "Revenue Engine, an open-source CRM under the MIT license.",
       },
       name: "Open-source CRM",
       eyebrow: "Open source",
       h1: "An open-source CRM you can read, run and change.",
-      lead: "Revenue Engine is a complete sales CRM published under the MIT license. Use the hosted version for free, or run the same code on your own servers.",
+      lead: "Revenue Engine is a complete sales CRM published under the MIT license. Try the hosted version free for 3 months, or run the same code on your own servers for free.",
       sections: [
         {
           id: "what-you-get",
@@ -773,7 +776,7 @@ export const en: Content = {
         },
         {
           q: "Do I have to host it myself?",
-          a: ["No. You can use the hosted version for free, host it yourself, or do both."],
+          a: ["No. You can use the hosted version (free for the first 3 months, then SAR 24.91 per seat per month, billed annually), host it yourself for free, or do both."],
         },
         {
           q: "How do I report a security problem?",
@@ -794,7 +797,7 @@ export const en: Content = {
       name: "Pipedrive alternative",
       eyebrow: "Compare",
       h1: "The open-source alternative to Pipedrive.",
-      lead: "If your team thinks in pipelines, stages and next activities, Revenue Engine will feel familiar. The difference is that it is free, MIT licensed, and yours to host.",
+      lead: "If your team thinks in pipelines, stages and next activities, Revenue Engine will feel familiar. The difference is that it is open source, MIT licensed, and free to host yourself.",
       sections: [
         {
           id: "familiar",
@@ -828,7 +831,7 @@ export const en: Content = {
               kind: "table",
               head: ["", "Revenue Engine", "Pipedrive"],
               rows: [
-                ["Price", "yes:Free", "Paid plans, with a 14-day trial"],
+                ["Price", "yes:Free to self-host. Hosted: 3 months free, then SAR 24.91 per seat a month", "Paid plans, with a 14-day trial"],
                 ["Source code", "yes:Open source, MIT", "no:Proprietary"],
                 ["Host it yourself", "yes:One Docker image", "no:Cloud only"],
                 ["Email inbox sync", "no:Not available", "yes:Yes"],
@@ -887,7 +890,7 @@ export const en: Content = {
         {
           q: "Can I try it before moving anything?",
           a: [
-            "Yes. Create a free workspace, import a small file, and see how your pipeline looks before you decide.",
+            "Yes. The hosted version is free for the first 3 months: create a workspace, import a small file, and see how your pipeline looks before you decide.",
           ],
         },
         {
@@ -922,7 +925,7 @@ export const en: Content = {
                 "**PostgreSQL 13 or newer**, reached as an ordinary database role (see below).",
                 "**A container host**: Fly.io, a virtual server, Kubernetes or anything else that runs a Docker image. The image is built for linux/amd64.",
                 "**HTTPS** in front of the app. The session cookie is marked Secure.",
-                "Optionally, **SMTP** for email, **S3-compatible storage** for attachments, and an **Anthropic API key** for Ask AI.",
+                "Optionally, **SMTP** for email, **S3-compatible storage** for attachments, and an **Anthropic API key** if Ask AI should work without each workspace connecting its own key.",
               ],
             },
           ],
@@ -1007,7 +1010,7 @@ export const en: Content = {
                 ["`APP_BASE_URL`", "The public URL, used in emails, Slack messages, canonical links and the sitemap."],
                 ["`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`", "Optional. Email for password resets and notifications."],
                 ["`S3_ENDPOINT`, `S3_BUCKET_NAME`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`", "Optional. S3-compatible storage for attachments."],
-                ["`ANTHROPIC_API_KEY`", "Optional. Turns on Ask AI."],
+                ["`ANTHROPIC_API_KEY`", "Optional. Ask AI for workspaces that haven't connected their own OpenAI or Anthropic key."],
               ],
             },
           ],
@@ -1088,7 +1091,7 @@ export const en: Content = {
 
   llms: {
     summary:
-      "Revenue Engine is a free, open-source (MIT) multi-tenant sales CRM built by Sirdab. Teams sign up and get an isolated workspace, or self-host the same code with one Docker image and PostgreSQL.",
+      "Revenue Engine is an open-source (MIT) multi-tenant sales CRM built by Sirdab. Teams sign up and get an isolated hosted workspace (free for the first 3 months, then SAR 24.91 per seat per month, billed annually as SAR 299 per seat a year), or self-host the same code for free with one Docker image and PostgreSQL.",
     facts: [
       "Deal pipelines on a drag-and-drop board, with list, forecast and funnel views, win probabilities, rotting deals, required fields per stage, and won/lost reasons.",
       "People and organizations with activities (call, meeting, email, task, deadline, WhatsApp), rich-text notes with @mentions, and file attachments.",
@@ -1099,7 +1102,7 @@ export const en: Content = {
       "Inbound webhooks for leads and deal updates, authenticated with a per-workspace secret.",
       "English and Arabic interface with right-to-left layout; light and dark themes.",
       "Tenant isolation by PostgreSQL row-level security. Passwords hashed with scrypt.",
-      "Optional read-only AI assistant (beta) using the Claude API; requires an Anthropic API key.",
+      "Optional read-only AI assistant (beta); each workspace connects its own OpenAI or Anthropic API key in Settings → Integrations.",
       "Stack: TypeScript, Node.js 24, Express 5, PostgreSQL 13+, Drizzle ORM, React 19, Vite, OpenAPI.",
     ],
     notYet:

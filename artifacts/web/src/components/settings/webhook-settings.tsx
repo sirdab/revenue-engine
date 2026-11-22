@@ -7,6 +7,7 @@ import {
   useWebhookSecret,
   useRotateWebhookSecret,
 } from "@/lib/webhook-settings-api";
+import { AiSettings } from "./ai-settings";
 import { SlackSettings } from "./slack-settings";
 import { useI18n, type MessageKey } from "@/lib/i18n/i18n";
 
@@ -267,6 +268,8 @@ export function WebhookSettings() {
           </section>
 
           <SlackSettings />
+
+          <AiSettings />
 
           {/* One self-contained section per inbound webhook */}
           {ENDPOINTS.map((endpoint) => (

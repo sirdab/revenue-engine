@@ -103,9 +103,10 @@ pnpm db:migrate && pnpm seed
 - Outside production the session cookie is `SameSite=none; Secure`. Chrome and
   Firefox keep it on `localhost`; Safari may not.
 - Optional integrations switch themselves off when not configured: email
-  without `SMTP_HOST`, Ask AI without `ANTHROPIC_API_KEY`. File attachments
-  need S3-compatible storage (the S3 variables); without it, uploads fail.
-  Slack is connected per workspace in Settings → Integrations. All variables
+  without `SMTP_HOST`. File attachments need S3-compatible storage (the S3
+  variables); without it, uploads fail. Slack and Ask AI (an OpenAI or
+  Anthropic key) are connected per workspace in Settings → Integrations;
+  `ANTHROPIC_API_KEY` optionally covers workspaces that haven't connected one. All variables
   are listed in [`.env.example`](.env.example).
 - If port 5432 is taken (say, by a Postgres you already run), start the
   services with `DB_PORT=5433 pnpm db:up` and use port 5433 in `DATABASE_URL`.

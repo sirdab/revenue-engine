@@ -100,11 +100,29 @@ function handleFrame(
       return payload;
     }
     case "error": {
-      const payload = tryParseFrame<{ message: string }>(frame);
-      throw new Error(payload?.message || "The assistant is temporarily unavailable.");
+      const payload = tryParseFrame<{ message: string; code?: string }>(frame);
+      throw new AssistantStreamError(
+        payload?.message || "The assistant is temporarily unavailable.",
+        payload?.code,
+      );
     }
     default:
       return undefined;
+  }
+}
+
+/**
+ * An "error" event from the server. `code` names the failure so the page can
+ * explain it in the reader's language (routes/assistant.ts lists the codes);
+ * `message` is the server's English text.
+ */
+export class AssistantStreamError extends Error {
+  constructor(
+    message: string,
+    readonly code: string | undefined,
+  ) {
+    super(message);
+    this.name = "AssistantStreamError";
   }
 }
 

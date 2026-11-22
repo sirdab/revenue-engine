@@ -1,14 +1,15 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { getAnthropicClient } from "./anthropic-client";
+import { runTurn, type AiConfig, type ChatMessage, type ToolResultPart } from "./ai-chat";
 import { logger } from "./logger";
-import { ASSISTANT_TOOLS, executeTool } from "./assistant-tools";
+import { ASSISTANT_TOOL_DEFS, executeTool } from "./assistant-tools";
 import { analyzeAssistantQuery, resolveAssistantCandidates } from "./assistant-planner";
 import type { AssistantSearchCandidate } from "./assistant-search-ranking";
 import { APP_TIMEZONE, appTodayIso } from "./assistant-dates";
 
 // ---------------------------------------------------------------------------
-// Ask AI assistant: a tool-use loop around the Claude API, with a
-// deterministic "bootstrap" pre-fetch step in front of it.
+// Ask AI assistant: a tool-use loop around the workspace's AI provider
+// (OpenAI or Anthropic, see ai-chat.ts), with a deterministic "bootstrap"
+// pre-fetch step in front of it. "Claude" below means whichever model the
+// workspace connected; the loop is the same for both.
 //
 // The bootstrap's ONLY job is speed: for common intents (pipeline summary,
 // "my deals", a specific deal id, a name/company lookup) it figures
@@ -34,19 +35,20 @@ import { APP_TIMEZONE, appTodayIso } from "./assistant-dates";
 // could change that setting, so every tool here is a fixed query over `db`.
 // ---------------------------------------------------------------------------
 
-const MODEL: Anthropic.Model = "claude-sonnet-5";
 // Headroom for a tool-use turn (preamble text + tool_use blocks) plus a
 // multi-record synthesis answer. Raised from 2048: an analytical
 // answer can verbalize a multi-row GROUP BY result (e.g. value by owner/stage)
 // plus the reasoning around it, which 2048 could clip via stop_reason
 // "max_tokens"; 4096 keeps margin while still bounding a runaway response.
 const MAX_TOKENS = 4096;
+// OpenAI's reasoning models count their thinking against the same budget
+// before they write a word, so they get more room for the same visible answer.
+const MAX_TOKENS_OPENAI = 16384;
 // Raised from 5: lookups legitimately chain — resolve a name with
 // search_crm or find_owner, load its context, run a follow-up aggregate, then
 // answer.
 const MAX_TOOL_ITERATIONS = 8;
-// The per-call ceiling is ANTHROPIC_REQUEST_TIMEOUT_MS on the shared client
-// (lib/anthropic-client.ts). It matters most here: with MAX_TOOL_ITERATIONS = 8
+// The per-call ceiling is AI_REQUEST_TIMEOUT_MS (lib/ai-chat.ts). It matters most here: with MAX_TOOL_ITERATIONS = 8
 // the SDK's 10-minute default would be a theoretical ~80-minute worst case for
 // one request. Combined with the AbortController wired in from the route handler
 // (cancels on client disconnect), this gives a real, enforced ceiling of a few
@@ -58,12 +60,10 @@ const TRUNCATED_RESPONSE_NOTICE =
 // 400 — bricking the chat until "New chat".
 const EMPTY_REPLY_FALLBACK =
   "I couldn't put together an answer for that. Could you rephrase it or add a little more detail?";
-// SYSTEM_PROMPT and ASSISTANT_TOOLS are identical on every request; caching
-// them (plus the conversation-so-far) means a multi-iteration tool loop, and
-// later turns in the same chat, reuse this prefix instead of reprocessing it
-// from scratch. Reused verbatim below rather than a fresh object per call —
-// the value is pure data with no per-call identity.
-const CACHE_CONTROL: Anthropic.CacheControlEphemeral = { type: "ephemeral" };
+// SYSTEM_PROMPT and ASSISTANT_TOOLS are identical on every request; providers
+// that cache a prompt prefix (Anthropic, with explicit breakpoints set in
+// ai-chat.ts; OpenAI, automatically) reuse it across a multi-iteration tool
+// loop and later turns of the same chat.
 
 const SYSTEM_PROMPT = `You are "Ask AI," an internal assistant built into this CRM — the team's system for deals, contacts, organizations, activities, notes, and the sales pipeline.
 
@@ -132,35 +132,29 @@ export interface AssistantStreamHandlers {
 }
 
 export async function runAssistant(
+  config: AiConfig,
   message: string,
   history: AssistantMessage[] = [],
   context?: AssistantContext,
   handlers?: AssistantStreamHandlers,
   signal?: AbortSignal,
 ): Promise<AssistantReply> {
-  const anthropic = getAnthropicClient("the Ask AI assistant");
   const traces: AssistantToolTrace[] = [];
   const modelContext = await runDeterministicBootstrap(message, traces, context, handlers);
-  const system = buildSystemPrompt(context, modelContext);
+  const dynamicSystem = buildDynamicSystemPrompt(context, modelContext);
 
   // Mark the end of the incoming history and the end of the new live message
-  // as cache breakpoints (on top of the one on SYSTEM_PROMPT below). History
-  // is byte-identical to what a prior turn already sent, so it lets this turn
+  // as cache breakpoints (on top of the one on SYSTEM_PROMPT). History is
+  // byte-identical to what a prior turn already sent, so it lets this turn
   // reuse that turn's cache; the live-message breakpoint lets iterations 2+
   // of this turn's own tool loop reuse iteration 1's cache instead of
   // reprocessing the same prefix on every round trip.
-  const messages: Anthropic.MessageParam[] = history.map((m, idx) =>
-    idx === history.length - 1
-      ? {
-          role: m.role,
-          content: [{ type: "text", text: m.content, cache_control: CACHE_CONTROL }],
-        }
-      : { role: m.role, content: m.content },
+  const messages: ChatMessage[] = history.map((m, idx) =>
+    m.role === "user"
+      ? { role: "user", text: m.content, cacheMark: idx === history.length - 1 }
+      : { role: "assistant", text: m.content, cacheMark: idx === history.length - 1 },
   );
-  messages.push({
-    role: "user",
-    content: [{ type: "text", text: message, cache_control: CACHE_CONTROL }],
-  });
+  messages.push({ role: "user", text: message, cacheMark: true });
 
   // Every iteration's pre-tool-call text is streamed live to the client via
   // onTextDelta below, so it must also be accumulated here — otherwise a
@@ -169,38 +163,26 @@ export async function runAssistant(
   const preambleParts: string[] = [];
 
   for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
-    const stream = anthropic.messages.stream(
-      {
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        system,
-        tools: ASSISTANT_TOOLS,
-        messages,
-      },
-      { signal },
-    );
-    if (handlers?.onTextDelta) {
-      stream.on("text", (delta) => handlers.onTextDelta!(delta));
-    }
-    const response = await stream.finalMessage();
-    const stopReason = response.stop_reason as string | null;
+    const turn = await runTurn(config, {
+      stableSystem: SYSTEM_PROMPT,
+      dynamicSystem,
+      tools: ASSISTANT_TOOL_DEFS,
+      messages,
+      maxTokens: config.provider === "openai" ? MAX_TOKENS_OPENAI : MAX_TOKENS,
+      onTextDelta: handlers?.onTextDelta,
+      signal,
+    });
 
-    if (stopReason === "refusal") {
-      logger.warn({ message }, "Assistant request was refused by Claude");
+    if (turn.stop === "refusal") {
+      logger.warn({ message, provider: config.provider }, "Assistant request was refused by the model");
       return {
         reply: "I couldn't help with that request. Please rephrase it as a read-only CRM question.",
         traces,
       };
     }
 
-    const toolUseBlocks = response.content.filter(
-      (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
-    );
-
-    const isTruncated =
-      stopReason === "max_tokens" ||
-      stopReason === "model_context_window_exceeded" ||
-      stopReason === "pause_turn";
+    const toolUseBlocks = turn.toolCalls;
+    const isTruncated = turn.stop === "truncated";
 
     // A truncated turn can still contain a fully-formed tool_use block —
     // Claude writes preamble text, then a complete tool call, then runs out
@@ -208,27 +190,26 @@ export async function runAssistant(
     // there's no pending tool call to run; otherwise fall through and
     // execute it like a normal tool_use turn.
     if (isTruncated && toolUseBlocks.length === 0) {
-      if (stopReason !== "max_tokens") {
-        logger.warn({ message, stopReason }, "Assistant response ended early");
+      if (turn.rawStop !== "max_tokens" && turn.rawStop !== "length") {
+        logger.warn({ message, stopReason: turn.rawStop }, "Assistant response ended early");
       }
-      const reply = [...preambleParts, extractText(response.content)].filter(Boolean).join("\n\n");
+      const reply = [...preambleParts, turn.text].filter(Boolean).join("\n\n");
       return { reply: reply + TRUNCATED_RESPONSE_NOTICE, traces };
     }
 
-    if (!isTruncated && stopReason !== "tool_use") {
-      const reply = [...preambleParts, extractText(response.content)].filter(Boolean).join("\n\n");
+    if (!isTruncated && turn.stop !== "tool_use") {
+      const reply = [...preambleParts, turn.text].filter(Boolean).join("\n\n");
       return { reply: reply || EMPTY_REPLY_FALLBACK, traces };
     }
 
-    messages.push({ role: "assistant", content: toAssistantParam(response.content) });
+    messages.push({ role: "assistant", text: turn.text, toolCalls: turn.toolCalls });
 
-    const preamble = extractText(response.content);
-    if (preamble) preambleParts.push(preamble);
+    if (turn.text) preambleParts.push(turn.text);
 
-    const toolResults = await Promise.all(
-      toolUseBlocks.map((block) => runOneTool(block, traces, handlers)),
+    const results = await Promise.all(
+      toolUseBlocks.map((call) => runOneTool(call, traces, handlers)),
     );
-    messages.push({ role: "user", content: toolResults });
+    messages.push({ role: "tool", results });
   }
 
   logger.warn({ message }, "Assistant hit the tool-iteration cap");
@@ -241,15 +222,14 @@ export async function runAssistant(
 }
 
 /**
- * SYSTEM_PROMPT is returned as its own cache_control-marked block, kept
- * separate from the per-request context/bootstrap text below it — that text
- * differs on every message (user id, live search results), so folding it
+ * The per-request part of the system prompt, kept apart from SYSTEM_PROMPT —
+ * it differs on every message (user id, live search results), so folding it
  * into the same block would invalidate the cached prefix on every request.
  */
-function buildSystemPrompt(
+function buildDynamicSystemPrompt(
   context: AssistantContext | undefined,
   modelContext: string | undefined,
-): Anthropic.TextBlockParam[] {
+): string {
   // Always tell the model "now" so it can turn relative ranges ("last 7 days",
   // "this quarter") into absolute dates for the date filters. Lives in the
   // uncached dynamic block because it changes daily.
@@ -271,32 +251,19 @@ ${modelContext}
 If this JSON includes a "note" field, it is flagging low confidence, ambiguity, or a partial failure — follow the note (e.g. ask the user a short clarifying question) rather than treating the data as certain. Otherwise, this bootstrap data is authoritative for the record(s) shown: it was just fetched and is current, so do not re-call search_crm or get_record_context on the same record to "confirm" it — that spends a tool call without changing the answer. Use it directly, and only call additional tools for information that's genuinely missing here (a different record, or something the user asks for next).`;
   }
 
-  const blocks: Anthropic.TextBlockParam[] = [
-    { type: "text", text: SYSTEM_PROMPT, cache_control: CACHE_CONTROL },
-  ];
-  if (dynamic) blocks.push({ type: "text", text: dynamic.trim() });
-  return blocks;
+  return dynamic.trim();
 }
 
 async function runOneTool(
-  block: Anthropic.ToolUseBlock,
+  call: { id: string; name: string; input: unknown },
   traces: AssistantToolTrace[],
   handlers?: AssistantStreamHandlers,
-): Promise<Anthropic.ToolResultBlockParam> {
-  const result = await executeToolWithTrace(block.name, block.input, traces, handlers);
+): Promise<ToolResultPart> {
+  const result = await executeToolWithTrace(call.name, call.input, traces, handlers);
   if (result.ok) {
-    return {
-      type: "tool_result",
-      tool_use_id: block.id,
-      content: JSON.stringify(result.data ?? null),
-    };
+    return { id: call.id, content: JSON.stringify(result.data ?? null) };
   }
-  return {
-    type: "tool_result",
-    tool_use_id: block.id,
-    content: result.message ?? "Tool call failed.",
-    is_error: true,
-  };
+  return { id: call.id, content: result.message ?? "Tool call failed.", isError: true };
 }
 
 async function executeToolWithTrace(
@@ -455,26 +422,4 @@ function summarizeTraceData(toolName: string, data: unknown): unknown {
   }
 
   return data;
-}
-
-function toAssistantParam(
-  blocks: Anthropic.ContentBlock[],
-): Array<Anthropic.TextBlockParam | Anthropic.ToolUseBlockParam> {
-  const out: Array<Anthropic.TextBlockParam | Anthropic.ToolUseBlockParam> = [];
-  for (const block of blocks) {
-    if (block.type === "text") {
-      out.push({ type: "text", text: block.text });
-    } else if (block.type === "tool_use") {
-      out.push({ type: "tool_use", id: block.id, name: block.name, input: block.input });
-    }
-  }
-  return out;
-}
-
-function extractText(content: Anthropic.ContentBlock[]): string {
-  return content
-    .filter((block): block is Anthropic.TextBlock => block.type === "text")
-    .map((block) => block.text)
-    .join("\n")
-    .trim();
 }
