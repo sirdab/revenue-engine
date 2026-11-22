@@ -31,7 +31,7 @@ export function htmlEscape(s: string): string {
 }
 
 /** The product name shown in emails. APP_NAME overrides the default. */
-export const APP_NAME = process.env.APP_NAME?.trim() || "Sirdab Revenue Engine";
+export const APP_NAME = process.env.APP_NAME?.trim() || "Revenue Engine";
 
 /** Chrome options for the shared email shell. */
 export interface ShellOptions {

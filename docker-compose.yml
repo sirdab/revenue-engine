@@ -104,7 +104,7 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:-}   # required by the app; set it in .env
       PORT: "8080"
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
-      APP_NAME: ${APP_NAME:-Sirdab Revenue Engine}
+      APP_NAME: ${APP_NAME:-Revenue Engine}
       APP_TIMEZONE: ${APP_TIMEZONE:-UTC}
       PHONE_COUNTRY_CODE: ${PHONE_COUNTRY_CODE:-}
       MAIL_FROM: ${MAIL_FROM:-}

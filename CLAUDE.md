@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-**Sirdab Revenue Engine**, an open-source (MIT) **multi-tenant CRM / sales-pipeline app**: deals, contacts (people and organizations), activities, notes, a Kanban board, custom deal fields, saved views, assignment rules, automations, insights dashboards, global search, CSV import and an AI assistant. Each customer is an isolated **workspace** (tenant), created self-serve from the sign-up page. It is a **pnpm-workspace monorepo** deployed on Fly.io (Node 24; multiple machines can serve at once, so treat all state as multi-instance). In production the API server and the built frontend are served same-origin under `/api`.
+**Revenue Engine** (by Sirdab), an open-source (MIT) **multi-tenant CRM / sales-pipeline app**: deals, contacts (people and organizations), activities, notes, a Kanban board, custom deal fields, saved views, assignment rules, automations, insights dashboards, global search, CSV import and an AI assistant. Each customer is an isolated **workspace** (tenant), created self-serve from the sign-up page. It is a **pnpm-workspace monorepo** deployed on Fly.io (Node 24; multiple machines can serve at once, so treat all state as multi-instance). In production the API server and the built frontend are served same-origin under `/api`.
 
 ## Monorepo layout
 
