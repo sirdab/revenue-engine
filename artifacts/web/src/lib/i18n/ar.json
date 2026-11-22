@@ -231,7 +231,6 @@
   "auth.login.welcomeTitle": "مرحبًا بعودتك!",
   "auth.login.noAccount": "جديد هنا؟",
   "auth.login.createWorkspace": "أنشئ مساحة عمل",
-  "auth.rememberMe": "تذكّرني",
   "auth.reset.allSet": "كل شيء جاهز. حسابك محمي الآن بكلمة المرور الجديدة.",
   "auth.reset.chooseSubtitle": "يجب ألا تقل كلمة المرور الجديدة عن 8 أحرف وأن تتضمن حرفًا ورقمًا.",
   "auth.reset.chooseTitle": "اختر كلمة مرور جديدة",
@@ -250,6 +249,16 @@
   "auth.reset.updating": "جارٍ تحديث كلمة المرور...",
   "auth.reset.verifying": "جارٍ التحقق من رابط إعادة التعيين...",
   "auth.resetPassword": "إعادة تعيين كلمة المرور",
+  "auth.shell.builtBy": "Revenue Engine · من تطوير Sirdab",
+  "auth.shell.eyebrow": "Revenue Engine",
+  "auth.shell.headline": "نظام CRM مفتوح المصدر لفرق المبيعات.",
+  "auth.shell.openSource": "مفتوح المصدر على GitHub",
+  "auth.shell.point.ai": "اسأل الذكاء الاصطناعي عن مسار مبيعاتك بالعربية أو الإنجليزية",
+  "auth.shell.point.automations": "أتمتة وقواعد إسناد تتولّى الأعمال الروتينية",
+  "auth.shell.point.pipeline": "مسارات المبيعات والتوقعات وكل صفقة في مكان واحد",
+  "auth.shell.preview.proposal": "عرض سعر",
+  "auth.shell.preview.qualified": "مؤهلة",
+  "auth.shell.preview.won": "رابحة",
   "auth.showPassword": "إظهار كلمة المرور",
   "auth.signingIn": "جارٍ تسجيل الدخول...",
   "auth.validation.email": "يرجى إدخال بريد إلكتروني صالح.",
@@ -1998,5 +2007,5 @@
   "activity.strip.keepAsIs": "إبقاؤها كما هي",
   "activity.strip.editFollowUp": "تعديل المتابعة",
   "activity.strip.followUpMoved": "حُددت المتابعة في {date}",
-  "brand.productName": "Sirdab Revenue Engine"
+  "brand.productName": "Revenue Engine"
 }

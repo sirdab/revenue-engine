@@ -1,4 +1,4 @@
-# Sirdab Revenue Engine
+# Revenue Engine
 
 An open-source, multi-tenant sales CRM in the spirit of Pipedrive, built on
 Sirdab's [One](https://github.com/sirdab/one) design system. Track deals

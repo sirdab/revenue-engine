@@ -16,10 +16,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 
-import { BrandMark } from "@/components/layout/brand-mark";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { useI18n, type Translate } from "@/lib/i18n/i18n";
 
@@ -28,13 +27,9 @@ const loginSchema = (t: Translate) =>
   z.object({
     email: z.string().email({ message: t("auth.validation.email") }),
     password: z.string().min(8, { message: t("auth.validation.passwordMin") }),
-    rememberMe: z.boolean().default(false),
   });
 
-// rememberMe has a default, so the form's input type (optional) differs from
-// the parsed output (always set); the resolver is typed with both.
-type LoginFormInput = z.input<ReturnType<typeof loginSchema>>;
-type LoginFormValues = z.output<ReturnType<typeof loginSchema>>;
+type LoginFormValues = z.infer<ReturnType<typeof loginSchema>>;
 
 export default function LoginPage() {
   const { t } = useI18n();
@@ -49,12 +44,11 @@ export default function LoginPage() {
     }
   }, [user, setLocation]);
 
-  const form = useForm<LoginFormInput, unknown, LoginFormValues>({
+  const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema(t)),
     defaultValues: {
       email: "",
       password: "",
-      rememberMe: false,
     },
   });
 
@@ -75,171 +69,96 @@ export default function LoginPage() {
   }
 
   return (
-    // Fixed to the viewport (no page scroll): the brand image always fills
-    // its panel edge-to-edge, and only the form column scrolls when the
-    // window is short.
-    <div className="h-[100dvh] w-full flex overflow-hidden bg-background">
-      {/* Left side: Visual / Brand panel (hidden on smaller screens) */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-surface-whisper items-center justify-center overflow-hidden border-e">
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="/side-bg.png" 
-            alt="" 
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              // Fallback if image fails to load
-              (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmMThmYWZjIi8+PC9zdmc+';
-            }}
+    <AuthShell
+      title={t("auth.login.title")}
+      subtitle={t("auth.login.subtitle")}
+      footer={
+        <p className="text-center text-body-quiet text-muted-foreground">
+          {t("auth.login.noAccount")}{" "}
+          <Link
+            href="/signup"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {t("auth.login.createWorkspace")}
+          </Link>
+        </p>
+      }
+    >
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-foreground font-medium">{t("auth.workEmail")}</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="name@company.com"
+                    type="email"
+                    dir="ltr"
+                    autoComplete="email"
+                    autoFocus
+                    size="touch"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {/* A subtle overlay to ensure it feels deep and sophisticated */}
-          <div className="absolute inset-0 bg-gradient-to-br from-brand-900/10 to-gray-900/20 mix-blend-multiply" />
-        </div>
-        
-        {/* Optional text or graphic overlay could go here */}
-      </div>
 
-      {/* Right side: Login Form */}
-      <div className="flex-1 flex flex-col overflow-y-auto overscroll-contain px-6 py-12 lg:px-16 xl:px-24">
-        {/* my-auto centers vertically when there's room but, unlike
-            justify-center on the scroll container, never clips the top
-            when the window is shorter than the form. */}
-        <div className="w-full max-w-[400px] mx-auto my-auto flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700">
-          
-          <div className="mb-10">
-            {/* A plain link, not a router one: the landing page is served by the
-                server, outside this app. */}
-            <a
-              href={import.meta.env.BASE_URL}
-              className="mb-8 inline-flex self-start rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            >
-              <BrandMark />
-            </a>
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between gap-2">
+                  <FormLabel className="text-foreground font-medium">{t("common.password")}</FormLabel>
+                  <Link
+                    href="/forgot-password"
+                    className="text-body-quiet text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                  >
+                    {t("auth.forgotPassword")}
+                  </Link>
+                </div>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      placeholder="••••••••"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      size="touch"
+                      inputClassName="pe-10"
+                      {...field}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+                      className="absolute end-3 top-1/2 -translate-y-1/2 rounded-md text-subtle hover:text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <h1 className="text-heading-sm text-foreground mb-2">
-              {t("auth.login.title")}
-            </h1>
-            <p className="text-muted-foreground text-body">
-              {t("auth.login.subtitle")}
-            </p>
-          </div>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-foreground font-medium">{t("auth.workEmail")}</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="name@company.com" 
-                        type="email" 
-                        autoComplete="email"
-                        autoFocus
-                        size="touch"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-foreground font-medium">{t("common.password")}</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          placeholder="••••••••" 
-                          type={showPassword ? "text" : "password"} 
-                          autoComplete="current-password"
-                          size="touch" inputClassName="pe-10"
-                          {...field} 
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
-                          className="absolute end-3 top-1/2 -translate-y-1/2 rounded-md text-subtle hover:text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-5 w-5" />
-                          ) : (
-                            <Eye className="h-5 w-5" />
-                          )}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex items-center justify-between">
-                <FormField
-                  control={form.control}
-                  name="rememberMe"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                      <FormControl>
-                        <Checkbox 
-                          checked={field.value} 
-                          onCheckedChange={field.onChange} 
-                          
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="text-body font-medium text-muted-foreground cursor-pointer">
-                          {t("auth.rememberMe")}
-                        </FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                
-                <Link
-                  href="/forgot-password"
-                  className="text-body text-foreground underline-offset-4 hover:underline"
-                >
-                  {t("auth.forgotPassword")}
-                </Link>
-              </div>
-
-              <Button 
-                type="submit" 
-                size="touch"
-                className="w-full"
-                disabled={isLoggingIn}
-              >
-                {isLoggingIn ? (
-                  <>
-                    <Loader2 className="me-2 h-5 w-5 animate-spin" />
-                    {t("auth.signingIn")}
-                  </>
-                ) : (
-                  t("common.signIn")
-                )}
-              </Button>
-            </form>
-          </Form>
-
-          <p className="mt-8 text-center text-body-quiet text-muted-foreground">
-            {t("auth.login.noAccount")}{" "}
-            <Link
-              href="/signup"
-              className="font-medium text-primary hover:text-primary/80 transition-colors"
-            >
-              {t("auth.login.createWorkspace")}
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+          <Button type="submit" size="touch" className="w-full" disabled={isLoggingIn}>
+            {isLoggingIn ? (
+              <>
+                <Loader2 className="me-2 h-5 w-5 animate-spin" />
+                {t("auth.signingIn")}
+              </>
+            ) : (
+              t("common.signIn")
+            )}
+          </Button>
+        </form>
+      </Form>
+    </AuthShell>
   );
 }

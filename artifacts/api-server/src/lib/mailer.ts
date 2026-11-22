@@ -76,7 +76,7 @@ export function isMailerConfigured(): boolean {
 }
 
 export function mailFrom(): string {
-  return process.env.MAIL_FROM || "Sirdab Revenue Engine <no-reply@localhost>";
+  return process.env.MAIL_FROM || "Revenue Engine <no-reply@localhost>";
 }
 
 /** Send an email via SMTP. Throws MailerNotConfiguredError when unconfigured. */
