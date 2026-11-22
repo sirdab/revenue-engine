@@ -93,7 +93,7 @@ test("structured data is valid JSON, prices the hosted plan, and answers the FAQ
     const offer = app.offers as { price: string; priceCurrency: string };
     assert.equal(offer.price, HOSTED_PRICE.perSeatYear);
     assert.equal(offer.priceCurrency, "SAR");
-    assert.equal((Number(HOSTED_PRICE.perSeatMonth) * 12).toFixed(2), HOSTED_PRICE.perSeatYear);
+    assert.equal(Math.floor((Number(HOSTED_PRICE.perSeatYear) / 12) * 100) / 100, Number(HOSTED_PRICE.perSeatMonth));
     // Ratings and reviews are never invented.
     assert.ok(!("aggregateRating" in app) && !("review" in app));
     const faq = graph.find((node) => node["@type"] === "FAQPage")!;

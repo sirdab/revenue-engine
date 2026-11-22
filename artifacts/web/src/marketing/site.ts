@@ -29,8 +29,8 @@ export const HOSTED_PRICE = {
   currency: "SAR",
   /** Per seat, per month, billed annually. */
   perSeatMonth: "24.91",
-  /** The one annual payment per seat: twelve months of `perSeatMonth`. */
-  perSeatYear: "298.92",
+  /** The one annual payment per seat. `perSeatMonth` is this over twelve, rounded down. */
+  perSeatYear: "299",
   freeMonths: 3,
 } as const;
 

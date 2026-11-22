@@ -553,7 +553,7 @@ export const en: Content = {
           badge: "Free for the first 3 months",
           price: "SAR 24.91",
           per: "per seat, per month, billed annually",
-          note: "One payment of SAR 298.92 per seat a year",
+          note: "One payment of SAR 299 per seat a year",
           ticks: [
             "A private workspace, ready in under a minute",
             "Pipelines, contacts, automations and insights",
@@ -583,7 +583,7 @@ export const en: Content = {
         {
           q: "How much does Revenue Engine cost?",
           a: [
-            "The hosted version is free for the first 3 months. After that it is SAR 24.91 per seat per month, billed annually as one payment of SAR 298.92 per seat a year.",
+            "The hosted version is free for the first 3 months. After that it is SAR 24.91 per seat per month, billed annually as one payment of SAR 299 per seat a year.",
             "The open-source version is free. The source code is MIT licensed, so you can run it yourself and pay only for your own servers.",
           ],
         },
@@ -1091,7 +1091,7 @@ export const en: Content = {
 
   llms: {
     summary:
-      "Revenue Engine is an open-source (MIT) multi-tenant sales CRM built by Sirdab. Teams sign up and get an isolated hosted workspace (free for the first 3 months, then SAR 24.91 per seat per month, billed annually as SAR 298.92 per seat a year), or self-host the same code for free with one Docker image and PostgreSQL.",
+      "Revenue Engine is an open-source (MIT) multi-tenant sales CRM built by Sirdab. Teams sign up and get an isolated hosted workspace (free for the first 3 months, then SAR 24.91 per seat per month, billed annually as SAR 299 per seat a year), or self-host the same code for free with one Docker image and PostgreSQL.",
     facts: [
       "Deal pipelines on a drag-and-drop board, with list, forecast and funnel views, win probabilities, rotting deals, required fields per stage, and won/lost reasons.",
       "People and organizations with activities (call, meeting, email, task, deadline, WhatsApp), rich-text notes with @mentions, and file attachments.",
