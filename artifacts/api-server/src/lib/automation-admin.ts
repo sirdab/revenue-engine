@@ -20,6 +20,7 @@ import {
   type DealFacts,
 } from "@workspace/deals-filter";
 import { isActiveUser, type Db } from "./assignment";
+import { allowPrivateWebhookTargets, webhookUrlProblem } from "./outbound-guard";
 
 // Automations service — admin CRUD + priority reorder for the deal-automations
 // engine. Routes stay thin; all DB work and validation live here (mirrors the
@@ -224,6 +225,13 @@ async function validateActionConfig(
         "Invalid webhook configuration (check the URL is https and the header name).",
       );
     }
+    // A workspace may not aim a webhook at the network this server sits on.
+    // Said here so the admin sees why; enforced again, with the resolved
+    // address, when the webhook fires (outbound-guard.ts).
+    const problem = webhookUrlProblem(parsed.data.url, {
+      allowPrivate: allowPrivateWebhookTargets(),
+    });
+    if (problem) throw new AutomationError(400, problem);
     return parsed.data;
   }
 

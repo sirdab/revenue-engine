@@ -1,11 +1,11 @@
 import { Suspense, useEffect, useState } from "react";
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Redirect, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DirectionProvider } from "@sirdab/one/provider";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { I18nProvider, useI18n } from "@/lib/i18n/i18n";
 import { AuthGuard } from "@/components/auth-guard";
 import { AppLayout } from "@/components/layout/app-layout";
@@ -148,10 +148,21 @@ function AppRoutes() {
   );
 }
 
+// "/" belongs to the public landing page, which the server (or, in dev, the
+// marketing plugin) answers before this app is ever loaded. Getting here means
+// a navigation from inside the app, or a deployment without the marketing
+// build, so send the person where they were heading.
+function RootRedirect() {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return null;
+  return <Redirect to={user ? "/home" : "/login"} replace />;
+}
+
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={LoginPage} />
+      <Route path="/" component={RootRedirect} />
+      <Route path="/login" component={LoginPage} />
       <Route path="/signup" component={SignupPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password" component={ResetPasswordPage} />

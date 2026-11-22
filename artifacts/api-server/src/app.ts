@@ -9,6 +9,8 @@ import * as Sentry from "@sentry/node";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { shouldServeSpaShell } from "./lib/spa-fallback";
+import { loadMarketingSite, marketingMiddleware } from "./lib/marketing-site";
+import { SESSION_COOKIE } from "./lib/auth";
 
 const SESSION_SECRET = process.env.SESSION_SECRET;
 if (!SESSION_SECRET) {
@@ -71,6 +73,20 @@ app.use(cookieParser(SESSION_SECRET));
 
 app.use("/api", router);
 
+// --- The public marketing pages ---------------------------------------------
+// The landing page at "/" and its siblings, sitemap.xml, robots.txt and
+// llms.txt: prerendered by the web build into dist/marketing, next to the
+// bundle (MARKETING_DIST overrides). Mounted before the static files and the
+// app shell so these URLs are answered here; every other path falls through.
+// With no marketing build present this is a no-op and "/" is the app's.
+const marketingSite = loadMarketingSite(
+  process.env.MARKETING_DIST ?? path.join(import.meta.dirname, "marketing"),
+);
+if (marketingSite) {
+  app.use(marketingMiddleware(marketingSite, { sessionCookie: SESSION_COOKIE }));
+  logger.info({ pages: marketingSite.pages.size }, "Serving the marketing pages");
+}
+
 // --- Serve the built frontend (single-process, same-origin) ----------------
 // There is no separate frontend server or proxy routing /api to us, so the
 // api-server serves both. The server is esbuild-bundled
@@ -83,8 +99,6 @@ const clientDist =
   process.env.CLIENT_DIST ?? path.join(import.meta.dirname, "public");
 
 if (fs.existsSync(clientDist)) {
-  const indexHtml = path.join(clientDist, "index.html");
-
   app.use(
     express.static(clientDist, {
       // index:false so "/" falls through to the SPA handler below — one code
@@ -108,7 +122,10 @@ if (fs.existsSync(clientDist)) {
   // instead of returning index.html as text/html.
   app.use((req, res, next) => {
     if (!shouldServeSpaShell(req.path, req.method)) return next();
-    res.sendFile(indexHtml);
+    // With `root`, only "index.html" is checked against the dotfile rule. An
+    // absolute path is checked whole, so a checkout under ~/.something would
+    // 404 its own app shell.
+    res.sendFile("index.html", { root: clientDist });
   });
 }
 

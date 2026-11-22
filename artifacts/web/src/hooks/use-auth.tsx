@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Re-seed the current-user key so the auth context immediately reflects
     // the logged-out state without a loading flash.
     queryClient.setQueryData(getGetCurrentUserQueryKey(), null);
-    setLocation("/");
+    setLocation("/login");
   };
 
   const isLoading = isUserLoading;

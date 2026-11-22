@@ -99,7 +99,7 @@ export default function ResetPasswordPage() {
           size="touch"
           className="w-full"
         >
-          <Link href="/">{t("auth.reset.continue")}</Link>
+          <Link href="/login">{t("auth.reset.continue")}</Link>
         </Button>
       </AuthShell>
     );
@@ -114,7 +114,7 @@ export default function ResetPasswordPage() {
         subtitle={t("auth.reset.linkExpiredSubtitle")}
         footer={
           <Link
-            href="/"
+            href="/login"
             className="font-medium text-primary hover:text-primary/80 transition-colors"
           >
             {t("auth.backToSignIn")}

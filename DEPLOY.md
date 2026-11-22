@@ -29,6 +29,15 @@ The app connects as `postgres://crm_app:<password>@<host>:5432/crm`. Migrations
 create the `pg_trgm` extension, which is trusted on Postgres 13+, so the owner
 can do it without a superuser.
 
+**Connect directly, not through a transaction-mode pooler.** The app binds a
+connection to a workspace with a session setting (`app.tenant_id`), and the
+migration runner takes a session-level advisory lock. PgBouncer in transaction
+mode hands each statement to whichever server connection is free, so the
+setting made on one connection would be read on another: at best empty
+results, at worst another workspace's rows. Use the database's direct
+endpoint. A pooler in *session* mode is fine. The app keeps its own pool
+(`DB_POOL_MAX`, 10 connections per machine by default).
+
 ## Migrations
 
 The image contains the committed migrations (`lib/db/drizzle/`) and a runner:
@@ -56,17 +65,35 @@ fly mpg create --name my-crm-db --org <org> --region fra --plan Basic
 fly mpg list --org <org>                  # note the cluster id
 ```
 
-Open a `psql` session as the admin user and run the SQL from
-[the database rule](#the-one-database-rule) above:
+Managed Postgres does not hand out a role that can run `CREATE ROLE`, so
+create the database and the app's user through `flyctl` instead of the SQL
+above. Its `schema_admin` users are ordinary roles (neither superuser nor
+`BYPASSRLS`), which is what the app needs:
 
 ```bash
-fly mpg connect --cluster <cluster-id>
+fly mpg databases create <cluster-id> --name crm
+fly mpg users create <cluster-id> --username crm_app --role schema_admin
+fly mpg users rotate-password <cluster-id> --username crm_app   # prints the password
 ```
 
-`fly mpg status <cluster-id>` shows the private host name. The app's
-connection string is
-`postgres://crm_app:<password>@<private-host>:5432/crm`. Don't use
-`fly mpg attach`: it hands the app the admin user.
+`fly mpg status <cluster-id>` shows the cluster's **direct** address
+(`direct.<cluster-id>.flympg.net`). The app's connection string is
+
+```
+postgres://crm_app:<password>@direct.<cluster-id>.flympg.net:5432/crm
+```
+
+Two things to avoid:
+
+- The connection string `fly mpg create` prints, and the one `fly mpg attach`
+  sets, point at `pgbouncer.<cluster-id>.flympg.net`. Don't use them: see
+  [the database rule](#the-one-database-rule) on poolers.
+- Don't use the default `fly-user` / `fly-db` pair for the app. Give it its
+  own user and database, as above.
+
+To check the result, `fly mpg connect <cluster-id> --database crm --username
+crm_app -c "select rolsuper, rolbypassrls from pg_roles where rolname =
+session_user"` should print `f | f`.
 
 Using another provider (Neon, Supabase, RDS…)? Create the role and database
 the same way and use its connection string, adding `?sslmode=require` if the
@@ -99,8 +126,19 @@ fly deploy --remote-only --app my-crm
 
 `--remote-only` builds on Fly's amd64 builders. The image is linux/amd64 only,
 so don't build it locally on Apple silicon. The release command migrates
-the empty database, then the app starts. Open `https://my-crm.fly.dev` and
-create your workspace from the sign-up page.
+the empty database, then the app starts. Open `https://my-crm.fly.dev`: the
+landing page is at `/`, and **Start for free** leads to the sign-up page,
+where you create your workspace.
+
+Attachments need object storage. On Fly, `fly storage create --app my-crm`
+makes a Tigris bucket and prints its credentials; set them under the names
+the app reads:
+
+```bash
+fly secrets set --app my-crm \
+  S3_ENDPOINT="https://fly.storage.tigris.dev" S3_REGION="auto" \
+  S3_BUCKET_NAME="<bucket>" S3_ACCESS_KEY_ID="…" S3_SECRET_ACCESS_KEY="…"
+```
 
 Only want an admin account, without leaving sign-up as the way in? Create the
 first workspace from your machine through a proxy:
@@ -130,6 +168,26 @@ gh variable set FLY_APP --body my-crm
 machines with traffic. `min_machines_running = 1` keeps one warm. Scale with
 `fly scale count` / `fly scale vm`; every machine shares the same database.
 
+## The public pages
+
+The image also serves a landing page at `/` (and `/ar`), three longer pages
+(`/open-source-crm`, `/self-hosted-crm`, `/pipedrive-alternative`),
+`/sitemap.xml`, `/robots.txt` and `/llms.txt`. They are plain HTML, rendered
+when the image is built, and the app itself stays behind `/login` and
+`/signup` with a `noindex` shell.
+
+- **Set `APP_BASE_URL`** to the address people use. It is written into every
+  canonical link, the Open Graph tags, the structured data and the sitemap.
+  Unset, each request's own host is used, which is fine for a try-out and
+  wrong the day you add a second domain.
+- **A custom domain**: `fly certs add crm.example.com --app my-crm`, add the
+  DNS records it prints, then set `APP_BASE_URL=https://crm.example.com`. The
+  `.fly.dev` address keeps working and names the new one as canonical.
+- **After the first deploy**, submit `https://<your-domain>/sitemap.xml` in
+  Google Search Console and Bing Webmaster Tools.
+- **Running a fork?** The pages carry Sirdab's name and marks. Replace them
+  first: see [`TRADEMARKS.md`](TRADEMARKS.md).
+
 ## Other hosts
 
 Build the image (`docker build -t crm .` on an amd64 machine or in CI) and run
@@ -157,5 +215,8 @@ SMTP provider and object store.
 - [ ] `DATABASE_URL` uses a role that is **not** superuser and **not** BYPASSRLS
 - [ ] `SESSION_SECRET` is long and random, and differs per environment
 - [ ] HTTPS in front of the app; `APP_BASE_URL` set to the public URL
+- [ ] `DATABASE_URL` reaches Postgres directly, not through a transaction-mode pooler
+- [ ] `WEBHOOK_ALLOW_PRIVATE_ADDRESSES` is unset if anyone can sign up (outbound
+      webhooks then cannot be pointed at your private network)
 - [ ] Backups enabled on the database (Fly Managed Postgres has them by default)
 - [ ] Never run `pnpm seed` against it: it deletes every workspace

@@ -24,7 +24,9 @@ export function AuthGuard({
 
   useEffect(() => {
     if (!authLoading && !user) {
-      setLocation("/");
+      // Not "/": that is the public landing page, and the server sends anyone
+      // holding a session cookie (even a stale one) from there back to /home.
+      setLocation("/login");
     } else if (!isLoading && user && adminOnly && !user.isAdmin) {
       setLocation("/home");
     }

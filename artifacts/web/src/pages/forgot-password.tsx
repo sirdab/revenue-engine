@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
         }
         footer={
           <Link
-            href="/"
+            href="/login"
             className="font-medium text-primary hover:text-primary/80 transition-colors"
           >
             {t("auth.backToSignIn")}
@@ -83,7 +83,7 @@ export default function ForgotPasswordPage() {
       subtitle={t("auth.forgot.subtitle")}
       footer={
         <Link
-          href="/"
+          href="/login"
           className="font-medium text-primary hover:text-primary/80 transition-colors"
         >
           {t("auth.backToSignIn")}

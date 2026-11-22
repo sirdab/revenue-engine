@@ -16,8 +16,10 @@
 @import "@sirdab/one/tailwind.css";
 @plugin "@tailwindcss/typography";
 
-/* The app's own source, scanned for utilities. */
+/* The app's own source, scanned for utilities. The marketing pages are not
+   part of the app: they have their own stylesheet and use no utilities. */
 @source "./";
+@source not "./marketing";
 
 @theme inline {
   /* Headings use One's display face. */

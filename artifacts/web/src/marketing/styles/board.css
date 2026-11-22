@@ -1,0 +1,742 @@
+/* ==========================================================================
+   The product window in the hero, as something that works.
+   marketing.css draws it; this adds the three other views, the search palette
+   and everything that moves once client/board.ts is running (`.is-live`).
+   ========================================================================== */
+
+:root {
+  /* Overshoots a little, like something with weight coming to rest. */
+  --spring: cubic-bezier(0.25, 1.35, 0.4, 1);
+  --glide: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.app {
+  --dir: 1;
+  -webkit-user-select: none;
+  user-select: none;
+}
+[dir="rtl"] .app {
+  --dir: -1;
+}
+.app__window {
+  position: relative;
+}
+.board__col {
+  position: relative;
+  transition:
+    background-color 0.25s,
+    box-shadow 0.25s;
+}
+
+/* ---- The window tips forward as it comes up the page ---------------------- */
+.hero__stage {
+  perspective: 1700px;
+  perspective-origin: 50% 0;
+}
+.app {
+  transform-origin: 50% 0;
+}
+@keyframes land {
+  from {
+    transform: rotateX(15deg) scale(0.93);
+  }
+  to {
+    transform: none;
+  }
+}
+@media (min-width: 60.01rem) and (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .hero__stage > .app {
+      animation: land linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 80%;
+    }
+  }
+  /* The same, driven by the script, where the browser cannot do it itself. */
+  .app.is-tilting {
+    transform: rotateX(calc((1 - var(--flat, 1)) * 15deg)) scale(calc(0.93 + 0.07 * var(--flat, 1)));
+  }
+}
+
+/* ---- Views ------------------------------------------------------------------ */
+.app__views {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.app__view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.app__view[hidden],
+.palette[hidden],
+.palette__row[hidden],
+.palette__group[hidden],
+.palette__none[hidden],
+.task[hidden],
+.note[hidden],
+.app-hint[hidden],
+.app-hint__replay[hidden] {
+  display: none;
+}
+
+/* List */
+.tbl {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.tbl__meta {
+  padding: 0.95em 1.5em 0.8em;
+  color: var(--a-muted);
+  font-size: 0.94em;
+}
+.tbl__row {
+  display: grid;
+  grid-template-columns: 1.2em minmax(0, 2.5fr) minmax(0, 1.5fr) 6.2em minmax(0, 1.55fr) minmax(0, 1.45fr) 5.6em;
+  align-items: center;
+  gap: 1.15em;
+  height: 3.2em;
+  flex: none;
+  padding-inline: 1.5em;
+  border-block-start: 1px solid var(--a-line);
+  white-space: nowrap;
+}
+.tbl__row--head {
+  height: 2.55em;
+  background: rgba(250, 251, 247, 0.022);
+  color: var(--a-faint);
+  font-size: 0.9em;
+}
+.tbl__check {
+  width: 1.15em;
+  height: 1.15em;
+  border-radius: 0.3em;
+  box-shadow: inset 0 0 0 1px var(--a-line-2);
+}
+.tbl__title {
+  display: flex;
+  align-items: center;
+  gap: 0.65em;
+  min-width: 0;
+  font-weight: 500;
+  color: #f1efea;
+}
+.tbl__title span,
+.tbl__dim,
+.tbl__stage > span,
+.tbl__owner > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tbl__dim {
+  color: var(--a-muted);
+}
+.tbl__num {
+  text-align: end;
+  font-weight: 600;
+  color: #f1efea;
+}
+.tbl__row--head .tbl__num {
+  font-weight: 400;
+  color: inherit;
+}
+.tbl__stage {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  min-width: 0;
+  color: #dedcd6;
+}
+.tbl__stage svg {
+  width: 1em;
+  height: 1em;
+  flex: none;
+  color: var(--a-faint);
+}
+.tbl__owner {
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+  min-width: 0;
+  color: var(--a-muted);
+}
+.tbl__owner .deal__who {
+  flex: none;
+}
+.tbl__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  height: 1.75em;
+  padding-inline: 0.6em;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--a-line-2);
+  font-size: 0.86em;
+  color: #dedcd6;
+}
+
+/* Forecast and funnel share their tiles and their chart card. */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85em;
+  padding: 1.1em 1.5em 0;
+}
+.tile {
+  display: grid;
+  gap: 0.25em;
+  padding: 0.85em 1.1em 0.95em;
+  border-radius: 0.85em;
+  background: rgba(250, 251, 247, 0.03);
+  box-shadow: inset 0 0 0 1px var(--a-line);
+  min-width: 0;
+}
+.tile span {
+  color: var(--a-muted);
+  font-size: 0.9em;
+}
+.tile b {
+  justify-self: start;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.55em;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: #f4f3ee;
+  font-variant-numeric: tabular-nums;
+}
+.tile--teal b {
+  color: var(--a-teal);
+}
+.chart {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0.85em 1.5em 1.2em;
+  padding: 1.05em 1.2em 0.9em;
+  border-radius: 0.85em;
+  background: rgba(250, 251, 247, 0.02);
+  box-shadow: inset 0 0 0 1px var(--a-line);
+}
+.chart__t {
+  font-weight: 600;
+  color: #f1efea;
+}
+.chart__plot {
+  flex: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9em;
+  min-height: 0;
+  margin-block: 1.1em 2.1em;
+}
+.chart__y {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin-block: -0.6em;
+  color: var(--a-faint);
+  font-size: 0.82em;
+  text-align: end;
+}
+.chart__y span {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+.chart__bars {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-block-end: 1px solid var(--a-line-2);
+  background-image: linear-gradient(to bottom, var(--a-line) 1px, transparent 1px);
+  background-size: 100% 25%;
+}
+.chart__m {
+  position: relative;
+}
+.chart__m > span {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline: 0;
+  margin-block-start: 0.55em;
+  text-align: center;
+  color: var(--a-muted);
+  font-size: 0.88em;
+  white-space: nowrap;
+}
+.chart__pair {
+  position: absolute;
+  inset: 0 21%;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35em;
+}
+.bar {
+  flex: 1;
+  height: calc(var(--h) * 100%);
+  border-radius: 0.3em 0.3em 0 0;
+  background: #8b8884;
+  transform-origin: bottom;
+  transition: height 0.7s var(--spring);
+}
+.bar--teal {
+  background: #1b98a1;
+}
+.chart__legend {
+  display: flex;
+  justify-content: center;
+  gap: 1.3em;
+  color: var(--a-muted);
+  font-size: 0.86em;
+}
+.chart__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+}
+.swatch {
+  width: 0.8em;
+  height: 0.8em;
+  border-radius: 0.2em;
+  background: #8b8884;
+}
+.swatch--teal {
+  background: #1b98a1;
+}
+.funnel {
+  display: grid;
+  gap: 0.72em;
+  margin-block-start: 0.95em;
+}
+.funnel__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "name n"
+    "track pct";
+  align-items: center;
+  gap: 0.32em 1em;
+}
+.funnel__name {
+  grid-area: name;
+  font-weight: 500;
+  color: #f1efea;
+}
+.funnel__n {
+  grid-area: n;
+  color: var(--a-muted);
+  font-size: 0.9em;
+  text-align: end;
+}
+.funnel__track {
+  grid-area: track;
+  display: block;
+  height: 1.25em;
+  border-radius: 0.4em;
+  background: var(--a-fill);
+  overflow: hidden;
+}
+.funnel__track i {
+  display: block;
+  width: calc(var(--w) * 100%);
+  height: 100%;
+  border-radius: 0.4em;
+  background: #1b98a1;
+  transform-origin: left;
+}
+[dir="rtl"] .funnel__track i {
+  transform-origin: right;
+}
+.funnel__pct {
+  grid-area: pct;
+  min-width: 2.6em;
+  color: #dedcd6;
+  font-size: 0.9em;
+  text-align: end;
+}
+
+/* ---- Search palette ----------------------------------------------------- */
+.palette {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  padding-block-start: 6.2em;
+  background: rgba(12, 10, 9, 0.5);
+  -webkit-backdrop-filter: blur(0.2em);
+  backdrop-filter: blur(0.2em);
+}
+.palette__box {
+  width: 37em;
+  max-width: 88%;
+  border-radius: 1em;
+  background: #24201d;
+  box-shadow:
+    0 0 0 1px var(--a-line-2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 2.5em 5em -1.5em rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+.palette__in {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  height: 3.4em;
+  padding-inline: 1.1em;
+  border-block-end: 1px solid var(--a-line);
+  color: var(--a-faint);
+}
+.palette__in svg {
+  width: 1.3em;
+  height: 1.3em;
+  flex: none;
+}
+.palette__in input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  font: inherit;
+  font-size: 1.05em;
+  color: #f4f3ee;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.palette__in input::placeholder {
+  color: var(--a-faint);
+}
+.palette__list {
+  max-height: 19.2em;
+  padding: 0.5em;
+  overflow: hidden;
+}
+.palette__group {
+  padding: 0.55em 0.7em 0.3em;
+  color: var(--a-faint);
+  font-size: 0.82em;
+}
+.palette__row {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  height: 2.6em;
+  padding-inline: 0.7em;
+  border-radius: 0.55em;
+  color: #dedcd6;
+  white-space: nowrap;
+}
+.palette__row.is-on {
+  background: var(--a-fill);
+  color: #f4f3ee;
+}
+.palette__t {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.palette__s {
+  color: var(--a-muted);
+  font-size: 0.9em;
+}
+.palette__none {
+  padding: 1.1em 0.7em;
+  color: var(--a-muted);
+}
+
+/* ---- Once it is live -------------------------------------------------------- */
+.app__layer {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+.is-live [data-view],
+.is-live [data-stage],
+.is-live [data-drawer-close],
+.is-live .tbl__row:not(.tbl__row--head),
+.is-live .palette__row {
+  cursor: pointer;
+}
+.is-live [data-board-search] {
+  cursor: text;
+}
+.is-live [data-view],
+.is-live [data-stage] {
+  transition:
+    color 0.2s,
+    background-color 0.25s;
+}
+.is-live [data-view]:not(.is-on):hover,
+.is-live [data-stage]:not(.is-on):hover {
+  color: #f4f3ee;
+}
+.is-live .tbl__row:not(.tbl__row--head):hover,
+.is-live .palette__row:hover {
+  background: var(--a-fill);
+}
+.is-live [data-board-search] {
+  transition: box-shadow 0.2s;
+}
+.is-live [data-board-search]:hover {
+  box-shadow: inset 0 0 0 1px rgba(250, 251, 247, 0.28);
+}
+@media (hover: hover) and (pointer: fine) {
+  .is-live .board .deal[data-deal] {
+    cursor: grab;
+    transition:
+      background-color 0.2s,
+      box-shadow 0.2s;
+  }
+  .is-live .board .deal[data-deal]:hover {
+    background: var(--a-card-2);
+  }
+}
+.is-dragging,
+.is-dragging .deal {
+  cursor: grabbing !important;
+}
+
+/* The pill behind the current view slides to it. */
+.app__seg[data-board-tabs] {
+  position: relative;
+}
+.app__seg[data-board-tabs] > span {
+  position: relative;
+  z-index: 1;
+}
+.app__seg-pill {
+  display: none;
+}
+.is-live .app__seg-pill {
+  position: absolute;
+  inset-block: 0.25em;
+  left: 0;
+  display: block;
+  border-radius: 0.55em;
+  background: var(--a-card-2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 1px 2px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.5s var(--spring),
+    width 0.5s var(--spring);
+}
+.is-live .app__seg[data-board-tabs] > .is-on {
+  background: none;
+  box-shadow: none;
+}
+
+/* A card in the hand. */
+.deal--drag {
+  position: absolute;
+  inset-block-start: 0;
+  left: 0;
+  z-index: 9;
+  margin: 0;
+  background: var(--a-card-2);
+  box-shadow:
+    inset 0 0 0 1px var(--a-line-2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 1.9em 3em -0.9em rgba(0, 0, 0, 0.8),
+    0 0 0 0.3em rgba(60, 199, 192, 0.1);
+  will-change: transform;
+}
+.board__col.is-target {
+  background: rgba(60, 199, 192, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(60, 199, 192, 0.24);
+}
+@keyframes landed {
+  from {
+    box-shadow:
+      inset 0 0 0 1px rgba(60, 199, 192, 0.85),
+      0 0 0 0.35em rgba(60, 199, 192, 0.2);
+  }
+}
+.deal--landed {
+  animation: landed 1s ease-out;
+}
+
+/* The drawer comes and goes. */
+.is-live .drawer {
+  transition:
+    transform 0.55s var(--spring),
+    opacity 0.3s ease;
+}
+.is-live .drawer.is-closed {
+  transform: translateX(calc(var(--dir) * 14%));
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Search is over everything, the drawer included. */
+.is-searching .drawer {
+  opacity: 0.3;
+  filter: blur(0.12em);
+  pointer-events: none;
+}
+
+/* A view arrives: rows deal in, bars grow. */
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.7em);
+  }
+}
+@keyframes bar-up {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes bar-wide {
+  from {
+    transform: scaleX(0);
+  }
+}
+.is-live .app__view.is-on {
+  animation: view-in 0.5s var(--glide) both;
+}
+.is-live .app__view.is-on .bar {
+  animation: bar-up 0.9s var(--spring) both;
+}
+.is-live .app__view.is-on .chart__m:nth-child(2) .bar {
+  animation-delay: 0.08s;
+}
+.is-live .app__view.is-on .chart__m:nth-child(3) .bar {
+  animation-delay: 0.16s;
+}
+.is-live .app__view.is-on .bar--teal {
+  animation-duration: 1.1s;
+}
+.is-live .app__view.is-on .funnel__track i {
+  animation: bar-wide 0.9s var(--glide) both;
+}
+.is-live .app__view.is-on .funnel__row:nth-child(2) i {
+  animation-delay: 0.07s;
+}
+.is-live .app__view.is-on .funnel__row:nth-child(3) i {
+  animation-delay: 0.14s;
+}
+.is-live .app__view.is-on .funnel__row:nth-child(4) i {
+  animation-delay: 0.21s;
+}
+.is-live .app__view.is-on .funnel__row:nth-child(5) i {
+  animation-delay: 0.28s;
+}
+@keyframes palette-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.6em) scale(0.97);
+  }
+}
+.palette:not([hidden]) {
+  animation: view-in 0.2s ease both;
+}
+.palette:not([hidden]) .palette__box {
+  animation: palette-in 0.32s var(--spring) both;
+}
+
+/* The tour's pointer is the shared one (styles/art.css); here it is light. */
+.app .ghost {
+  --ghost: #f4f3ee;
+  --ghost-ring: rgba(127, 222, 216, 0.9);
+  --ghost-shadow: rgba(0, 0, 0, 0.6);
+}
+
+/* ---- The line under the window ------------------------------------------- */
+.app-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.85rem;
+  margin-block-start: 1.6rem;
+  font-size: 0.875rem;
+  color: var(--faint);
+  animation: view-in 0.6s var(--glide) both;
+}
+.app-hint__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: none;
+  border-radius: 50%;
+  background: var(--teal-bright);
+  animation: live 2.4s ease-out infinite;
+}
+@keyframes live {
+  from {
+    box-shadow: 0 0 0 0 rgba(3, 152, 158, 0.55);
+  }
+  70%,
+  to {
+    box-shadow: 0 0 0 0.5rem rgba(3, 152, 158, 0);
+  }
+}
+.app-hint__coarse {
+  display: none;
+}
+@media (hover: none), (pointer: coarse) {
+  .app-hint__fine {
+    display: none;
+  }
+  .app-hint__coarse {
+    display: inline;
+  }
+}
+.app-hint__replay {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 1.9rem;
+  padding-inline: 0.7rem 0.8rem;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition:
+    background-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s var(--spring);
+}
+.app-hint__replay:hover {
+  background: var(--fill);
+  box-shadow: inset 0 0 0 1px var(--line-3);
+}
+.app-hint__replay:active {
+  transform: scale(0.96);
+}
+.app-hint__replay svg {
+  width: 0.7rem;
+  height: 0.7rem;
+  fill: currentColor;
+}
+
+/* ---- Narrower screens ------------------------------------------------------ */
+@media (max-width: 60rem) {
+  /* Only the leading edge of the window is on screen: keep search there too. */
+  .palette {
+    justify-items: start;
+    padding-inline-start: 1.5em;
+  }
+  .palette__box {
+    max-width: none;
+    width: 34em;
+  }
+  .app-hint {
+    margin-inline: var(--gutter);
+  }
+}

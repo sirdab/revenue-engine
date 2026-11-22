@@ -17,7 +17,11 @@ export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   // Max connections held by THIS process. With multiple machines each instance
   // opens its own pool, so keep (instances × DB_POOL_MAX) under the Postgres
-  // server's max_connections — prefer a pooled/pgBouncer endpoint when unsure.
+  // server's max_connections. Do NOT put a transaction-mode pooler (PgBouncer's
+  // usual setting) in front to stretch that: the tenant binding in
+  // tenant-context.ts is a session setting on the connection, and transaction
+  // pooling would run the next statement on some other tenant's connection.
+  // A session-mode pooler, or the database's direct endpoint, is safe.
   max: poolNum(process.env.DB_POOL_MAX, 10),
   // Return idle connections to the server so idle/scaled-down instances don't
   // keep holding slots open.

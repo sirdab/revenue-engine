@@ -103,7 +103,14 @@ export default function LoginPage() {
         <div className="w-full max-w-[400px] mx-auto my-auto flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700">
           
           <div className="mb-10">
-            <BrandMark className="mb-8" />
+            {/* A plain link, not a router one: the landing page is served by the
+                server, outside this app. */}
+            <a
+              href={import.meta.env.BASE_URL}
+              className="mb-8 inline-flex self-start rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              <BrandMark />
+            </a>
 
             <h1 className="text-heading-sm text-foreground mb-2">
               {t("auth.login.title")}
