@@ -10,6 +10,7 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { shouldServeSpaShell } from "./lib/spa-fallback";
 import { loadMarketingSite, marketingMiddleware } from "./lib/marketing-site";
+import { canonicalHostMiddleware } from "./lib/canonical-host";
 import { SESSION_COOKIE } from "./lib/auth";
 
 const SESSION_SECRET = process.env.SESSION_SECRET;
@@ -70,6 +71,10 @@ app.use("/api/import", express.json({ limit: "10mb" }));
 // The workspace logo: up to 300 KB of image, base64 in JSON.
 app.use("/api/settings/branding", express.json({ limit: "512kb" }));
 app.use(express.json());
+
+// One public address: page requests that arrive on the *.fly.dev host are
+// redirected to APP_BASE_URL, so search engines see a single copy of the site.
+app.use(canonicalHostMiddleware());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(SESSION_SECRET));
 

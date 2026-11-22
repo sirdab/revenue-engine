@@ -121,6 +121,11 @@ function Footer({ c, locale, page }: PageProps) {
               <li>
                 <a href={pagePath("pipedrive-alternative", locale)}>{g["pipedrive-alternative"].name}</a>
               </li>
+              {(["crm-software", "sales-management", "free-crm", "arabic-crm"] as const).map((p) => (
+                <li key={p}>
+                  <a href={pagePath(p, locale)}>{g[p].name}</a>
+                </li>
+              ))}
             </ul>
           </div>
           <div className="footer__col">

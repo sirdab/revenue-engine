@@ -7,6 +7,10 @@
 
 import { en } from "./en";
 import type { Content } from "./types";
+import { salesManagement } from "./guides/sales-management";
+import { crmSoftware } from "./guides/crm-software";
+import { freeCrm } from "./guides/free-crm";
+import { arabicCrm } from "./guides/arabic-crm";
 
 export const ar: Content = {
   common: {
@@ -53,9 +57,9 @@ export const ar: Content = {
 
   home: {
     meta: {
-      title: "نظام CRM مفتوح المصدر لفرق المبيعات | Revenue Engine",
+      title: "نظام CRM عربي مفتوح المصدر لفرق المبيعات | Revenue Engine",
       description:
-        "Revenue Engine نظام مفتوح المصدر لإدارة علاقات العملاء: خطوط مبيعات وجهات اتصال وأنشطة وأتمتة ولوحات تحليلات. مستضاف مجانًا لثلاثة أشهر، أو استضفه بنفسك.",
+        "نظام CRM عربي لإدارة علاقات العملاء والمبيعات: خطوط مبيعات وجهات اتصال وأنشطة وأتمتة وتحليلات. مجانًا لثلاثة أشهر، أو استضفه بنفسك مجانًا.",
       imageAlt: "خط المبيعات في Revenue Engine: لوحة صفقات تتنقل بين مراحل البيع.",
     },
     hero: {
@@ -581,6 +585,13 @@ export const ar: Content = {
       lead: "لديك سؤال آخر؟ افتح مسألة على [GitHub](github).",
       items: [
         {
+          q: "ما هو نظام CRM (سي آر إم)؟",
+          a: [
+            "نظام CRM، أي نظام إدارة علاقات العملاء، يجمع صفقاتك وجهات اتصالك وأنشطة فريق المبيعات في مكان واحد، فيعرف كل مندوب ما الخطوة التالية مع كل عميل وأين تقف كل صفقة.",
+            "Revenue Engine برنامج CRM عربي مفتوح المصدر: واجهته بالعربية بالكامل، ويضم خطوط مبيعات وجهات اتصال وأنشطة وأتمتة ولوحات تحليلات.",
+          ],
+        },
+        {
           q: "كم تكلفة Revenue Engine؟",
           a: [
             "النسخة المستضافة مجانية لأول ثلاثة أشهر. بعدها تكلّف 24.91 ر.س لكل مقعد شهريًا، تُدفع سنويًا دفعة واحدة قدرها 299 ر.س لكل مقعد.",
@@ -645,6 +656,10 @@ export const ar: Content = {
   },
 
   guides: {
+    "sales-management": salesManagement.ar,
+    "crm-software": crmSoftware.ar,
+    "free-crm": freeCrm.ar,
+    "arabic-crm": arabicCrm.ar,
     "open-source-crm": {
       meta: {
         title: "نظام CRM مفتوح المصدر ومجاني برخصة MIT | Revenue Engine",

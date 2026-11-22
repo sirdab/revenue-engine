@@ -62,6 +62,10 @@ export const PAGES = [
   "open-source-crm",
   "pipedrive-alternative",
   "self-hosted-crm",
+  "sales-management",
+  "crm-software",
+  "free-crm",
+  "arabic-crm",
 ] as const;
 export type PageId = (typeof PAGES)[number];
 
@@ -70,6 +74,10 @@ const SLUG: Record<PageId, string> = {
   "open-source-crm": "open-source-crm",
   "pipedrive-alternative": "pipedrive-alternative",
   "self-hosted-crm": "self-hosted-crm",
+  "sales-management": "sales-management",
+  "crm-software": "crm-software",
+  "free-crm": "free-crm",
+  "arabic-crm": "arabic-crm",
 };
 
 /** Site-relative path of a page: `/`, `/ar`, `/open-source-crm`, `/ar/open-source-crm`. */
