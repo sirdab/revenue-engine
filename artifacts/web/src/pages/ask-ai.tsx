@@ -9,11 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
   streamAssistantMessage,
+  AssistantStreamError,
   MAX_HISTORY_TURNS,
   type AssistantMessage,
   type AssistantToolTrace,
 } from "@/lib/assistant-api";
-import { useI18n, tStatic } from "@/lib/i18n/i18n";
+import { useI18n, tStatic, type MessageKey } from "@/lib/i18n/i18n";
+import { useAssistantStatus } from "@/lib/ai-settings-api";
+import { Link } from "wouter";
 import { formatNumber } from "@/lib/format";
 
 function formatValue(value: unknown): string {
@@ -636,9 +639,42 @@ function Composer({
   );
 }
 
+// What the page says for each error code the server sends (routes/assistant.ts).
+const ERROR_KEYS: Record<string, MessageKey> = {
+  not_configured: "askAi.error.notConfigured",
+  key_rejected: "askAi.error.keyRejected",
+  rate_limited: "askAi.error.rateLimited",
+  model_invalid: "askAi.error.modelInvalid",
+  history: "askAi.error.history",
+  timeout: "askAi.error.timeout",
+  unavailable: "askAi.error.unavailable",
+};
+
+/** Shown in place of the prompt while the workspace has no AI connection. */
+function NotSetUp({ isAdmin }: { isAdmin: boolean }) {
+  const { t } = useI18n();
+  return (
+    <div className="flex min-w-0 flex-1 items-center justify-center px-6">
+      <div className="max-w-md text-center">
+        <Sparkles className="mx-auto mb-4 h-8 w-8 text-brand" />
+        <h1 className="mb-2 font-heading text-heading-sm font-semibold text-foreground">{t("askAi.notSetUp.title")}</h1>
+        <p className="mb-5 text-body text-muted-foreground">
+          {isAdmin ? t("askAi.notSetUp.admin") : t("askAi.notSetUp.member")}
+        </p>
+        {isAdmin && (
+          <Button asChild>
+            <Link href="/admin/settings/integrations">{t("askAi.notSetUp.cta")}</Link>
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AskAIPage() {
   const { t } = useI18n();
   const { user } = useAuth();
+  const status = useAssistantStatus();
   const firstName = (user?.name ?? "").trim().split(/\s+/)[0] || "there";
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -767,7 +803,12 @@ export default function AskAIPage() {
           m.id === assistantId
             ? {
                 ...m,
-                content: err instanceof Error ? err.message : t("common.somethingWentWrongDot"),
+                content:
+                  err instanceof AssistantStreamError && err.code && ERROR_KEYS[err.code]
+                    ? t(ERROR_KEYS[err.code])
+                    : err instanceof Error
+                      ? err.message
+                      : t("common.somethingWentWrongDot"),
                 error: true,
               }
             : m,
@@ -806,7 +847,9 @@ export default function AskAIPage() {
 
   return (
     <div className="flex h-full min-h-0 bg-background text-foreground">
-      {messages.length === 0 ? (
+      {messages.length === 0 && status.data && !status.data.available ? (
+        <NotSetUp isAdmin={Boolean(user?.isAdmin)} />
+      ) : messages.length === 0 ? (
         <EmptyState
           firstName={firstName}
           input={input}

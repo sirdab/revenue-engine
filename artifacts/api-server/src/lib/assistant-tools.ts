@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type Anthropic from "@anthropic-ai/sdk";
+import type { ToolDef } from "./ai-chat";
 import { and, eq, ne, inArray, type SQL } from "drizzle-orm";
 import { dealsTable } from "@workspace/db";
 import {
@@ -50,7 +51,9 @@ const RECORD_TYPES = [
 const SYMBOLIC_DATE_HELP =
   "dateFrom/dateTo accept YYYY-MM-DD or a symbolic period (today, yesterday, this_week, last_week, this_month, last_month, this_quarter, last_quarter, this_year, last_year) resolved in the app time zone — prefer a symbolic period for relative-date questions.";
 
-export const ASSISTANT_TOOLS: Anthropic.Tool[] = [
+// Written in Anthropic's tool shape; ASSISTANT_TOOL_DEFS below is the
+// provider-neutral form the assistant hands to either provider (ai-chat.ts).
+const ASSISTANT_TOOLS: Anthropic.Tool[] = [
   {
     name: "search_crm",
     description:
@@ -356,6 +359,12 @@ async function resolveStageOrError(
   }
   return { stageIds };
 }
+
+export const ASSISTANT_TOOL_DEFS: ToolDef[] = ASSISTANT_TOOLS.map((tool) => ({
+  name: tool.name,
+  description: tool.description ?? "",
+  parameters: tool.input_schema as Record<string, unknown>,
+}));
 
 export interface ToolResult {
   ok: boolean;

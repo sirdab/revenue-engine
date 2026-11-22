@@ -7,6 +7,7 @@ import {
   useWebhookSecret,
   useRotateWebhookSecret,
 } from "@/lib/webhook-settings-api";
+import { AiSettings } from "./ai-settings";
 import { SlackSettings } from "./slack-settings";
 
 // The inbound webhooks, in integration order (create a deal, then update it).
@@ -234,6 +235,8 @@ export function WebhookSettings() {
           </section>
 
           <SlackSettings />
+
+          <AiSettings />
 
           {/* One self-contained section per inbound webhook */}
           {ENDPOINTS.map((endpoint) => (
