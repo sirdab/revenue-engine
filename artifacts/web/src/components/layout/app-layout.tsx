@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { Sidebar, MobileSidebar } from "./sidebar";
 import { Topbar } from "./topbar";
+import { TrialBanner } from "./trial-banner";
 import { GlobalSearch } from "@/components/search/global-search";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePreference } from "@/hooks/use-user-preferences";
@@ -56,6 +57,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           onOpenMobile={() => setMobileOpen(true)}
           onOpenSearch={() => setSearchOpen(true)}
         />
+        <TrialBanner />
         <main ref={mainRef} className="flex-1 overflow-auto bg-background">
           {children}
         </main>

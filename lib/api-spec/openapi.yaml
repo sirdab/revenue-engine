@@ -3622,7 +3622,7 @@ components:
     Workspace:
       type: object
       description: A tenant — one customer's isolated CRM workspace.
-      required: [id, name, slug, regional, effectiveRegional]
+      required: [id, name, slug, regional, effectiveRegional, trial]
       properties:
         id:
           type: integer
@@ -3634,6 +3634,19 @@ components:
           $ref: "#/components/schemas/WorkspaceRegionalSettings"
         effectiveRegional:
           $ref: "#/components/schemas/WorkspaceEffectiveRegionalSettings"
+        trial:
+          type: ["object", "null"]
+          description: >-
+            The hosted plan's free trial (HOSTED_TRIAL_MONTHS from sign-up).
+            null when this deployment has no trial, as on a self-hosted install.
+          required: [endsAt, contactEmail]
+          properties:
+            endsAt:
+              type: string
+              format: date-time
+            contactEmail:
+              type: ["string", "null"]
+              description: Where admins write to subscribe (BILLING_CONTACT_EMAIL).
 
     WorkspaceRegionalSettings:
       type: object

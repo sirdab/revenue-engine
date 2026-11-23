@@ -298,6 +298,7 @@ export * from './workspaceEffectiveRegionalSettingsWeekStart';
 export * from './workspaceRegionalSettings';
 export * from './workspaceRegionalSettingsDefaultLocale';
 export * from './workspaceRegionalSettingsWeekStart';
+export * from './workspaceTrial';
 export * from './workspaceUpdate';
 export * from './workspaceUpdateDefaultLocale';
 export * from './workspaceUpdateWeekStart';

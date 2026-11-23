@@ -124,6 +124,7 @@ Optional, process-wide:
 - `CLIENT_DIST` / `MARKETING_DIST` — where the built SPA and the prerendered marketing pages live, when not next to the server bundle (`dist/public`, `dist/marketing`).
 - `APP_NAME` — product name in emails (default `CRM`).
 - `APP_TIMEZONE` — default IANA zone for workspaces that haven't set their own in Settings › Workspace (default `UTC`).
+- `HOSTED_TRIAL_MONTHS` — the hosted plan's free trial, in calendar months from each workspace's sign-up (`lib/trial.ts`). Admins see a reminder banner in the last 14 days and after it ends; nothing is locked. Unset (self-hosted): no trial, no banner. `BILLING_CONTACT_EMAIL` adds a "Subscribe" button that emails that address.
 - `PHONE_COUNTRY_CODE` — default calling code without `+` (e.g. `44`) for workspaces that haven't set their own, so phone search and import dedupe treat `07700…` and `+44 7700…` as one number. Unset: no country assumed.
 - `WEBHOOK_ALLOW_PRIVATE_ADDRESSES` — `1` lets the automation "call webhook" action reach private/loopback addresses. Unset (the default, and the only safe value where sign-up is open) it connects to public addresses only and never follows redirects (`lib/outbound-guard.ts`). Any new code that requests a tenant-supplied URL must go through that module.
 - `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` / `BOOTSTRAP_ADMIN_NAME` / `BOOTSTRAP_WORKSPACE_NAME` — the bootstrap script.
