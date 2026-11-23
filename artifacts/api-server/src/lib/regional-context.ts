@@ -179,3 +179,42 @@ export function timeZoneSql(): SQL {
 export function runWithRegionalSettings<T>(settings: EffectiveRegionalSettings, fn: () => T): T {
   return regionalStorage.run(settings, fn);
 }
+
+// ---- Sign-up presets -------------------------------------------------------
+
+/**
+ * What a new workspace starts with when the browser reports one of these
+ * zones. Only places where the currency, calling code and working week are
+ * unambiguous; every other zone sets the time zone alone. Admins change any
+ * of it in Settings › Workspace.
+ */
+const REGION_PRESETS: Record<string, Omit<StoredRegionalSettings, "timezone" | "defaultLocale">> = {
+  "Asia/Riyadh": { defaultCurrency: "SAR", phoneCountryCode: "966", weekStart: 0 },
+  "Asia/Kuwait": { defaultCurrency: "KWD", phoneCountryCode: "965", weekStart: 0 },
+  "Asia/Qatar": { defaultCurrency: "QAR", phoneCountryCode: "974", weekStart: 0 },
+  "Asia/Bahrain": { defaultCurrency: "BHD", phoneCountryCode: "973", weekStart: 0 },
+  "Asia/Muscat": { defaultCurrency: "OMR", phoneCountryCode: "968", weekStart: 0 },
+  "Asia/Amman": { defaultCurrency: "JOD", phoneCountryCode: "962", weekStart: 0 },
+  "Asia/Dubai": { defaultCurrency: "AED", phoneCountryCode: "971", weekStart: 1 },
+};
+
+/**
+ * Regional settings for a new workspace from the sign-up page's language and
+ * the browser's zone. Anything unknown is left unset (the server default),
+ * never an error: sign-up must not fail over a browser quirk.
+ */
+export function signupRegionalSettings(input: {
+  locale?: string | null;
+  timezone?: string | null;
+}): StoredRegionalSettings {
+  const zone = typeof input.timezone === "string" ? input.timezone.trim() : "";
+  const known = zone !== "" && isValidTimeZone(zone);
+  const preset = known ? REGION_PRESETS[zone] : undefined;
+  return {
+    timezone: known ? zone : null,
+    weekStart: preset?.weekStart ?? null,
+    defaultCurrency: preset?.defaultCurrency ?? null,
+    phoneCountryCode: preset?.phoneCountryCode ?? null,
+    defaultLocale: input.locale === "ar" ? "ar" : null,
+  };
+}

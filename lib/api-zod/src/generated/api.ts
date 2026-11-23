@@ -76,13 +76,17 @@ export const signupBodyNameMax = 120;
 export const signupBodyEmailMin = 3;
 
 
+export const signupBodyTimezoneMax = 64;
+
 
 
 export const SignupBody = zod.object({
   "workspaceName": zod.string().min(1).max(signupBodyWorkspaceNameMax),
   "name": zod.string().min(1).max(signupBodyNameMax),
   "email": zod.string().min(signupBodyEmailMin),
-  "password": zod.string().min(1)
+  "password": zod.string().min(1),
+  "locale": zod.enum(['en', 'ar']).optional().describe('The language the sign-up page was in. Arabic names the default pipeline and its stages in Arabic and makes Arabic the workspace\'s default language.'),
+  "timezone": zod.string().max(signupBodyTimezoneMax).optional().describe('The browser\'s IANA time zone. Becomes the workspace\'s time zone (and, for a few Gulf and Levant zones, its currency, calling code and week start). An unknown zone is ignored, never an error.')
 })
 
 export const SignupResponse = zod.object({
@@ -181,6 +185,66 @@ export const UpdateWorkspaceResponse = zod.object({
   "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
 }).describe('The regional settings that apply, with server defaults filled in.')
 }).describe('A tenant — one customer\'s isolated CRM workspace.')
+
+
+/**
+ * @summary The workspace's getting-started checklist (admin)
+ */
+export const GetOnboardingResponse = zod.object({
+  "steps": zod.array(zod.object({
+  "key": zod.enum(['region', 'contacts', 'team', 'deal']),
+  "done": zod.boolean()
+})),
+  "dismissed": zod.boolean(),
+  "sampleData": zod.boolean().describe('Whether the sample records are loaded.')
+})
+
+
+/**
+ * @summary Hide or show the getting-started checklist (admin)
+ */
+export const DismissOnboardingBody = zod.object({
+  "dismissed": zod.boolean()
+})
+
+export const DismissOnboardingResponse = zod.object({
+  "steps": zod.array(zod.object({
+  "key": zod.enum(['region', 'contacts', 'team', 'deal']),
+  "done": zod.boolean()
+})),
+  "dismissed": zod.boolean(),
+  "sampleData": zod.boolean().describe('Whether the sample records are loaded.')
+})
+
+
+/**
+ * @summary Load sample organizations, people, deals and activities (admin)
+ */
+export const LoadSampleDataBody = zod.object({
+  "locale": zod.enum(['en', 'ar']).optional().describe('Language of the sample names. Defaults to the workspace\'s language, else English.')
+})
+
+export const LoadSampleDataResponse = zod.object({
+  "steps": zod.array(zod.object({
+  "key": zod.enum(['region', 'contacts', 'team', 'deal']),
+  "done": zod.boolean()
+})),
+  "dismissed": zod.boolean(),
+  "sampleData": zod.boolean().describe('Whether the sample records are loaded.')
+})
+
+
+/**
+ * @summary Remove the sample records (admin)
+ */
+export const RemoveSampleDataResponse = zod.object({
+  "steps": zod.array(zod.object({
+  "key": zod.enum(['region', 'contacts', 'team', 'deal']),
+  "done": zod.boolean()
+})),
+  "dismissed": zod.boolean(),
+  "sampleData": zod.boolean().describe('Whether the sample records are loaded.')
+})
 
 
 /**
