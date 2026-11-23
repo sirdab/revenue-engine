@@ -269,6 +269,17 @@ export interface WorkspaceUpdate {
   defaultLocale?: WorkspaceUpdateDefaultLocale;
 }
 
+/**
+ * The language the sign-up page was in. Arabic names the default pipeline and its stages in Arabic and makes Arabic the workspace's default language.
+ */
+export type SignupInputLocale = typeof SignupInputLocale[keyof typeof SignupInputLocale];
+
+
+export const SignupInputLocale = {
+  en: 'en',
+  ar: 'ar',
+} as const;
+
 export interface SignupInput {
   /**
      * @minLength 1
@@ -284,6 +295,55 @@ export interface SignupInput {
   email: string;
   /** @minLength 1 */
   password: string;
+  /** The language the sign-up page was in. Arabic names the default pipeline and its stages in Arabic and makes Arabic the workspace's default language. */
+  locale?: SignupInputLocale;
+  /**
+     * The browser's IANA time zone. Becomes the workspace's time zone (and, for a few Gulf and Levant zones, its currency, calling code and week start). An unknown zone is ignored, never an error.
+     * @maxLength 64
+     */
+  timezone?: string;
+}
+
+export type OnboardingStepKey = typeof OnboardingStepKey[keyof typeof OnboardingStepKey];
+
+
+export const OnboardingStepKey = {
+  region: 'region',
+  contacts: 'contacts',
+  team: 'team',
+  deal: 'deal',
+} as const;
+
+export interface OnboardingStep {
+  key: OnboardingStepKey;
+  done: boolean;
+}
+
+export interface OnboardingStatus {
+  steps: OnboardingStep[];
+  dismissed: boolean;
+  /** Whether the sample records are loaded. */
+  sampleData: boolean;
+}
+
+/**
+ * Language of the sample names. Defaults to the workspace's language, else English.
+ */
+export type SampleDataInputLocale = typeof SampleDataInputLocale[keyof typeof SampleDataInputLocale];
+
+
+export const SampleDataInputLocale = {
+  en: 'en',
+  ar: 'ar',
+} as const;
+
+export interface SampleDataInput {
+  /** Language of the sample names. Defaults to the workspace's language, else English. */
+  locale?: SampleDataInputLocale;
+}
+
+export interface OnboardingDismiss {
+  dismissed: boolean;
 }
 
 export interface UserOption {

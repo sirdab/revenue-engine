@@ -30,6 +30,7 @@ import filesRouter from "./files";
 import insightsRouter from "./insights";
 import assistantRouter from "./assistant";
 import workspaceRouter from "./workspace";
+import onboardingRouter from "./onboarding";
 import { requireAuth } from "../lib/auth";
 import { dbClientErrorHandler } from "../lib/pg-errors";
 
@@ -46,6 +47,7 @@ router.use(webhooksRouter);
 router.use(requireAuth);
 
 router.use(workspaceRouter);
+router.use(onboardingRouter);
 router.use(pipelinesRouter);
 router.use(stagesRouter);
 router.use(adminPipelinesRouter);

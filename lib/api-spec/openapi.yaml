@@ -149,6 +149,98 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /onboarding:
+    get:
+      operationId: getOnboarding
+      tags: [onboarding]
+      summary: The workspace's getting-started checklist (admin)
+      responses:
+        "200":
+          description: Checklist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingStatus"
+        "403":
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /onboarding/dismiss:
+    post:
+      operationId: dismissOnboarding
+      tags: [onboarding]
+      summary: Hide or show the getting-started checklist (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingDismiss"
+      responses:
+        "200":
+          description: Checklist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingStatus"
+        "403":
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /onboarding/sample-data:
+    post:
+      operationId: loadSampleData
+      tags: [onboarding]
+      summary: Load sample organizations, people, deals and activities (admin)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SampleDataInput"
+      responses:
+        "200":
+          description: Checklist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingStatus"
+        "403":
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Sample data is already loaded, or there is no pipeline with stages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: removeSampleData
+      tags: [onboarding]
+      summary: Remove the sample records (admin)
+      responses:
+        "200":
+          description: Checklist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingStatus"
+        "403":
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /auth/logout:
     post:
       operationId: logout
@@ -3628,6 +3720,59 @@ components:
         password:
           type: string
           minLength: 1
+        locale:
+          type: string
+          enum: [en, ar]
+          description: >-
+            The language the sign-up page was in. Arabic names the default
+            pipeline and its stages in Arabic and makes Arabic the workspace's
+            default language.
+        timezone:
+          type: string
+          maxLength: 64
+          description: >-
+            The browser's IANA time zone. Becomes the workspace's time zone
+            (and, for a few Gulf and Levant zones, its currency, calling code
+            and week start). An unknown zone is ignored, never an error.
+
+    OnboardingStep:
+      type: object
+      required: [key, done]
+      properties:
+        key:
+          type: string
+          enum: [region, contacts, team, deal]
+        done:
+          type: boolean
+
+    OnboardingStatus:
+      type: object
+      required: [steps, dismissed, sampleData]
+      properties:
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/OnboardingStep"
+        dismissed:
+          type: boolean
+        sampleData:
+          type: boolean
+          description: Whether the sample records are loaded.
+
+    SampleDataInput:
+      type: object
+      properties:
+        locale:
+          type: string
+          enum: [en, ar]
+          description: Language of the sample names. Defaults to the workspace's language, else English.
+
+    OnboardingDismiss:
+      type: object
+      required: [dismissed]
+      properties:
+        dismissed:
+          type: boolean
 
     UserOption:
       type: object

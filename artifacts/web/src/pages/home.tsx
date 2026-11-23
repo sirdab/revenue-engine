@@ -13,6 +13,7 @@ import { ScheduleWidget } from "@/components/home/schedule-widget";
 import { RottenDealsWidget } from "@/components/home/rotten-deals-widget";
 import { NotificationsWidget } from "@/components/home/notifications-widget";
 import { RecentlyViewedWidget } from "@/components/home/recently-viewed-widget";
+import { GettingStarted } from "@/components/home/getting-started";
 import { useI18n, type MessageKey } from "@/lib/i18n/i18n";
 import { intlDateTag } from "@/lib/i18n/formatting";
 import { getDisplayTimeZone } from "@/lib/format";
@@ -74,6 +75,8 @@ export default function HomePage() {
           </>
         }
       />
+
+      {user.isAdmin && <GettingStarted onCreateDeal={() => setDealOpen(true)} />}
 
       {/* TWO PACKED COLUMNS, not row-wise auto-placement.
           The old layout placed widgets row by row — [wide, narrow] per row — so a

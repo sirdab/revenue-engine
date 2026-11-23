@@ -5,6 +5,7 @@
  * Revenue Engine API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { SignupInputLocale } from './signupInputLocale';
 
 export interface SignupInput {
   /**
@@ -21,4 +22,11 @@ export interface SignupInput {
   email: string;
   /** @minLength 1 */
   password: string;
+  /** The language the sign-up page was in. Arabic names the default pipeline and its stages in Arabic and makes Arabic the workspace's default language. */
+  locale?: SignupInputLocale;
+  /**
+     * The browser's IANA time zone. Becomes the workspace's time zone (and, for a few Gulf and Levant zones, its currency, calling code and week start). An unknown zone is ignored, never an error.
+     * @maxLength 64
+     */
+  timezone?: string;
 }

@@ -116,6 +116,8 @@ import type {
   NotificationRulesResponse,
   NotificationSubscriptionInput,
   NotificationsResponse,
+  OnboardingDismiss,
+  OnboardingStatus,
   Organization,
   OrganizationImportInput,
   OrganizationInput,
@@ -128,6 +130,7 @@ import type {
   PipelineFunnel,
   ResetPasswordInput,
   ResetTokenValidity,
+  SampleDataInput,
   SearchParams,
   SearchResults,
   SignupInput,
@@ -544,6 +547,296 @@ export const useUpdateWorkspace = <TError = ErrorType<Error>,
         TContext
       > => {
       return useMutation(getUpdateWorkspaceMutationOptions(options));
+    }
+
+export const getGetOnboardingUrl = () => {
+
+
+
+
+  return `/api/onboarding`
+}
+
+/**
+ * @summary The workspace's getting-started checklist (admin)
+ */
+export const getOnboarding = async ( options?: RequestInit): Promise<OnboardingStatus> => {
+
+  return customFetch<OnboardingStatus>(getGetOnboardingUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetOnboardingQueryKey = () => {
+    return [
+    `/api/onboarding`
+    ] as const;
+    }
+
+
+export const getGetOnboardingQueryOptions = <TData = Awaited<ReturnType<typeof getOnboarding>>, TError = ErrorType<Error>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOnboarding>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOnboardingQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOnboarding>>> = ({ signal }) => getOnboarding({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOnboarding>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetOnboardingQueryResult = NonNullable<Awaited<ReturnType<typeof getOnboarding>>>
+export type GetOnboardingQueryError = ErrorType<Error>
+
+
+/**
+ * @summary The workspace's getting-started checklist (admin)
+ */
+
+export function useGetOnboarding<TData = Awaited<ReturnType<typeof getOnboarding>>, TError = ErrorType<Error>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOnboarding>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetOnboardingQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDismissOnboardingUrl = () => {
+
+
+
+
+  return `/api/onboarding/dismiss`
+}
+
+/**
+ * @summary Hide or show the getting-started checklist (admin)
+ */
+export const dismissOnboarding = async (onboardingDismiss: OnboardingDismiss, options?: RequestInit): Promise<OnboardingStatus> => {
+
+  return customFetch<OnboardingStatus>(getDismissOnboardingUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(onboardingDismiss)
+  }
+);}
+
+
+
+
+
+export const getDismissOnboardingMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dismissOnboarding>>, TError,{data: BodyType<OnboardingDismiss>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof dismissOnboarding>>, TError,{data: BodyType<OnboardingDismiss>}, TContext> => {
+
+const mutationKey = ['dismissOnboarding'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof dismissOnboarding>>, {data: BodyType<OnboardingDismiss>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  dismissOnboarding(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DismissOnboardingMutationResult = NonNullable<Awaited<ReturnType<typeof dismissOnboarding>>>
+    export type DismissOnboardingMutationBody = BodyType<OnboardingDismiss>
+    export type DismissOnboardingMutationError = ErrorType<Error>
+
+    /**
+ * @summary Hide or show the getting-started checklist (admin)
+ */
+export const useDismissOnboarding = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof dismissOnboarding>>, TError,{data: BodyType<OnboardingDismiss>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof dismissOnboarding>>,
+        TError,
+        {data: BodyType<OnboardingDismiss>},
+        TContext
+      > => {
+      return useMutation(getDismissOnboardingMutationOptions(options));
+    }
+
+export const getLoadSampleDataUrl = () => {
+
+
+
+
+  return `/api/onboarding/sample-data`
+}
+
+/**
+ * @summary Load sample organizations, people, deals and activities (admin)
+ */
+export const loadSampleData = async (sampleDataInput?: SampleDataInput, options?: RequestInit): Promise<OnboardingStatus> => {
+
+  return customFetch<OnboardingStatus>(getLoadSampleDataUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(sampleDataInput)
+  }
+);}
+
+
+
+
+
+export const getLoadSampleDataMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loadSampleData>>, TError,{data?: BodyType<SampleDataInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof loadSampleData>>, TError,{data?: BodyType<SampleDataInput>}, TContext> => {
+
+const mutationKey = ['loadSampleData'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof loadSampleData>>, {data?: BodyType<SampleDataInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  loadSampleData(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LoadSampleDataMutationResult = NonNullable<Awaited<ReturnType<typeof loadSampleData>>>
+    export type LoadSampleDataMutationBody = BodyType<SampleDataInput> | undefined
+    export type LoadSampleDataMutationError = ErrorType<Error>
+
+    /**
+ * @summary Load sample organizations, people, deals and activities (admin)
+ */
+export const useLoadSampleData = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loadSampleData>>, TError,{data?: BodyType<SampleDataInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof loadSampleData>>,
+        TError,
+        {data?: BodyType<SampleDataInput>},
+        TContext
+      > => {
+      return useMutation(getLoadSampleDataMutationOptions(options));
+    }
+
+export const getRemoveSampleDataUrl = () => {
+
+
+
+
+  return `/api/onboarding/sample-data`
+}
+
+/**
+ * @summary Remove the sample records (admin)
+ */
+export const removeSampleData = async ( options?: RequestInit): Promise<OnboardingStatus> => {
+
+  return customFetch<OnboardingStatus>(getRemoveSampleDataUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemoveSampleDataMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeSampleData>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeSampleData>>, TError,void, TContext> => {
+
+const mutationKey = ['removeSampleData'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeSampleData>>, void> = () => {
+
+
+          return  removeSampleData(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveSampleDataMutationResult = NonNullable<Awaited<ReturnType<typeof removeSampleData>>>
+
+    export type RemoveSampleDataMutationError = ErrorType<Error>
+
+    /**
+ * @summary Remove the sample records (admin)
+ */
+export const useRemoveSampleData = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeSampleData>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeSampleData>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRemoveSampleDataMutationOptions(options));
     }
 
 export const getLogoutUrl = () => {

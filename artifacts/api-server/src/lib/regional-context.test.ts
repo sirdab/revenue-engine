@@ -9,6 +9,7 @@ import {
   resolveEffective,
   runWithRegionalSettings,
   serverDefaults,
+  signupRegionalSettings,
   storedFromTenant,
   timeZoneSql,
 } from "./regional-context.ts";
@@ -91,4 +92,25 @@ test("currency for a new amount: workspace choice, else the user's legacy defaul
     assert.equal(currencyForNewAmount("USD"), "SAR");
     assert.equal(currencyForNewAmount(null), "SAR");
   });
+});
+
+test("sign-up: a Gulf zone brings its currency, calling code and week", () => {
+  assert.deepEqual(signupRegionalSettings({ locale: "ar", timezone: "Asia/Riyadh" }), {
+    timezone: "Asia/Riyadh",
+    weekStart: 0,
+    defaultCurrency: "SAR",
+    phoneCountryCode: "966",
+    defaultLocale: "ar",
+  });
+  assert.equal(signupRegionalSettings({ timezone: "Asia/Dubai" }).weekStart, 1);
+});
+
+test("sign-up: other zones set the zone alone, and junk sets nothing", () => {
+  assert.deepEqual(signupRegionalSettings({ locale: "en", timezone: "Europe/London" }), {
+    ...UNSET,
+    timezone: "Europe/London",
+  });
+  assert.deepEqual(signupRegionalSettings({ timezone: "Mars/Olympus" }), UNSET);
+  assert.deepEqual(signupRegionalSettings({ timezone: "x'; drop table tenants; --" }), UNSET);
+  assert.deepEqual(signupRegionalSettings({}), UNSET);
 });

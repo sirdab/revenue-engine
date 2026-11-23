@@ -9,7 +9,7 @@ import {
   stagesTable,
   type Tenant,
 } from "@workspace/db";
-import { runInWorkspace } from "./workspace-settings";
+import { runInWorkspace, signupRegionalSettings } from "./workspace-settings";
 import { hashPassword } from "./auth";
 import { ensureNativeColumnFields } from "./deal-fields";
 import { logger } from "./logger";
@@ -19,13 +19,15 @@ import { logger } from "./logger";
 // request is already bound to its user's tenant by requireAuth.
 
 // The pipeline every new workspace starts with, so the board is usable on the
-// first sign-in. Admins rename, reorder or replace it from Settings.
-const DEFAULT_STAGES: { name: string; probability: number }[] = [
-  { name: "Qualified", probability: 10 },
-  { name: "Contact made", probability: 20 },
-  { name: "Demo scheduled", probability: 40 },
-  { name: "Proposal made", probability: 60 },
-  { name: "Negotiation", probability: 80 },
+// first sign-in, in the language the workspace signed up in. Admins rename,
+// reorder or replace it from Settings.
+const DEFAULT_PIPELINE = { en: "Sales pipeline", ar: "مسار المبيعات" };
+const DEFAULT_STAGES: { en: string; ar: string; probability: number }[] = [
+  { en: "Qualified", ar: "مؤهلة", probability: 10 },
+  { en: "Contact made", ar: "تم التواصل", probability: 20 },
+  { en: "Demo scheduled", ar: "عرض توضيحي مجدول", probability: 40 },
+  { en: "Proposal made", ar: "تم إرسال عرض السعر", probability: 60 },
+  { en: "Negotiation", ar: "تفاوض", probability: 80 },
 ];
 
 export class EmailTakenError extends Error {
@@ -50,6 +52,10 @@ export interface CreateWorkspaceInput {
   name: string;
   email: string;
   password: string;
+  /** The sign-up page's language: "ar" names the pipeline in Arabic. */
+  locale?: "en" | "ar";
+  /** The browser's IANA zone; an unknown one is ignored. */
+  timezone?: string;
 }
 
 /**
@@ -62,6 +68,7 @@ export async function createWorkspace(
 ): Promise<{ tenant: Tenant; userId: number }> {
   const email = input.email.toLowerCase().trim();
   const passwordHash = await hashPassword(input.password);
+  const lang = input.locale === "ar" ? "ar" : "en";
 
   const result = await runAsSystem(() =>
     db.transaction(async (tx) => {
@@ -81,9 +88,19 @@ export async function createWorkspace(
         ? `${base}-${Math.random().toString(36).slice(2, 8)}`
         : base;
 
+      const regional = signupRegionalSettings(input);
+      if (regional.timezone) {
+        // The browser and Postgres can disagree on a zone; only one Postgres
+        // knows may reach a query (see validateRegionalUpdate).
+        const known = await tx.execute(
+          sql`select 1 from pg_timezone_names where name = ${regional.timezone} limit 1`,
+        );
+        if (known.rows.length === 0 && regional.timezone !== "UTC") regional.timezone = null;
+      }
+
       const [tenant] = await tx
         .insert(tenantsTable)
-        .values({ name: input.workspaceName.trim(), slug })
+        .values({ name: input.workspaceName.trim(), slug, ...regional })
         .returning();
 
       const [user] = await tx
@@ -99,13 +116,13 @@ export async function createWorkspace(
 
       const [pipeline] = await tx
         .insert(pipelinesTable)
-        .values({ tenantId: tenant.id, name: "Sales pipeline", isDefault: true })
+        .values({ tenantId: tenant.id, name: DEFAULT_PIPELINE[lang], isDefault: true })
         .returning({ id: pipelinesTable.id });
       await tx.insert(stagesTable).values(
         DEFAULT_STAGES.map((s, i) => ({
           tenantId: tenant.id,
           pipelineId: pipeline.id,
-          name: s.name,
+          name: s[lang],
           probability: s.probability,
           orderIndex: i,
         })),

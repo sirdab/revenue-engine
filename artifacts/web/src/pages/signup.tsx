@@ -51,7 +51,7 @@ const inputClass =
   "h-12 bg-card px-4 border-input transition-colors focus-visible:ring-primary/20 focus-visible:border-primary";
 
 export default function SignupPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { signup, isSigningUp, user } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -68,7 +68,15 @@ export default function SignupPage() {
 
   async function onSubmit(data: SignupFormValues) {
     try {
-      await signup(data);
+      // The page's language and the browser's zone seed the new workspace's
+      // pipeline names and regional settings (changeable in Settings).
+      let timezone: string | undefined;
+      try {
+        timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
+      } catch {
+        timezone = undefined;
+      }
+      await signup({ ...data, locale, timezone });
       toast({ title: t("auth.signup.welcomeTitle", { workspace: data.workspaceName }) });
     } catch (err) {
       const status = (err as { status?: unknown } | null)?.status;
