@@ -1893,5 +1893,12 @@
   "activity.strip.keepAsIs": "Keep as is",
   "activity.strip.editFollowUp": "Edit follow-up",
   "activity.strip.followUpMoved": "Follow-up set for {date}",
-  "brand.productName": "Revenue Engine"
+  "brand.productName": "Revenue Engine",
+  "trial.dismiss": "Hide until tomorrow",
+  "trial.ended": "Your free trial ended on {date}.",
+  "trial.endsIn#one": "Your free trial ends in 1 day.",
+  "trial.endsIn#other": "Your free trial ends in {count} days.",
+  "trial.mailSubject": "Subscribe {workspace} to Revenue Engine",
+  "trial.price": "Keep going for SAR 299 per seat per year.",
+  "trial.subscribe": "Subscribe"
 }

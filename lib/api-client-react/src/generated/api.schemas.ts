@@ -189,6 +189,19 @@ export interface WorkspaceEffectiveRegionalSettings {
 }
 
 /**
+ * The hosted plan's free trial (HOSTED_TRIAL_MONTHS from sign-up). null when this deployment has no trial, as on a self-hosted install.
+ * @nullable
+ */
+export type WorkspaceTrial = {
+  endsAt: string;
+  /**
+     * Where admins write to subscribe (BILLING_CONTACT_EMAIL).
+     * @nullable
+     */
+  contactEmail: string | null;
+} | null;
+
+/**
  * A tenant — one customer's isolated CRM workspace.
  */
 export interface Workspace {
@@ -197,6 +210,11 @@ export interface Workspace {
   slug: string;
   regional: WorkspaceRegionalSettings;
   effectiveRegional: WorkspaceEffectiveRegionalSettings;
+  /**
+     * The hosted plan's free trial (HOSTED_TRIAL_MONTHS from sign-up). null when this deployment has no trial, as on a self-hosted install.
+     * @nullable
+     */
+  trial: WorkspaceTrial;
 }
 
 export interface User {

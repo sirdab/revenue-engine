@@ -61,7 +61,11 @@ export const LoginResponse = zod.object({
   "defaultCurrency": zod.string(),
   "phoneCountryCode": zod.string().nullable(),
   "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
-}).describe('The regional settings that apply, with server defaults filled in.')
+}).describe('The regional settings that apply, with server defaults filled in.'),
+  "trial": zod.object({
+  "endsAt": zod.coerce.date(),
+  "contactEmail": zod.string().nullable().describe('Where admins write to subscribe (BILLING_CONTACT_EMAIL).')
+}).nullable().describe('The hosted plan\'s free trial (HOSTED_TRIAL_MONTHS from sign-up). null when this deployment has no trial, as on a self-hosted install.')
 }).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 
@@ -121,7 +125,11 @@ export const SignupResponse = zod.object({
   "defaultCurrency": zod.string(),
   "phoneCountryCode": zod.string().nullable(),
   "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
-}).describe('The regional settings that apply, with server defaults filled in.')
+}).describe('The regional settings that apply, with server defaults filled in.'),
+  "trial": zod.object({
+  "endsAt": zod.coerce.date(),
+  "contactEmail": zod.string().nullable().describe('Where admins write to subscribe (BILLING_CONTACT_EMAIL).')
+}).nullable().describe('The hosted plan\'s free trial (HOSTED_TRIAL_MONTHS from sign-up). null when this deployment has no trial, as on a self-hosted install.')
 }).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 
@@ -146,7 +154,11 @@ export const GetWorkspaceResponse = zod.object({
   "defaultCurrency": zod.string(),
   "phoneCountryCode": zod.string().nullable(),
   "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
-}).describe('The regional settings that apply, with server defaults filled in.')
+}).describe('The regional settings that apply, with server defaults filled in.'),
+  "trial": zod.object({
+  "endsAt": zod.coerce.date(),
+  "contactEmail": zod.string().nullable().describe('Where admins write to subscribe (BILLING_CONTACT_EMAIL).')
+}).nullable().describe('The hosted plan\'s free trial (HOSTED_TRIAL_MONTHS from sign-up). null when this deployment has no trial, as on a self-hosted install.')
 }).describe('A tenant — one customer\'s isolated CRM workspace.')
 
 
@@ -183,7 +195,11 @@ export const UpdateWorkspaceResponse = zod.object({
   "defaultCurrency": zod.string(),
   "phoneCountryCode": zod.string().nullable(),
   "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
-}).describe('The regional settings that apply, with server defaults filled in.')
+}).describe('The regional settings that apply, with server defaults filled in.'),
+  "trial": zod.object({
+  "endsAt": zod.coerce.date(),
+  "contactEmail": zod.string().nullable().describe('Where admins write to subscribe (BILLING_CONTACT_EMAIL).')
+}).nullable().describe('The hosted plan\'s free trial (HOSTED_TRIAL_MONTHS from sign-up). null when this deployment has no trial, as on a self-hosted install.')
 }).describe('A tenant — one customer\'s isolated CRM workspace.')
 
 
@@ -288,7 +304,11 @@ export const GetCurrentUserResponse = zod.object({
   "defaultCurrency": zod.string(),
   "phoneCountryCode": zod.string().nullable(),
   "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
-}).describe('The regional settings that apply, with server defaults filled in.')
+}).describe('The regional settings that apply, with server defaults filled in.'),
+  "trial": zod.object({
+  "endsAt": zod.coerce.date(),
+  "contactEmail": zod.string().nullable().describe('Where admins write to subscribe (BILLING_CONTACT_EMAIL).')
+}).nullable().describe('The hosted plan\'s free trial (HOSTED_TRIAL_MONTHS from sign-up). null when this deployment has no trial, as on a self-hosted install.')
 }).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 
@@ -2334,7 +2354,11 @@ export const ListUsersResponseItem = zod.object({
   "defaultCurrency": zod.string(),
   "phoneCountryCode": zod.string().nullable(),
   "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
-}).describe('The regional settings that apply, with server defaults filled in.')
+}).describe('The regional settings that apply, with server defaults filled in.'),
+  "trial": zod.object({
+  "endsAt": zod.coerce.date(),
+  "contactEmail": zod.string().nullable().describe('Where admins write to subscribe (BILLING_CONTACT_EMAIL).')
+}).nullable().describe('The hosted plan\'s free trial (HOSTED_TRIAL_MONTHS from sign-up). null when this deployment has no trial, as on a self-hosted install.')
 }).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 export const ListUsersResponse = zod.array(ListUsersResponseItem)
@@ -2394,7 +2418,11 @@ export const CreateUserResponse = zod.object({
   "defaultCurrency": zod.string(),
   "phoneCountryCode": zod.string().nullable(),
   "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
-}).describe('The regional settings that apply, with server defaults filled in.')
+}).describe('The regional settings that apply, with server defaults filled in.'),
+  "trial": zod.object({
+  "endsAt": zod.coerce.date(),
+  "contactEmail": zod.string().nullable().describe('Where admins write to subscribe (BILLING_CONTACT_EMAIL).')
+}).nullable().describe('The hosted plan\'s free trial (HOSTED_TRIAL_MONTHS from sign-up). null when this deployment has no trial, as on a self-hosted install.')
 }).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 
@@ -2438,7 +2466,11 @@ export const GetUserResponse = zod.object({
   "defaultCurrency": zod.string(),
   "phoneCountryCode": zod.string().nullable(),
   "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
-}).describe('The regional settings that apply, with server defaults filled in.')
+}).describe('The regional settings that apply, with server defaults filled in.'),
+  "trial": zod.object({
+  "endsAt": zod.coerce.date(),
+  "contactEmail": zod.string().nullable().describe('Where admins write to subscribe (BILLING_CONTACT_EMAIL).')
+}).nullable().describe('The hosted plan\'s free trial (HOSTED_TRIAL_MONTHS from sign-up). null when this deployment has no trial, as on a self-hosted install.')
 }).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 
@@ -2502,7 +2534,11 @@ export const UpdateUserResponse = zod.object({
   "defaultCurrency": zod.string(),
   "phoneCountryCode": zod.string().nullable(),
   "defaultLocale": zod.union([zod.literal('en'),zod.literal('ar'),zod.literal(null)]).nullable()
-}).describe('The regional settings that apply, with server defaults filled in.')
+}).describe('The regional settings that apply, with server defaults filled in.'),
+  "trial": zod.object({
+  "endsAt": zod.coerce.date(),
+  "contactEmail": zod.string().nullable().describe('Where admins write to subscribe (BILLING_CONTACT_EMAIL).')
+}).nullable().describe('The hosted plan\'s free trial (HOSTED_TRIAL_MONTHS from sign-up). null when this deployment has no trial, as on a self-hosted install.')
 }).optional().describe('A tenant — one customer\'s isolated CRM workspace.')
 })
 

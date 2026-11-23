@@ -14,6 +14,7 @@ import {
   type WeekStart,
   type WorkspaceLocale,
 } from "./regional-context";
+import { workspaceTrial } from "./trial";
 
 // Loading, binding and saving a workspace's regional settings. The types,
 // validation and the per-request context are in regional-context.ts (no
@@ -136,8 +137,8 @@ export async function saveRegionalSettings(
 }
 
 /**
- * The workspace as the API returns it (Workspace in openapi.yaml): identity
- * plus the regional settings as stored and as they apply.
+ * The workspace as the API returns it (Workspace in openapi.yaml): identity,
+ * the regional settings as stored and as they apply, and the hosted trial.
  */
 export function toWorkspaceDto(t: {
   id: number;
@@ -148,8 +149,16 @@ export function toWorkspaceDto(t: {
   defaultCurrency: string | null;
   phoneCountryCode: string | null;
   defaultLocale: string | null;
+  createdAt: Date;
 }) {
   const regional = storedFromTenant(t);
   const { chosenCurrency: _chosen, ...effectiveRegional } = resolveEffective(regional);
-  return { id: t.id, name: t.name, slug: t.slug, regional, effectiveRegional };
+  return {
+    id: t.id,
+    name: t.name,
+    slug: t.slug,
+    regional,
+    effectiveRegional,
+    trial: workspaceTrial(t.createdAt),
+  };
 }

@@ -7,6 +7,7 @@
  */
 import type { WorkspaceEffectiveRegionalSettings } from './workspaceEffectiveRegionalSettings';
 import type { WorkspaceRegionalSettings } from './workspaceRegionalSettings';
+import type { WorkspaceTrial } from './workspaceTrial';
 
 /**
  * A tenant — one customer's isolated CRM workspace.
@@ -17,4 +18,9 @@ export interface Workspace {
   slug: string;
   regional: WorkspaceRegionalSettings;
   effectiveRegional: WorkspaceEffectiveRegionalSettings;
+  /**
+     * The hosted plan's free trial (HOSTED_TRIAL_MONTHS from sign-up). null when this deployment has no trial, as on a self-hosted install.
+     * @nullable
+     */
+  trial: WorkspaceTrial;
 }

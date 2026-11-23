@@ -2121,5 +2121,16 @@
   "activity.strip.keepAsIs": "إبقاؤها كما هي",
   "activity.strip.editFollowUp": "تعديل المتابعة",
   "activity.strip.followUpMoved": "حُددت المتابعة في {date}",
-  "brand.productName": "Revenue Engine"
+  "brand.productName": "Revenue Engine",
+  "trial.dismiss": "إخفاء حتى الغد",
+  "trial.ended": "انتهت فترتك التجريبية المجانية في {date}.",
+  "trial.endsIn#few": "تنتهي فترتك التجريبية المجانية خلال {count} أيام.",
+  "trial.endsIn#many": "تنتهي فترتك التجريبية المجانية خلال {count} يومًا.",
+  "trial.endsIn#one": "تنتهي فترتك التجريبية المجانية خلال يوم واحد.",
+  "trial.endsIn#other": "تنتهي فترتك التجريبية المجانية خلال {count} يوم.",
+  "trial.endsIn#two": "تنتهي فترتك التجريبية المجانية خلال يومين.",
+  "trial.endsIn#zero": "تنتهي فترتك التجريبية المجانية اليوم.",
+  "trial.mailSubject": "اشتراك {workspace} في Revenue Engine",
+  "trial.price": "استمر مقابل 299 ريالًا لكل مستخدم سنويًا.",
+  "trial.subscribe": "اشترك"
 }
